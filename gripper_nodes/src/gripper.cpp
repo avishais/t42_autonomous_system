@@ -33,7 +33,6 @@ void Gripper::subscribeTopicsServices(){
 	srvsrvr_command_trajectory_ = node_handle_.advertiseService("command_trajectory", &Gripper::callbackCommandTrajectory, this);
 	srvsrvr_set_offsets_ = node_handle_.advertiseService("offsets", &Gripper::callbackSetOffsets, this);
 	srvsrvr_vel_ref_ = node_handle_.advertiseService("vel_ref", &Gripper::callbackVelRef, this);
-	reset_motor_pos_ref = node_handle_.advertiseService("reset_motor_pos_ref", &Gripper::callbackResetMotorPosRef, this);
 	srvsrvr_vel_cont_init_pos_ = node_handle_.advertiseService("/vel_cont_init_pos", &Gripper::callbackVelContInitPos, this);
 	sub_stop_ = node_handle_.subscribe("stop",1,&Gripper::stop, this);
 	sub_gripper_pose_ = node_handle_.subscribe("/gripper/pos", 1, &Gripper::callbackRefresehGripperPose, this);
@@ -134,10 +133,6 @@ bool Gripper::callbackVelContInitPos(common_msgs_gl::SendDoubleArray::Request& r
 	return true;
 }
 
-bool Gripper::callbackResetMotorPosRef(std_srvs::Empty::Request &req, std_srvs::Empty::Response& res){
-	motor_pos_ref_ = cur_gripper_pos_;
-	return true;
-}
 void Gripper::velocityModeStep(){
 	double rate = 100;//100; // With the decrease, the velocity increases.
 	auto motor_pos = cur_gripper_pos_;//readData();

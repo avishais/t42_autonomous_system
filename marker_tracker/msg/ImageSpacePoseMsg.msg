@@ -1,4 +1,5 @@
 int32[] ids
-int32[] posx
-int32[] posy
+float64[] posx
+float64[] posy
 float64[] angles
+float64[] marker_size

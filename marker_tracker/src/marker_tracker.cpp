@@ -2,9 +2,16 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <opencv2/calib3d/calib3d.hpp>
 #include "marker_tracker/ImageSpacePoseMsg.h"
+
+using namespace std;
+
 MarkerTracker::MarkerTracker(){
 	readParametersFromServer();
+	markers_rec_size_.resize(5);
+	markers_rec_size_ = {11.5, 10.0, 10.0, 10.0, 13.0, 14.0};
 	marker_size_ = 0.0075;
+	measured_marker_size_.resize(5);
+	measured_marker_size_ = {0,0,0,0,0};
 	float cam_mat_data[9] = {824.127282, 0, 512, 0, 824.127282, 288, 0, 0, 1};
 	camera_matrix_ = cv::Mat(3,3,CV_32F,cam_mat_data);
 	float dist_data[5] {-0.073267,0.27436,0,0,-0.537225};
@@ -12,7 +19,7 @@ MarkerTracker::MarkerTracker(){
 	dictionary_ = cv::aruco::getPredefinedDictionary(cv::aruco::DICT_6X6_250);
 	image_transport_ = new image_transport::ImageTransport(node_handle_);
 	sub_image_ = image_transport_->subscribe("/camera/image_raw",1,&MarkerTracker::imageCallback, this);
-	pub_image_ = image_transport_->advertise("camera/image_out", 1);
+	pub_image_ = image_transport_->advertise("/camera/image_out", 1);
 	pub_image_space_pose_ = node_handle_.advertise<marker_tracker::ImageSpacePoseMsg>("/marker_tracker/image_space_pose_msg",1);
 	srvsrvr_image_space_pose_ = node_handle_.advertiseService("/marker_tracker/image_space_pose_srv",&MarkerTracker::callbackImageSpacePoseSrv,this);
 }
@@ -34,6 +41,7 @@ void MarkerTracker::detectMarkers(cv::Mat image_in){
 	marker_ids_.clear();
 	cv::aruco::detectMarkers(image_in, dictionary_, marker_corners_, marker_ids_);
 }
+
 void MarkerTracker::drawMarkers(cv::Mat& image){
 	cv::aruco::drawDetectedMarkers(image, marker_corners_, marker_ids_);
 }
@@ -41,10 +49,12 @@ void MarkerTracker::publishMarkerPoseImageSpace(){
 	marker_tracker::ImageSpacePoseMsg msg;
 	msg.ids = marker_ids_;
 	for (size_t i = 0; i < marker_ids_.size(); i++){
-		msg.posx.push_back(tvecs_[i].val[0]);
-		msg.posy.push_back(tvecs_[i].val[1]);
+		msg.posx.push_back(tvecs_[i].val[0] / factor_dist_);
+		msg.posy.push_back(tvecs_[i].val[1] / factor_dist_);
+		msg.marker_size.push_back(measured_marker_size_[i] / factor_dist_);
 		msg.angles.push_back(rvecs_[i].val[2]);
 	}
+
 	pub_image_space_pose_.publish(msg);
 }
 void MarkerTracker::estimatePose(){
@@ -83,6 +93,26 @@ void MarkerTracker::estimateMarkerImagePoses(){
 		tvecs_[i] = cv::Vec3d((mid_buttom.x + mid_top.x)/2.0, (mid_buttom.y + mid_top.y)/2.0,1);
 		rvecs_[i] = cv::Vec3d(0,0,calculate2dVecOrientation(mid_buttom, mid_top));
 	}
+
+	factor_dist_ = 0;
+	for (size_t i = 0; i < rvecs_.size(); i++){
+
+		int j = i;//marker_ids_[i];
+
+		float s1 = sqrt((marker_corners_[j][0].x - marker_corners_[j][1].x)*(marker_corners_[j][0].x - marker_corners_[j][1].x) + (marker_corners_[j][0].y - marker_corners_[j][1].y)*(marker_corners_[j][0].y - marker_corners_[j][1].y));
+		float s2 = sqrt((marker_corners_[j][2].x - marker_corners_[j][3].x)*(marker_corners_[j][2].x - marker_corners_[j][3].x) + (marker_corners_[j][2].y - marker_corners_[j][3].y)*(marker_corners_[j][2].y - marker_corners_[j][3].y));
+		float s3 = sqrt((marker_corners_[j][1].x - marker_corners_[j][3].x)*(marker_corners_[j][1].x - marker_corners_[j][3].x) + (marker_corners_[j][1].y - marker_corners_[j][3].y)*(marker_corners_[j][1].y - marker_corners_[j][3].y));
+		float s4 = sqrt((marker_corners_[j][2].x - marker_corners_[j][0].x)*(marker_corners_[j][2].x - marker_corners_[j][0].x) + (marker_corners_[j][2].y - marker_corners_[j][0].y)*(marker_corners_[j][2].y - marker_corners_[j][0].y));
+		measured_marker_size_[j] = (s1 + s2)/2.;// + s3 + s4)/4.;
+		// cout << s1 << " " << s2  << " " << s3  << " " << s4 << endl;
+		// cout << measured_marker_size_[j] << endl;
+		factor_dist_ += measured_marker_size_[j] / markers_rec_size_[j];
+		
+	}
+	factor_dist_ /= rvecs_.size();
+	// std::cout << factor_dist_ << " " << measured_marker_size_[4] <<  std::endl;
+	
+	
 }
 void MarkerTracker::imageCallback(const sensor_msgs::ImageConstPtr& msg){
 	cv::cvtColor(cv_bridge::toCvShare(msg,"bgra8")->image,image_received_,CV_BGRA2BGR);
@@ -94,7 +124,7 @@ void MarkerTracker::getImage(cv::Mat& img_in){
 void MarkerTracker::sendImage(const cv::Mat& img_out){
 	sensor_msgs::ImagePtr msg = cv_bridge::CvImage(std_msgs::Header(), "bgr8", img_out).toImageMsg();
 	pub_image_.publish(msg);
-	cv::waitKey(1);
+	// cv::waitKey(1);
 }
 void MarkerTracker::spin(){
 	ros::Rate rate(15); // 30 Berk
@@ -107,6 +137,7 @@ void MarkerTracker::spin(){
 			drawMarkers(image);
 			drawMarkerImagePoses(image);
 			publishMarkerPoseImageSpace();
+			sendImage(image);
 			if(show_image_){
 				cv::imshow("Markers",image);
 				cv::waitKey(1);

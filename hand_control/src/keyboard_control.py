@@ -13,9 +13,9 @@ import rospy
 import numpy as np 
 from std_msgs.msg import Char
 from std_msgs.msg import Float64MultiArray, Float32MultiArray
-from openhand.srv import MoveServos
+from hand_simulator.srv import MoveServos
 from std_srvs.srv import Empty, EmptyResponse
-# import tty, termios, sys
+import tty, termios, sys
 from std_srvs.srv import Empty, EmptyResponse
 from hand_control.srv import observation, IsDropped, TargetAngles, RegraspObject, close
 import curses, time
@@ -39,52 +39,58 @@ class keyboard_control():
         move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
         close_srv = rospy.ServiceProxy('/CloseGripper', close)
         open_srv = rospy.ServiceProxy('/OpenGripper', Empty)
-        rospy.Service('/ResetKeyboard', Empty, self.ResetKeyboard)
 
         k_prev = np.array([-200,-200])
 
         rate = rospy.Rate(100)
-        self.ch = ord('s')
+        ch = ord('s')
         while not rospy.is_shutdown():
             c = curses.wrapper(key_listener)#self.getchar()
             if c!=-1:
-                self.ch = c
+                ch = c
+            # print ch
+            
 
-            if self.ch == 27:
+            if ch == 27:
                 break
 
-            k = self.Move(self.ch)
+            k = self.Move(ch)
             if all(k == np.array([100.,100.])):
                 print "closing"
                 close_srv()
-                self.ch = ord('s')
+                ch = ord('s')
                 k = self.A[8]
                 rospy.sleep(1.0)
             elif all(k == np.array([-100.,-100.])):
                 print "opening"
                 open_srv()
-                self.ch = ord('s')
+                ch = ord('s')
                 k = self.A[8]
                 print "open"
                 rospy.sleep(1.0)
             else:
+                # if not np.all(k == k_prev):
+                # move_srv(k)
                 msg = Float32MultiArray()
                 msg.data = k
                 pub_action.publish(msg)
+                # k_prev = k
 
             rate.sleep()
 
-#     def getchar(self):
-#    #Returns a single character from standard input
+    def getchar(self):
+   #Returns a single character from standard input
         
-#         fd = sys.stdin.fileno()
-#         old_settings = termios.tcgetattr(fd)
-#         try:
-#             tty.setraw(sys.stdin.fileno())
-#             ch = sys.stdin.read(1)
-#         finally:
-#             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-#         return ch
+        fd = sys.stdin.fileno()
+        old_settings = termios.tcgetattr(fd)
+        try:
+            tty.setraw(sys.stdin.fileno())
+            ch = sys.stdin.read(1)
+        finally:
+            termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+        return ch
+
+
 
 
     def ActPosCallback(self, msg):
@@ -99,28 +105,22 @@ class keyboard_control():
         if chr(ch) == 'w': # Up
             return self.A[1]
         if chr(ch) == 'a': # Left
-            return self.A[2]
-        if chr(ch) == 'd': # Right
             return self.A[3]
+        if chr(ch) == 'd': # Right
+            return self.A[2]
         if chr(ch) == 'c': # Down-Right
-            return self.A[4]
-        if chr(ch) == 'z': # Down-left
             return self.A[7]
+        if chr(ch) == 'z': # Down-left
+            return self.A[4]
         if chr(ch) == 'e': # Up-Right
-            return self.A[6]
-        if chr(ch) == 'q': # Up-Left
             return self.A[5]
+        if chr(ch) == 'q': # Up-Left
+            return self.A[6]
         
         if chr(ch) == '[': # Close
             return np.array([100,100])
         if chr(ch) == ']': # Open
             return np.array([-100, -100])
-
-    def ResetKeyboard(self, msg):
-        self.ch = ord('s')
-
-        return EmptyResponse()
-
         
 
 
@@ -132,3 +132,4 @@ if __name__ == '__main__':
         pass
 
     
+

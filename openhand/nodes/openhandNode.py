@@ -34,7 +34,7 @@ class OpenHandNode():
 		return resp
 	def MoveServosProxy(self,req):
 		pos = req.pos
-		#rospy.loginfo("Received command: "+repr(pos))
+		# rospy.loginfo("Received command: "+repr(pos))
 		resp = MoveServosResponse()
 		resp.err = 0
 		for i in xrange(len(pos)):

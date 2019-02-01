@@ -1,14 +1,13 @@
 <launch>
   <!-- Requires Python3 - source relavent venv -->
 
-  <arg name="recordData" default="false" />
+  <arg name="maunal" default="false" />
 
   <!--<include file="$(find hand_control)/launch/run.launch"></include>-->
 
   <node pkg="hand_control" name="collect" type="collect_data.py" output="screen"/>
 
-  <node pkg="rosbag" type="record" name="rosbag_record_data"
-       args="record -O /home/pracsys/Dropbox/transfer/sim/sim1_cont /hand/obj_pos /hand/camera/image_raw /gripper/pos /gripper/load"
-       if="$(arg recordData)" />
+  <node pkg="hand_control" type="keyboard_control.py" name="keyboard_control"
+       if="$(arg maunal)" />
 
 </launch>

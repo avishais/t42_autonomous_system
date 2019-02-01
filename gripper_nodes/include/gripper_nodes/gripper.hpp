@@ -15,7 +15,6 @@ class Gripper{
 	ros::Publisher pub_pos_ref_, pub_vel_ref_;
 	ros::ServiceServer srvsrvr_command_trajectory_;
 	ros::ServiceServer srvsrvr_vel_ref_;
-	ros::ServiceServer reset_motor_pos_ref;
 	bool velocity_mode_on_ = false;
 	bool initial_motor_pos_set_ = false;
 	std::vector<float> vel_cont_init_motor_pos_;
@@ -28,8 +27,6 @@ class Gripper{
 	bool callbackSetOffsets(common_msgs_gl::SendDoubleArray::Request& req, common_msgs_gl::SendDoubleArray::Response& res);
 	bool callbackVelRef(common_msgs_gl::SendDoubleArray::Request& req, common_msgs_gl::SendDoubleArray::Response& res);
 	bool callbackVelContInitPos(common_msgs_gl::SendDoubleArray::Request& req, common_msgs_gl::SendDoubleArray::Response& res);
-	bool callbackResetMotorPosRef(std_srvs::Empty::Request &req, std_srvs::Empty::Response& res);
-	
 	void subscribeTopicsServices();
 	void readParametersFromServer();
 public:

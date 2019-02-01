@@ -6,10 +6,14 @@
 class MarkerTracker{
 	bool new_image_received_ = false, show_image_ = false;
 	double marker_size_;
+	std::vector<double> markers_rec_size_;
+	double factor_dist_;
+	double marker_object_size_;
 	cv::Mat camera_matrix_;
 	cv::Mat dist_coeffs_;
 	cv::Mat image_received_;
 	std::vector<cv::Vec3d> rvecs_, tvecs_;
+	std::vector<double>  measured_marker_size_;
 	cv::Ptr<cv::aruco::Dictionary> dictionary_;
 	std::vector<int> marker_ids_;
 	std::vector<std::vector<cv::Point2f>> marker_corners_, rejected_candidates_;

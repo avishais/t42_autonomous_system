@@ -9,14 +9,16 @@ import matplotlib.pyplot as plt
 from transition_experience import *
 
 
+
+
 def main():
     texp = transition_experience(Load = True, discrete=True)
 
     # texp.save_to_file()
-    texp.process_transition_data(stepSize = 1, plot = False)
-    texp.process_svm(stepSize = 1)
 
-    # texp.plot_data()
+    # texp.divide_and_save(n = 750)
+
+    texp.plot_data()
 
     return 1
 
