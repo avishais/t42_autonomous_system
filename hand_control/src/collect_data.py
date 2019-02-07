@@ -10,8 +10,9 @@ from hand_control.srv import observation, IsDropped, TargetAngles, RegraspObject
 from transition_experience import *
 # from common_msgs_gl.srv import SendBool, SendDoubleArray
 import glob
+from bowen_pose_estimate.srv import recordHandPose
 
-collect_mode = 'plan' # 'manual' or 'auto' or 'plan'
+collect_mode = 'auto' # 'manual' or 'auto' or 'plan'
 
 class collect_data():
 
@@ -25,7 +26,7 @@ class collect_data():
     episode_length = 100000 # !!!
     desired_action = np.array([0.,0.])
 
-    A = np.array([[1.0,1.0],[-1.,-1.],[-1.,1.],[1.,-1.],[1.,0.],[-1.,0.],[0.,-1.],[0.,1.]])
+    A = np.array([[1.0,1.0],[-1.,-1.],[-1.,1.],[1.,-1.],[1.5,0.],[-1.5,0.],[0.,-1.5],[0.,1.5]])
 
     texp = transition_experience(Load = True, discrete = discrete_actions)
 
@@ -40,6 +41,7 @@ class collect_data():
         move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
         rospy.Subscriber('/ObjectIsReset', String, self.callbackTrigger)
         arm_reset_srv = rospy.ServiceProxy('/RegraspObject', RegraspObject)
+        record_srv = rospy.ServiceProxy('/record_hand_pose', recordHandPose)
         # allow_motion_srv = rospy.ServiceProxy('/gripper_t42/allow_motion', SendBool)
         # vel_ref_srv = rospy.ServiceProxy('/gripper_t42/vel_ref', SendDoubleArray)
         # reset_motor_pos_srv = rospy.ServiceProxy('/gripper_t42/reset_motor_pos_ref', Empty)
@@ -60,11 +62,15 @@ class collect_data():
 
         msg = Float32MultiArray()
 
+        msgd = record_srv()
+        print msgd.info
         open_srv()
+        time.sleep(2.)
 
         print('[collect_data] Ready to collect...')
 
         rate = rospy.Rate(15) # 15hz
+        count_fail = 0
         while not rospy.is_shutdown():
 
             if self.global_trigger:
@@ -73,10 +79,10 @@ class collect_data():
                     
                     if collect_mode == 'manual': 
                         ResetKeyboard_srv()
-                    if drop_srv().dropped:
+                    if 1:#drop_srv().dropped:
                         arm_reset_srv()
                         print('[collect_data] Waiting for arm to grasp object...')
-                        rospy.sleep(1.0)
+                        time.sleep(1.0)
                     else:
                         self.trigger = True
                 
@@ -86,7 +92,12 @@ class collect_data():
                     if drop_srv().dropped: # Check if really grasped
                         self.trigger = False
                         print('[collect_data] Grasp failed. Restarting')
+                        count_fail += 1
+                        if count_fail == 60:
+                            self.global_trigger = False
                         continue
+
+                    count_fail = 0
 
                     print('[collect_data] Starting episode %d...' % self.num_episodes)
 
@@ -109,7 +120,10 @@ class collect_data():
                             if ep_step==0:#np.random.uniform() > 0.7:
                                 n = np.random.randint(100)
                             else:
-                                n = np.random.randint(40)
+                                if np.random.uniform() > 0.6:
+                                    n = np.random.randint(150)
+                                else:
+                                    n = np.random.randint(40)
                         elif collect_mode == 'manual':
                             action = self.desired_action
                             n = 1
@@ -119,8 +133,10 @@ class collect_data():
                         print action
                         
                         for _ in range( n ):
-                            msg.data = action
-                            pub_gripper_action.publish(msg)
+                            tr = rospy.get_time()
+                            
+                            # msg.data = action
+                            # pub_gripper_action.publish(msg)
                             suc = move_srv(action).success
                             # rospy.sleep(0.05)
                             rate.sleep()
@@ -138,16 +154,17 @@ class collect_data():
                             if not suc or fail:
                                 next_state = np.copy(state)
 
-                            self.texp.add(state, action, next_state, not suc or fail)
-                            state = next_state
+                            self.texp.add(state, action, next_state, not suc or fail, rospy.get_time()-tr)
+                            state = np.copy(next_state)
 
                             if not suc or fail:
                                 Done = True
                                 break
-
                         if Done:
                             open_srv()
                             break
+
+                    open_srv()
 
                     self.trigger = False
                     print('[collect_data] Finished running episode %d with total number of collected points: %d' % (self.num_episodes, self.texp.getSize()))

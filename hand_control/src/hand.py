@@ -6,13 +6,14 @@ Author: Avishai Sintov
 
 import rospy
 import numpy as np 
-from std_msgs.msg import Float64MultiArray, Float32MultiArray, String
+from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool
 from std_srvs.srv import Empty, EmptyResponse
 from openhand.srv import MoveServos
 from hand_control.srv import TargetAngles, IsDropped, observation, close
 # from common_msgs_gl.srv import SendDoubleArray, SendBool
 import geometry_msgs.msg
 import math
+import time
 
 class hand_control():
 
@@ -33,10 +34,11 @@ class hand_control():
     count = 1
     vel_ref = np.array([0.,0.])
     gripper_cur_pos = np.array([0.,0.])
-    max_load = 250.0
+    max_load = 280.0
 
     gripper_status = 'open'
     object_grasped = False
+    drop_query = True
 
     move_servos_srv = 0.
 
@@ -53,6 +55,7 @@ class hand_control():
         rospy.Subscriber('/gripper/pos', Float32MultiArray, self.callbackGripperPos)
         rospy.Subscriber('/gripper/load', Float32MultiArray, self.callbackGripperLoad)
         rospy.Subscriber('/cylinder_pose', geometry_msgs.msg.Pose, self.callbackMarkers)
+        rospy.Subscriber('cylinder_drop', Bool, self.callbackObjectDrop)
         pub_gripper_status = rospy.Publisher('/gripper/gripper_status', String, queue_size=10)
 
         # vel_ref_srv = rospy.ServiceProxy('/gripper_t42/vel_ref', SendDoubleArray)
@@ -98,6 +101,9 @@ class hand_control():
             self.obj_pos = np.array([np.nan, np.nan])
             self.obj_height = np.nan
 
+    def callbackObjectDrop(self, msg):
+        self.drop_query = msg.data
+
     def OpenGripper(self, msg):
         # self.vel_ref = np.array([0.,0.,])
         # self.allow_motion_srv(False)
@@ -142,6 +148,7 @@ class hand_control():
 
         self.rate.sleep()
         self.gripper_cur_pos = self.gripper_pos
+        self.drop_query = True
 
         return {'success': self.object_grasped}
 
@@ -161,11 +168,11 @@ class hand_control():
     
     def moveGripper(self, angles):
         if angles[0] > 0.9 or angles[1] > 0.9 or angles[0] < 0.05 or angles[1] < 0.05:
-            rospy.logerr('[hand] Desired angles out of bounds.')
+            rospy.logerr('[hand] Move Failed. Desired angles out of bounds.')
             return False
 
         if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
-            rospy.logerr('[hand] Pre-overload.')
+            rospy.logerr('[hand] Move failed. Pre-overload.')
             return False
 
         self.move_servos_srv.call(angles)
@@ -174,6 +181,11 @@ class hand_control():
 
     def CheckDropped(self, msg):
         # Should spin (update topics) between moveGripper and this
+
+        if self.drop_query:
+            rospy.logerr('[hand] Object dropped.')
+            return {'dropped': True}
+
 
         if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.05 or self.gripper_pos[1] < 0.05:
             rospy.logerr('[hand] Desired angles out of bounds.')
@@ -185,34 +197,18 @@ class hand_control():
             return {'dropped': True}
 
         # If object marker not visible, loop to verify and declare dropped.
-        
         if self.obj_height == -1000:
             dr = True
-            for _ in range(15):
-                self.rate.sleep()
+            for _ in range(25):
+                # print('self.obj_height is ', self.obj_height)
                 if self.obj_height != -1000:
                     dr = False
                     break
+                time.sleep(0.1)
             if dr:
                 rospy.loginfo('[hand] Object not visible - assumed dropped.')
                 return {'dropped': True}
         
-        # If marker is visible but far from the height of the hand, loop to verify and declare dropped
-        '''if abs(self.obj_height) > 0.05:
-            dr = True
-            for _ in range(10):
-                rospy.sleep(0.05)
-                self.rate.sleep()
-                print("*", self.obj_height)
-                if abs(self.obj_height) < 0.06:
-                    dr = False
-                    break
-            if dr:
-                rospy.loginfo('[hand] Object dropped.')
-                print(self.obj_height)
-                self.object_grasped = False
-                return {'dropped': True}'''
-
         return {'dropped': False}
 
     def GetObservation(self, msg):

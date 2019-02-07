@@ -8,7 +8,7 @@ import scipy.signal
 
 
 class transition_experience():
-    path = '/home/pracsys/catkin_ws/src/hand_control/data/'
+    path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/'
 
     def __init__(self, Load=True, discrete = True):
 
@@ -17,15 +17,15 @@ class transition_experience():
         else:
             self.mode = 'c' # Continuous actions
         
-        self.file_name = self.path + 'raw_35_' + self.mode + '_v0.obj'
+        self.file_name = self.path + 'raw_35_' + self.mode + '_v1.obj'
 
         if Load:
             self.load()
         else:
             self.clear()
         
-    def add(self, state, action, next_state, done):
-        self.memory += [(state, action, next_state, done)]
+    def add(self, state, action, next_state, done, dt):
+        self.memory += [(state, action, next_state, done, dt)]
         
     def clear(self):
         self.memory = []
@@ -67,7 +67,7 @@ class transition_experience():
 
         plt.figure(1)
         ax1 = plt.subplot(111)
-        ax1.plot(states[:,0],states[:,1],'-k')
+        # ax1.plot(states[:,0],states[:,1],'-k')
         ax1.plot(states[:,0],states[:,1],'.y')
         ax1.plot(failed_states[:,0],failed_states[:,1],'.r')
         ax1.set(title='Object position')
