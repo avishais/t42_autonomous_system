@@ -57,6 +57,8 @@ class hand_control():
         rospy.Subscriber('/cylinder_pose', geometry_msgs.msg.Pose, self.callbackMarkers)
         rospy.Subscriber('cylinder_drop', Bool, self.callbackObjectDrop)
         pub_gripper_status = rospy.Publisher('/gripper/gripper_status', String, queue_size=10)
+        pub_drop = rospy.Publisher('/hand_control/drop', Bool, queue_size=10)
+        pub_obj_pos = rospy.Publisher('/hand_control/obj_pos_mm', Float32MultiArray, queue_size=10)
 
         # vel_ref_srv = rospy.ServiceProxy('/gripper_t42/vel_ref', SendDoubleArray)
         # self.allow_motion_srv = rospy.ServiceProxy('/gripper_t42/allow_motion', SendBool)
@@ -64,17 +66,27 @@ class hand_control():
         rospy.Service('/OpenGripper', Empty, self.OpenGripper)
         rospy.Service('/CloseGripper', close, self.CloseGripper)
         rospy.Service('/MoveGripper', TargetAngles, self.MoveGripper)
-        rospy.Service('/IsObjDropped', IsDropped, self.CheckDropped)
+        rospy.Service('/IsObjDropped', IsDropped, self.CheckDroppedSrv)
         rospy.Service('/observation', observation, self.GetObservation)
 
         self.move_servos_srv = rospy.ServiceProxy('/MoveServos', MoveServos)
 
-        #### Later I should remove the angles from hands.py and set initial angles here at the start ####
+        msg = Float32MultiArray()
 
         self.rate = rospy.Rate(100)
         c = True
+        count = 0
         while not rospy.is_shutdown():
             pub_gripper_status.publish(self.gripper_status)
+
+            msg.data = self.obj_pos
+            pub_obj_pos.publish(msg)
+
+            if count > 1000:
+                dr, verbose = self.CheckDropped()
+                pub_drop.publish(dr)
+                # rospy.logerr(verbose)
+            count += 1
 
             if c and not np.all(self.gripper_load==0): # Wait till openhand services ready and set gripper open pose
                 self.moveGripper(self.finger_opening_position)
@@ -179,22 +191,23 @@ class hand_control():
 
         return True
 
-    def CheckDropped(self, msg):
+    def CheckDropped(self):
         # Should spin (update topics) between moveGripper and this
 
-        if self.drop_query:
-            rospy.logerr('[hand] Object dropped.')
-            return {'dropped': True}
+        
 
+        if self.drop_query:
+            verbose = '[hand] Object dropped.'
+            return True, verbose
 
         if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.05 or self.gripper_pos[1] < 0.05:
-            rospy.logerr('[hand] Desired angles out of bounds.')
-            return {'dropped': True}
+            verbose = '[hand] Desired angles out of bounds.'
+            return True, verbose
 
         # Check load
         if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
-            rospy.logerr('[hand] Pre-overload.')
-            return {'dropped': True}
+            verbose = '[hand] Pre-overload.'
+            return True, verbose
 
         # If object marker not visible, loop to verify and declare dropped.
         if self.obj_height == -1000:
@@ -206,10 +219,20 @@ class hand_control():
                     break
                 time.sleep(0.1)
             if dr:
-                rospy.loginfo('[hand] Object not visible - assumed dropped.')
-                return {'dropped': True}
+                verbose = '[hand] Object not visible - assumed dropped.'
+                return True, verbose
         
-        return {'dropped': False}
+        return False, ''
+
+    def CheckDroppedSrv(self, msg):
+
+        dr, verbose = self.CheckDropped()
+        
+        if len(verbose) > 0:
+            rospy.logerr(verbose)
+
+        return {'dropped': dr}
+
 
     def GetObservation(self, msg):
         obs = np.concatenate((self.obj_pos, self.gripper_load))

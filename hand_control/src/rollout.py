@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import String, Float32MultiArray
+from std_msgs.msg import String, Float32MultiArray, Bool
 from std_srvs.srv import Empty, EmptyResponse
 from rollout_node.srv import rolloutReq, rolloutReqFile, plotReq, observation, IsDropped, TargetAngles
 from hand_control.srv import RegraspObject, close
@@ -16,6 +16,7 @@ class rollout():
     plot_num = 0
     arm_status = ' '
     trigger = False # Enable collection
+    drop = True
 
     def __init__(self):
         rospy.init_node('rollout_node', anonymous=True)
@@ -29,21 +30,22 @@ class rollout():
         self.move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
         self.arm_reset_srv = rospy.ServiceProxy('/RegraspObject', RegraspObject)
         rospy.Subscriber('/ObjectIsReset', String, self.callbackTrigger)
+        rospy.Subscriber('/hand_control/drop', Bool, self.callbackObjectDrop)
 
         close_srv = rospy.ServiceProxy('/CloseGripper', close)
-        open_srv = rospy.ServiceProxy('/OpenGripper', Empty) 
+        self.open_srv = rospy.ServiceProxy('/OpenGripper', Empty) 
 
         self.state_dim = 4
         self.action_dim = 2
         self.stepSize = 1 
 
         self.rate = rospy.Rate(15) # 15hz
-        while not rospy.is_shutdown():
-            rospy.spin()
+        # while not rospy.is_shutdown():
+        rospy.spin()
 
     def ResetArm(self):
-        if not self.drop_srv().dropped:
-            return
+        # if not self.drop_srv().dropped:
+        #     return
         while 1:
             if not self.trigger and self.arm_status == 'waiting':
                 self.arm_reset_srv()
@@ -70,45 +72,40 @@ class rollout():
         
         # Start episode
         success = True
-        S = []
-        for i in range(A.shape[0]):
+        state = np.array(self.obs_srv().state)
+        S = [state]
+        for action in A:
             # Get observation and choose action
-            state = np.array(self.obs_srv().state)
+            state = 
             action = A[i,:]
             print action
 
-            S.append(state)
-            
-            suc = True
-            state_tmp = state
-            for _ in range(self.stepSize):
-                suct = self.move_srv(action).success
+            suc = self.move_srv(action).success
 
-                next_state = np.array(self.obs_srv().state)
-                self.rollout_transition += [(state_tmp, action, next_state, not suct or self.drop_srv().dropped)]
-                state_tmp = next_state
-
-                self.rate.sleep()
-                if not suct:
-                    suc = False
+            next_state = np.array(self.obs_srv().state)
 
             # Get observation
             next_state = np.array(self.obs_srv().state)
 
             if suc:
-                fail = self.drop_srv().dropped # Check if dropped - end of episode
+                fail = self.drop # self.drop_srv().dropped # Check if dropped - end of episode
             else:
                 # End episode if overload or angle limits reached
                 rospy.logerr('[rollout] Failed to move gripper. Episode declared failed.')
                 fail = True
 
+            self.rollout_transition += [(state, action, next_state, not suct or fail)]
             state = np.copy(next_state)
+            S.append(state)
 
             if not suc or fail:
                 print("[rollout] Fail")
-                S.append(state)
                 success = False
                 break
+
+            self.rate.sleep()
+
+        self.open_srv()
 
         file_pi = open('/home/pracsys/catkin_ws/src/hand_control/plans/rollout_output.pkl', 'wb')
         pickle.dump(self.rollout_transition, file_pi)
@@ -117,6 +114,9 @@ class rollout():
         print("[rollout] Rollout done.")
 
         return np.array(S), success
+
+    def callbackObjectDrop(self, msg):
+        self.drop = msg.data
 
     def callbackTrigger(self, msg):
         self.arm_status = msg.data

@@ -10,22 +10,22 @@ import scipy.signal
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/'
 
-    def __init__(self, Load=True, discrete = True):
+    def __init__(self, Load=True, discrete = True, postfix=''):
 
         if discrete:
             self.mode = 'd' # Discrete actions
         else:
             self.mode = 'c' # Continuous actions
         
-        self.file_name = self.path + 'raw_35_' + self.mode + '_v1.obj'
+        self.file_name = self.path + 'raw_35_' + self.mode + '_v3' + postfix + '.obj'
 
         if Load:
             self.load()
         else:
             self.clear()
         
-    def add(self, state, action, next_state, done, dt):
-        self.memory += [(state, action, next_state, done, dt)]
+    def add(self, state, action, next_state, done):
+        self.memory += [(state, action, next_state, done)]
         
     def clear(self):
         self.memory = []
@@ -65,20 +65,22 @@ class transition_experience():
         states = np.array(states)
         failed_states = states[done]
 
+        # print self.memory
+
         plt.figure(1)
-        ax1 = plt.subplot(111)
+        ax1 = plt.subplot(121)
         # ax1.plot(states[:,0],states[:,1],'-k')
         ax1.plot(states[:,0],states[:,1],'.y')
         ax1.plot(failed_states[:,0],failed_states[:,1],'.r')
         ax1.set(title='Object position')
         ax1.axis('equal')
-        plt.ylim((0.06, 0.12))
-        plt.xlim((-0.03, 0.11))
+        # plt.ylim((0.06, 0.12))
+        # plt.xlim((-0.03, 0.11))
         
-        # ax2 = plt.subplot(122)
-        # ax2.plot(states[:,2],states[:,3],'.k')
-        # ax2.plot(failed_states[:,2],failed_states[:,3],'.r')
-        # ax2.set(title='Actuator loads')
+        ax2 = plt.subplot(122)
+        ax2.plot(states[:,2],states[:,3],'.k')
+        ax2.plot(failed_states[:,2],failed_states[:,3],'.r')
+        ax2.set(title='Actuator loads')
         
         plt.show()
 
@@ -184,6 +186,10 @@ class transition_experience():
 
         self.state_dim = states.shape[1]
 
+        for i in range(done.shape[0]):
+            if done[i]:
+                done[i-2:i] = True
+
         D = np.concatenate((states, actions, next_states), axis = 1)
         D, done = clean(D, done)
 
@@ -206,16 +212,12 @@ class transition_experience():
 
         D = smooth(D, done)
 
-        for i in range(done.shape[0]):
-            if done[i]:
-                done[i-2:i] = True
-
         if stepSize > 1:
             D = multiStep(D, done, stepSize)
 
-        # inx = np.where(done)
-        # D = np.delete(D, inx, 0) # Remove drop transitions
-        # done = np.delete(done, inx, 0)
+        inx = np.where(done)
+        D = np.delete(D, inx, 0) # Remove drop transitions
+        done = np.delete(done, inx, 0)
               
         self.D = D
 
@@ -230,8 +232,8 @@ class transition_experience():
         # plt.show()
         # exit(1)
 
-        savemat(self.path + 't42_35_data_discrete_v0_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
-        savemat('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_data_discrete_v0_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
+        savemat(self.path + 't42_35_data_discrete_v3_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
+        savemat('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_data_discrete_v3_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
         print "Saved mat file with " + str(D.shape[0]) + " transition points."
 
         if plot:
@@ -282,13 +284,13 @@ class transition_experience():
         inx_fail = np.where(done)[0]
         print "Number of failed states " + str(inx_fail.shape[0])
         T = np.where(np.logical_not(done))[0]
-        inx_suc = T[np.random.choice(T.shape[0], 3000, replace=False)]
+        inx_suc = T[np.random.choice(T.shape[0], 5000, replace=False)]
         SA = np.concatenate((SA[inx_fail], SA[inx_suc]), axis=0)
         done = np.concatenate((done[inx_fail], done[inx_suc]), axis=0)
 
-        with open(self.path + 't42_35_svm_data_' + self.mode + '_v0_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
+        with open(self.path + 't42_35_svm_data_' + self.mode + '_v3_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
             pickle.dump([SA, done], f)
-        with open('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_svm_data_' + self.mode + '_v0_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
+        with open('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_svm_data_' + self.mode + '_v3_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
             pickle.dump([SA, done], f)
         # savemat(self.path + 't42_35_svm_data_' + self.mode + '_v0_d4_m' + str(stepSize) + '.mat', {'SA': SA, 'done': done})
         print('Saved svm data.')

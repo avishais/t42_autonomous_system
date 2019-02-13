@@ -4,15 +4,13 @@ import rospy
 import numpy as np
 import time
 import random
-from std_msgs.msg import String, Float32MultiArray
+from std_msgs.msg import String, Float32MultiArray, Bool
 from std_srvs.srv import Empty, EmptyResponse
 from hand_control.srv import observation, IsDropped, TargetAngles, RegraspObject, close
 from transition_experience import *
 # from common_msgs_gl.srv import SendBool, SendDoubleArray
 import glob
 from bowen_pose_estimate.srv import recordHandPose
-
-collect_mode = 'auto' # 'manual' or 'auto' or 'plan'
 
 class collect_data():
 
@@ -25,6 +23,7 @@ class collect_data():
     num_episodes = 0
     episode_length = 100000 # !!!
     desired_action = np.array([0.,0.])
+    drop = True
 
     A = np.array([[1.0,1.0],[-1.,-1.],[-1.,1.],[1.,-1.],[1.5,0.],[-1.5,0.],[0.,-1.5],[0.,1.5]])
 
@@ -34,7 +33,7 @@ class collect_data():
         rospy.init_node('collect_data', anonymous=True)
 
         rospy.Subscriber('/gripper/gripper_status', String, self.callbackGripperStatus)
-        pub_gripper_action = rospy.Publisher('/gripper_action', Float32MultiArray, queue_size=10)
+        pub_gripper_action = rospy.Publisher('/collect/action', Float32MultiArray, queue_size=10)
         rospy.Service('/collect/trigger_episode', Empty, self.callbackManualTrigger)
         obs_srv = rospy.ServiceProxy('/observation', observation)
         drop_srv = rospy.ServiceProxy('/IsObjDropped', IsDropped)
@@ -42,20 +41,21 @@ class collect_data():
         rospy.Subscriber('/ObjectIsReset', String, self.callbackTrigger)
         arm_reset_srv = rospy.ServiceProxy('/RegraspObject', RegraspObject)
         record_srv = rospy.ServiceProxy('/record_hand_pose', recordHandPose)
-        # allow_motion_srv = rospy.ServiceProxy('/gripper_t42/allow_motion', SendBool)
-        # vel_ref_srv = rospy.ServiceProxy('/gripper_t42/vel_ref', SendDoubleArray)
-        # reset_motor_pos_srv = rospy.ServiceProxy('/gripper_t42/reset_motor_pos_ref', Empty)
+        rospy.Subscriber('/hand_control/drop', Bool, self.callbackObjectDrop)
+        recorder_srv = rospy.ServiceProxy('/actor/trigger', Empty)
 
+        collect_mode = 'auto' # 'manual' or 'auto' or 'plan'
+        
         if collect_mode == 'manual':
             rospy.Subscriber('/keyboard/desired_action', Float32MultiArray, self.callbackDesiredAction)
             ResetKeyboard_srv = rospy.ServiceProxy('/ResetKeyboard', Empty)
 
-        if collect_mode == 'plan':
-            filest = glob.glob('/home/pracsys/catkin_ws/src/hand_control/plans/*.txt')
-            files = []
-            for f in filest:
-                if f.find('traj') == -1:
-                    files.append(f)
+        # if collect_mode == 'plan':
+        # filest = glob.glob('/home/pracsys/catkin_ws/src/hand_control/plans/*.txt')
+        # files = []
+        # for f in filest:
+        #     if f.find('traj') == -1:
+        #         files.append(f)
         
         close_srv = rospy.ServiceProxy('/CloseGripper', close)
         open_srv = rospy.ServiceProxy('/OpenGripper', Empty) 
@@ -74,6 +74,12 @@ class collect_data():
         while not rospy.is_shutdown():
 
             if self.global_trigger:
+
+                if np.random.uniform() > 0.5:
+                    collect_mode = 'plan'
+                    files = glob.glob('/home/pracsys/catkin_ws/src/hand_control/plans/*.txt')
+                else:
+                    collect_mode = 'auto'
 
                 if not self.trigger and self.arm_status == 'waiting':
                     
@@ -107,62 +113,53 @@ class collect_data():
                     if collect_mode == 'plan':
                         ia = np.random.randint(len(files))
                         print('[rollout] Rolling out file: ' + files[ia])
-                        A = np.loadtxt(files[ia], delimiter = ',', dtype=float)[:,:2]
-                        self.episode_length = A.shape[0]
-
+                        Af = np.loadtxt(files[ia], delimiter = ',', dtype=float)[:,:2]
+                    # self.episode_length = A.shape[0]
+                    
                     # Start episode
+                    recorder_srv()
+                    n = 0
+                    action = np.array([0.,0.])
+                    state = np.array(obs_srv().state)
                     for ep_step in range(self.episode_length):
-                        # Get observation and choose action
-                        state = np.array(obs_srv().state)
+
+                        if collect_mode == 'plan' and Af.shape[0] == ep_step: # Finished planned path and now applying random actions
+                            collect_mode == 'auto'
                         
-                        if collect_mode == 'auto':
-                            action = self.choose_action()
-                            if ep_step==0:#np.random.uniform() > 0.7:
-                                n = np.random.randint(100)
+                        if n == 0:
+                            if collect_mode == 'auto':
+                                action, n = self.choose_action()
+                            elif collect_mode == 'manual':
+                                action = self.desired_action
+                                n = 1
                             else:
-                                if np.random.uniform() > 0.6:
-                                    n = np.random.randint(150)
-                                else:
-                                    n = np.random.randint(40)
-                        elif collect_mode == 'manual':
-                            action = self.desired_action
-                            n = 1
-                        else:
-                            n = 1
-                            action = A[ep_step, :]                            
+                                n = 1
+                                action = Af[ep_step, :]                            
                         print action
                         
-                        for _ in range( n ):
-                            tr = rospy.get_time()
-                            
-                            # msg.data = action
-                            # pub_gripper_action.publish(msg)
-                            suc = move_srv(action).success
-                            # rospy.sleep(0.05)
-                            rate.sleep()
+                        msg.data = action
+                        pub_gripper_action.publish(msg)
+                        suc = move_srv(action).success
+                        n -= 1
 
-                            # Get observation
-                            next_state = np.array(obs_srv().state)
+                        # Get observation
+                        next_state = np.array(obs_srv().state)
 
-                            if suc:
-                                fail = drop_srv().dropped # Check if dropped - end of episode
-                            else:
-                                # End episode if overload or angle limits reached
-                                rospy.logerr('[collect_data] Failed to move gripper. Episode declared failed.')
-                                fail = True
+                        if suc:
+                            fail = self.drop # drop_srv().dropped # Check if dropped - end of episode
+                        else:
+                            # End episode if overload or angle limits reached
+                            rospy.logerr('[collect_data] Failed to move gripper. Episode declared failed.')
+                            fail = True
 
-                            if not suc or fail:
-                                next_state = np.copy(state)
+                        self.texp.add(state, action, next_state, not suc or fail)
+                        state = np.copy(next_state)
 
-                            self.texp.add(state, action, next_state, not suc or fail, rospy.get_time()-tr)
-                            state = np.copy(next_state)
-
-                            if not suc or fail:
-                                Done = True
-                                break
-                        if Done:
-                            open_srv()
+                        if not suc or fail:
+                            Done = True
                             break
+                        
+                        rate.sleep()
 
                     open_srv()
 
@@ -170,14 +167,12 @@ class collect_data():
                     print('[collect_data] Finished running episode %d with total number of collected points: %d' % (self.num_episodes, self.texp.getSize()))
                     print('[collect_data] Waiting for next episode initialization...')
 
-                    self.texp.save()
-                    # if self.num_episodes > 0 and not (self.num_episodes % 3):
-                    #     self.texp.save()
+                    # self.texp.save()
+                    if self.num_episodes > 0 and not (self.num_episodes % 3):
+                        self.texp.save()
                     # if self.num_episodes > 0 and not (self.num_episodes % 10):
                     #     self.texp.process_transition_data(stepSize = 10, plot = False)
                     #     self.texp.process_svm(stepSize = 10)
-
-            rate.sleep()
 
     def callbackGripperStatus(self, msg):
         self.gripper_closed = msg.data == "closed"
@@ -190,14 +185,31 @@ class collect_data():
     def callbackManualTrigger(self, msg):
         self.global_trigger = not self.global_trigger
 
+    def callbackObjectDrop(self, msg):
+        self.drop = msg.data
+
     def choose_action(self):
         if self.discrete_actions:
             a = self.A[np.random.randint(self.A.shape[0])]
-            if np.random.uniform(0,1,1) > 0.7:
+            if np.random.uniform(0,1,1) > 0.85:
                 if np.random.uniform(0,1,1) > 0.5:
                     a = self.A[0]
                 else:
                     a = self.A[1]
+            elif np.random.uniform(0,1,1) > 0.7:
+                if np.random.uniform(0,1,1) > 0.5:
+                    a = self.A[2]
+                else:
+                    a = self.A[3]
+
+            n = np.random.randint(100)
+            if np.all(a == self.A[0]) or np.all(a == self.A[1]):
+                n = np.random.randint(40)
+            elif np.random.uniform() > 0.6:
+                n = np.random.randint(150)
+            else:
+                n = np.random.randint(40)
+            return a, n
         else:
             a = np.random.uniform(-1.,1.,2)
             if np.random.uniform(0,1,1) > 0.35:
@@ -208,7 +220,7 @@ class collect_data():
                     a[0] = np.random.uniform(0.8,1.,1)
                     a[1] = np.random.uniform(0.8,1.,1)
 
-        return a
+            return a
 
     def callbackDesiredAction(self, msg):
         self.desired_action = msg.data
