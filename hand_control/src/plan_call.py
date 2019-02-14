@@ -30,11 +30,6 @@ class planCall():
                 self.plan_for_goal(self.goals[self.goal_counter])
             rate.sleep()
 
-                # print('[plan_call] Waiting for response from planner...')
-                # if not self.planning_done:
-                #     rate.sleep()
-
-
             
 
 
@@ -45,7 +40,7 @@ class planCall():
         msg.goal_state = goal
         msg.goal_radius = 10.0
         msg.time_limit = 600 #seconds
-        msg.probability_success_threshold = 0.1 #affects SVM validity check 
+        msg.probability_success_threshold = 0.5 #affects SVM validity check 
 
         print('Publishing...')
         self.planning_request_pub.publish(msg)

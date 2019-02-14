@@ -60,12 +60,10 @@ class transition_experience():
 
     def plot_data(self):
 
-        states = [item[0] for item in self.memory]
+        states = np.array([item[0] for item in self.memory])
+        states[:,:2] *= 1000.
         done = [item[3] for item in self.memory]
-        states = np.array(states)
         failed_states = states[done]
-
-        # print self.memory
 
         plt.figure(1)
         ax1 = plt.subplot(121)

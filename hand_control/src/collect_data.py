@@ -75,9 +75,11 @@ class collect_data():
 
             if self.global_trigger:
 
-                if np.random.uniform() > 0.5:
+                if np.random.uniform() > 0.6:
                     collect_mode = 'plan'
-                    files = glob.glob('/home/pracsys/catkin_ws/src/hand_control/plans/*.txt')
+                    files = glob.glob('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/*.txt')
+                    if len(files)==0:
+                        collect_mode = 'auto'
                 else:
                     collect_mode = 'auto'
 
@@ -114,7 +116,6 @@ class collect_data():
                         ia = np.random.randint(len(files))
                         print('[rollout] Rolling out file: ' + files[ia])
                         Af = np.loadtxt(files[ia], delimiter = ',', dtype=float)[:,:2]
-                    # self.episode_length = A.shape[0]
                     
                     # Start episode
                     recorder_srv()
@@ -132,10 +133,10 @@ class collect_data():
                             elif collect_mode == 'manual':
                                 action = self.desired_action
                                 n = 1
-                            else:
+                            else: # 'plan'
                                 n = 1
                                 action = Af[ep_step, :]                            
-                        print action
+                        print action, ep_step
                         
                         msg.data = action
                         pub_gripper_action.publish(msg)

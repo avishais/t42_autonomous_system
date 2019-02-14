@@ -8,7 +8,7 @@ import rospy
 import numpy as np 
 from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool
 from std_srvs.srv import Empty, EmptyResponse
-from openhand.srv import MoveServos
+from openhand.srv import MoveServos, ReadTemperature
 from hand_control.srv import TargetAngles, IsDropped, observation, close
 # from common_msgs_gl.srv import SendDoubleArray, SendBool
 import geometry_msgs.msg
@@ -70,6 +70,7 @@ class hand_control():
         rospy.Service('/observation', observation, self.GetObservation)
 
         self.move_servos_srv = rospy.ServiceProxy('/MoveServos', MoveServos)
+        self.temperature_srv = rospy.ServiceProxy('/ReadTemperature', ReadTemperature)
 
         msg = Float32MultiArray()
 
@@ -122,6 +123,11 @@ class hand_control():
         self.moveGripper(self.finger_opening_position)
 
         self.gripper_status = 'open'
+
+        T = np.array(self.temperature_srv().temp)
+        if np.any(temp > 80.):
+            rospy.logerr('[hand_control] Actuators overheated, shutting down. Disconnect power cord!')
+            rospy.signal_shutdown('[hand_control] Actuators overheated, shutting down. Disconnect power cord!')
 
         return EmptyResponse()
 
@@ -194,15 +200,18 @@ class hand_control():
     def CheckDropped(self):
         # Should spin (update topics) between moveGripper and this
 
-        
-
         if self.drop_query:
             verbose = '[hand] Object dropped.'
             return True, verbose
 
-        if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.05 or self.gripper_pos[1] < 0.05:
-            verbose = '[hand] Desired angles out of bounds.'
-            return True, verbose
+        try:
+            if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.05 or self.gripper_pos[1] < 0.05:
+                verbose = '[hand] Desired angles out of bounds.'
+                return True, verbose
+        except:
+            print('error in gripper pos hand.py')
+            print self.gripper_pos
+            exit(1)
 
         # Check load
         if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
