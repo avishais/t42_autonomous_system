@@ -25,6 +25,7 @@ class hand_control():
 
     gripper_pos = np.array([0., 0.])
     gripper_load = np.array([0., 0.])
+    gripper_temperature = np.array([0., 0.])
     base_pos = [0,0]
     base_theta = 0
     obj_pos = [0,0]
@@ -54,6 +55,7 @@ class hand_control():
 
         rospy.Subscriber('/gripper/pos', Float32MultiArray, self.callbackGripperPos)
         rospy.Subscriber('/gripper/load', Float32MultiArray, self.callbackGripperLoad)
+        rospy.Subscriber('/gripper/temperature', Float32MultiArray, self.callbackGripperTemp)
         rospy.Subscriber('/cylinder_pose', geometry_msgs.msg.Pose, self.callbackMarkers)
         rospy.Subscriber('cylinder_drop', Bool, self.callbackObjectDrop)
         pub_gripper_status = rospy.Publisher('/gripper/gripper_status', String, queue_size=10)
@@ -104,6 +106,9 @@ class hand_control():
 
     def callbackGripperLoad(self, msg):
         self.gripper_load = np.array(msg.data)
+    
+    def callbackGripperTemp(self, msg):
+        self.gripper_temperature = np.array(msg.data)
 
     def callbackMarkers(self, msg):
         try:
@@ -124,15 +129,20 @@ class hand_control():
 
         self.gripper_status = 'open'
 
-        T = np.array(self.temperature_srv().temp)
-        if np.any(temp > 80.):
-            rospy.logerr('[hand_control] Actuators overheated, shutting down. Disconnect power cord!')
-            rospy.signal_shutdown('[hand_control] Actuators overheated, shutting down. Disconnect power cord!')
-
         return EmptyResponse()
 
     def CloseGripper(self, msg):
         # self.vel_ref = np.array([0.,0.,])
+        
+        if np.any(self.gripper_temperature > 55.):
+            rospy.logerr('[hand_control] Actuators overheated, shutting down. Taking a break')
+            # rospy.signal_shutdown('[hand_control] Actuators overheated, shutting down. Disconnect power cord!')
+            while 1:
+                if np.all(self.gripper_temperature < 52.):
+                    break
+                rospy.sleep(60*2)
+                self.rate.sleep()
+
 
         self.object_grasped = False
         for i in range(100):

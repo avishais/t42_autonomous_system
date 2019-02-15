@@ -31,8 +31,6 @@ class planCall():
             rate.sleep()
 
             
-
-
     def plan_for_goal(self, goal):
         
         msg = plan_for_goal_request()

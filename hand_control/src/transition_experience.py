@@ -6,7 +6,6 @@ import matplotlib.pyplot as plt
 from scipy.io import savemat
 import scipy.signal
 
-
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/'
 
@@ -17,7 +16,8 @@ class transition_experience():
         else:
             self.mode = 'c' # Continuous actions
         
-        self.file_name = self.path + 'raw_35_' + self.mode + '_v3' + postfix + '.obj'
+        self.postfix = postfix
+        self.file_name = self.path + 'raw_35_' + self.mode + '_v3' + self.postfix + '.obj'
 
         if Load:
             self.load()
@@ -61,9 +61,12 @@ class transition_experience():
     def plot_data(self):
 
         states = np.array([item[0] for item in self.memory])
-        states[:,:2] *= 1000.
+        # states[:,:2] *= 1000.
         done = [item[3] for item in self.memory]
         failed_states = states[done]
+
+        actions = np.array([item[1] for item in self.memory])
+        print actions
 
         plt.figure(1)
         ax1 = plt.subplot(121)
@@ -180,7 +183,11 @@ class transition_experience():
         actions = np.array([item[1] for item in self.memory])
         next_states = np.array([item[2] for item in self.memory])
         next_states[:,:2] *= 1000.
-        done = np.array([item[3] for item in self.memory])
+        done = np.array([item[3] for item in self.memory]) 
+
+        # For data from recorder
+        if self.postfix == 'bu':
+            next_states = np.roll(states, -1, axis=0) 
 
         self.state_dim = states.shape[1]
 

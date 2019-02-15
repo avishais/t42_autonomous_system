@@ -31,7 +31,7 @@ class actorPubRec():
         rospy.Subscriber('/gripper/load', Float32MultiArray, self.callbackGripperLoad)
         rospy.Subscriber('/hand_control/obj_pos_mm', Float32MultiArray, self.callbackObj)
         rospy.Subscriber('/hand_control/drop', Bool, self.callbackDrop)
-        rospy.Subscriber('/gripper_action', Float32MultiArray, self.callbackAction)
+        rospy.Subscriber('/collect/action', Float32MultiArray, self.callbackAction)
 
         rospy.Service('/actor/trigger', Empty, self.callbackTrigger)
 
