@@ -135,12 +135,12 @@ class hand_control():
         # self.vel_ref = np.array([0.,0.,])
         
         if np.any(self.gripper_temperature > 55.):
-            rospy.logerr('[hand_control] Actuators overheated, shutting down. Taking a break')
+            rospy.logerr('[hand_control] Actuators overheated, taking a break...')
             # rospy.signal_shutdown('[hand_control] Actuators overheated, shutting down. Disconnect power cord!')
             while 1:
-                if np.all(self.gripper_temperature < 52.):
+                if np.all(self.gripper_temperature < 50.):
                     break
-                rospy.sleep(60*2)
+                # rospy.sleep(60*2)
                 self.rate.sleep()
 
 

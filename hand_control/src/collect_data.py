@@ -35,6 +35,8 @@ class collect_data():
         rospy.Subscriber('/gripper/gripper_status', String, self.callbackGripperStatus)
         pub_gripper_action = rospy.Publisher('/collect/action', Float32MultiArray, queue_size=10)
         rospy.Service('/collect/trigger_episode', Empty, self.callbackManualTrigger)
+        rospy.Service('/collect/save', Empty, self.callbackSave)
+        self.recorderSave_srv = rospy.ServiceProxy('/actor/save', Empty)
         obs_srv = rospy.ServiceProxy('/observation', observation)
         drop_srv = rospy.ServiceProxy('/IsObjDropped', IsDropped)
         move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
@@ -75,13 +77,14 @@ class collect_data():
 
             if self.global_trigger:
 
-                if np.random.uniform() > 0.6:
-                    collect_mode = 'plan'
-                    files = glob.glob('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/*.txt')
-                    if len(files)==0:
+                if collect_mode != 'manual':
+                    if np.random.uniform() > 0.6:
+                        collect_mode = 'plan'
+                        files = glob.glob('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/*.txt')
+                        if len(files)==0:
+                            collect_mode = 'auto'
+                    else:
                         collect_mode = 'auto'
-                else:
-                    collect_mode = 'auto'
 
                 if not self.trigger and self.arm_status == 'waiting':
                     
@@ -205,11 +208,11 @@ class collect_data():
 
             n = np.random.randint(100)
             if np.all(a == self.A[0]) or np.all(a == self.A[1]):
-                n = np.random.randint(40)
-            elif np.random.uniform() > 0.6:
-                n = np.random.randint(150)
+                n = np.random.randint(60)
+            elif np.random.uniform() > 0.7:
+                n = np.random.randint(250)
             else:
-                n = np.random.randint(40)
+                n = np.random.randint(60)
             return a, n
         else:
             a = np.random.uniform(-1.,1.,2)
@@ -225,6 +228,10 @@ class collect_data():
 
     def callbackDesiredAction(self, msg):
         self.desired_action = msg.data
+
+    def callbackSave(self, msg):
+        self.texp.save()
+        self.recorderSave_srv()
 
 if __name__ == '__main__':
     

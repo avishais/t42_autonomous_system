@@ -34,6 +34,7 @@ class actorPubRec():
         rospy.Subscriber('/collect/action', Float32MultiArray, self.callbackAction)
 
         rospy.Service('/actor/trigger', Empty, self.callbackTrigger)
+        rospy.Service('/actor/save', Empty, self.callbackSave)
 
         rate = rospy.Rate(15)
         count = 1
@@ -69,6 +70,9 @@ class actorPubRec():
         self.running = not self.running
 
         return EmptyResponse()
+
+    def callbackSave(self, msg):
+        self.texp.save()
 
 
 if __name__ == '__main__':

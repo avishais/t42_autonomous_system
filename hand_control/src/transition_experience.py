@@ -65,8 +65,8 @@ class transition_experience():
         done = [item[3] for item in self.memory]
         failed_states = states[done]
 
-        actions = np.array([item[1] for item in self.memory])
-        print actions
+        # actions = np.array([item[1] for item in self.memory])
+        # print actions
 
         plt.figure(1)
         ax1 = plt.subplot(121)
@@ -252,6 +252,24 @@ class transition_experience():
     
     def process_svm(self, stepSize = 1):
 
+        def clean_done(states, done):
+            # Cancel drop mark if episode is very short
+            i = 0
+            while i < states.shape[0]-1:
+                j = i + 1
+                while j < states.shape[0] and not done[j]:
+                    j +=1
+                if done[j] and j-i < 10:
+                    done[j] = False 
+                i = j
+
+            # Cancel drop if load is not critical
+            for i in range(states.shape[0]):
+                if done[i] and np.all(np.abs(states[i, 2:]) < 260) and np.all(np.abs(states[i, 2:]) > 40):
+                    done[i] = False
+
+            return done
+
         def multiStep(D, done, stepSize): 
             Dnew = []
             done_new = []
@@ -278,6 +296,8 @@ class transition_experience():
         actions = np.array([item[1] for item in self.memory])
         done = np.array([item[3] for item in self.memory])
 
+        done = clean_done(states, done)
+
         for i in range(done.shape[0]):
             if done[i]:
                 done[i-2:i] = True
@@ -289,7 +309,7 @@ class transition_experience():
         inx_fail = np.where(done)[0]
         print "Number of failed states " + str(inx_fail.shape[0])
         T = np.where(np.logical_not(done))[0]
-        inx_suc = T[np.random.choice(T.shape[0], 5000, replace=False)]
+        inx_suc = T[np.random.choice(T.shape[0], 2000, replace=False)]
         SA = np.concatenate((SA[inx_fail], SA[inx_suc]), axis=0)
         done = np.concatenate((done[inx_fail], done[inx_suc]), axis=0)
 
