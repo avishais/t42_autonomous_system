@@ -36,12 +36,12 @@ class actorPubRec():
         rospy.Service('/actor/trigger', Empty, self.callbackTrigger)
         rospy.Service('/actor/save', Empty, self.callbackSave)
 
-        rate = rospy.Rate(15)
+        rate = rospy.Rate(2.5)
         count = 1
         while not rospy.is_shutdown():
 
             if self.running:
-                count += 1
+                #count += 1
 
                 self.state = np.concatenate((self.obj_pos, self.gripper_load), axis=0)
                 self.texp.add(self.state, self.action, self.state, self.drop)
@@ -49,8 +49,8 @@ class actorPubRec():
                 if self.drop:
                     print('[actor_record] Episode ended (%d points so far).' % self.texp.getSize())
                     self.running = False
-                    if not (count % 3):
-                        self.texp.save()
+                    #if not (count % 3):
+                    #    self.texp.save()
 
             rate.sleep()
 
@@ -73,6 +73,8 @@ class actorPubRec():
 
     def callbackSave(self, msg):
         self.texp.save()
+
+        return EmptyResponse()
 
 
 if __name__ == '__main__':

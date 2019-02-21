@@ -71,18 +71,18 @@ class collect_data():
 
         print('[collect_data] Ready to collect...')
 
-        rate = rospy.Rate(15) # 15hz
+        rate = rospy.Rate(2.5) # 15hz
         count_fail = 0
         while not rospy.is_shutdown():
 
             if self.global_trigger:
 
                 if collect_mode != 'manual':
-                    if np.random.uniform() > 0.6:
+                    if np.random.uniform() > 0.4:
                         collect_mode = 'plan'
-                        files = glob.glob('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/*.txt')
-                        if len(files)==0:
-                            collect_mode = 'auto'
+                        # files = glob.glob('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/*.txt')
+                        # if len(files)==0:
+                        #     collect_mode = 'auto'
                     else:
                         collect_mode = 'auto'
 
@@ -103,6 +103,7 @@ class collect_data():
                     if drop_srv().dropped: # Check if really grasped
                         self.trigger = False
                         print('[collect_data] Grasp failed. Restarting')
+                        open_srv()
                         count_fail += 1
                         if count_fail == 60:
                             self.global_trigger = False
@@ -116,9 +117,14 @@ class collect_data():
                     Done = False
 
                     if collect_mode == 'plan':
-                        ia = np.random.randint(len(files))
-                        print('[rollout] Rolling out file: ' + files[ia])
-                        Af = np.loadtxt(files[ia], delimiter = ',', dtype=float)[:,:2]
+                        # ia = np.random.randint(len(files))
+                        # print('[collect_data] Rolling out file: ' + files[ia])
+                        # Af = np.loadtxt(files[ia], delimiter = ',', dtype=float)[:,:2]
+                        print('[collect_data] Rolling out shooting.')
+                        if np.random.uniform() > 0.5:
+                            Af = np.tile(np.array([-1.,1.]), (np.random.randint(40,170), 1))
+                        else:
+                            Af = np.tile(np.array([1.,-1.]), (np.random.randint(40,170), 1))
                     
                     # Start episode
                     recorder_srv()
@@ -128,7 +134,8 @@ class collect_data():
                     for ep_step in range(self.episode_length):
 
                         if collect_mode == 'plan' and Af.shape[0] == ep_step: # Finished planned path and now applying random actions
-                            collect_mode == 'auto'
+                            collect_mode = 'auto'
+                            print('[collect_data] Running random actions...')
                         
                         if n == 0:
                             if collect_mode == 'auto':
@@ -165,18 +172,25 @@ class collect_data():
                         
                         rate.sleep()
 
-                    open_srv()
+                    # resp = open_srv()
+                    # try:
+                    #     rospy.wait_for_service('/OpenGripper', 5.0)
+                    #     resp = open_srv()
+                    # except (rospy.ServiceException, rospy.ROSException), e:
+                    #     rospy.logerr("Service call failed: %s" % (e,))
+                    #     return 1
+                    
 
                     self.trigger = False
                     print('[collect_data] Finished running episode %d with total number of collected points: %d' % (self.num_episodes, self.texp.getSize()))
                     print('[collect_data] Waiting for next episode initialization...')
 
-                    # self.texp.save()
-                    if self.num_episodes > 0 and not (self.num_episodes % 3):
+                    if self.num_episodes > 0 and not (self.num_episodes % 10):
+                        open_srv()
                         self.texp.save()
-                    # if self.num_episodes > 0 and not (self.num_episodes % 10):
-                    #     self.texp.process_transition_data(stepSize = 10, plot = False)
-                    #     self.texp.process_svm(stepSize = 10)
+                        self.recorderSave_srv()
+                        if (self.num_episodes % 50):
+                            rospy.sleep(180)
 
     def callbackGripperStatus(self, msg):
         self.gripper_closed = msg.data == "closed"
@@ -206,13 +220,13 @@ class collect_data():
                 else:
                     a = self.A[3]
 
-            n = np.random.randint(100)
+            n = np.random.randint(150)
             if np.all(a == self.A[0]) or np.all(a == self.A[1]):
-                n = np.random.randint(60)
+                n = np.random.randint(70)
             elif np.random.uniform() > 0.7:
-                n = np.random.randint(250)
+                n = np.random.randint(300)
             else:
-                n = np.random.randint(60)
+                n = np.random.randint(100)
             return a, n
         else:
             a = np.random.uniform(-1.,1.,2)

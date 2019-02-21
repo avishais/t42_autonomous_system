@@ -17,7 +17,7 @@ class transition_experience():
             self.mode = 'c' # Continuous actions
         
         self.postfix = postfix
-        self.file_name = self.path + 'raw_35_' + self.mode + '_v3' + self.postfix + '.obj'
+        self.file_name = self.path + 'raw_35_' + self.mode + '_v4' + self.postfix + '.obj'
 
         if Load:
             self.load()
@@ -62,11 +62,8 @@ class transition_experience():
 
         states = np.array([item[0] for item in self.memory])
         # states[:,:2] *= 1000.
-        done = [item[3] for item in self.memory]
+        done = np.array([item[3] for item in self.memory])
         failed_states = states[done]
-
-        # actions = np.array([item[1] for item in self.memory])
-        # print actions
 
         plt.figure(1)
         ax1 = plt.subplot(121)

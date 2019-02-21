@@ -11,7 +11,7 @@
     <rosparam command="load" file="$(find hand_control)/param/control_red.yaml" />
   </node> -->
 
-  <node name="gripper_state_publisher" pkg="gripper_state_publisher" type="gripper_state_publisher_node"/>
+  <node name="gripper_state_publisher" pkg="gripper_state_publisher" type="gripper_state_publisher_node" output="screen"/>
 
   <node pkg="hand_control" name="hand_control" type="hand.py" output="screen">
         <rosparam command="load" file="$(find hand_control)/param/control_red.yaml" />

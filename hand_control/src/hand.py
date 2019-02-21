@@ -125,7 +125,7 @@ class hand_control():
     def OpenGripper(self, msg):
         # self.vel_ref = np.array([0.,0.,])
         # self.allow_motion_srv(False)
-        self.moveGripper(self.finger_opening_position)
+        self.moveGripper(self.finger_opening_position, open=True)
 
         self.gripper_status = 'open'
 
@@ -134,11 +134,11 @@ class hand_control():
     def CloseGripper(self, msg):
         # self.vel_ref = np.array([0.,0.,])
         
-        if np.any(self.gripper_temperature > 55.):
+        if np.any(self.gripper_temperature > 52.):
             rospy.logerr('[hand_control] Actuators overheated, taking a break...')
             # rospy.signal_shutdown('[hand_control] Actuators overheated, shutting down. Disconnect power cord!')
             while 1:
-                if np.all(self.gripper_temperature < 50.):
+                if np.all(self.gripper_temperature < 45.):
                     break
                 # rospy.sleep(60*2)
                 self.rate.sleep()
@@ -194,14 +194,15 @@ class hand_control():
 
         return {'success': suc}
     
-    def moveGripper(self, angles):
-        if angles[0] > 0.9 or angles[1] > 0.9 or angles[0] < 0.05 or angles[1] < 0.05:
-            rospy.logerr('[hand] Move Failed. Desired angles out of bounds.')
-            return False
+    def moveGripper(self, angles, open=False):
+        if not open:
+            if angles[0] > 0.9 or angles[1] > 0.9 or angles[0] < 0.05 or angles[1] < 0.05:
+                rospy.logerr('[hand] Move Failed. Desired angles out of bounds.')
+                return False
 
-        if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
-            rospy.logerr('[hand] Move failed. Pre-overload.')
-            return False
+            if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
+                rospy.logerr('[hand] Move failed. Pre-overload.')
+                return False
 
         self.move_servos_srv.call(angles)
 
@@ -214,14 +215,9 @@ class hand_control():
             verbose = '[hand] Object dropped.'
             return True, verbose
 
-        try:
-            if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.05 or self.gripper_pos[1] < 0.05:
-                verbose = '[hand] Desired angles out of bounds.'
-                return True, verbose
-        except:
-            print('error in gripper pos hand.py')
-            print self.gripper_pos
-            exit(1)
+        if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.05 or self.gripper_pos[1] < 0.05:
+            verbose = '[hand] Desired angles out of bounds.'
+            return True, verbose
 
         # Check load
         if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
