@@ -144,10 +144,12 @@ class hand_control():
                 self.rate.sleep()
 
 
+        closed_load = np.random.randint(70, self.closed_load+30) # !!!!!! Remember to change
+
         self.object_grasped = False
         for i in range(100):
             # print('Angles: ' + str(self.gripper_pos) + ', load: ' + str(self.gripper_load), self.closed_load)
-            if abs(self.gripper_load[0]) > self.closed_load or abs(self.gripper_load[1]) > self.closed_load:
+            if abs(self.gripper_load[0]) > closed_load or abs(self.gripper_load[1]) > closed_load:
                 rospy.loginfo('[hand] Object grasped.')
                 self.gripper_status = 'closed'
                 break

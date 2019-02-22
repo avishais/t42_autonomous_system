@@ -234,8 +234,8 @@ class transition_experience():
         # plt.show()
         # exit(1)
 
-        savemat(self.path + 't42_35_data_discrete_v3_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
-        savemat('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_data_discrete_v3_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
+        savemat(self.path + 't42_35_data_discrete_v4_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
+        savemat('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_data_discrete_v4_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
         print "Saved mat file with " + str(D.shape[0]) + " transition points."
 
         if plot:
@@ -263,7 +263,8 @@ class transition_experience():
             # Cancel drop if load is not critical
             for i in range(states.shape[0]):
                 if done[i] and np.all(np.abs(states[i, 2:]) < 260) and np.all(np.abs(states[i, 2:]) > 40):
-                    done[i] = False
+                    if np.random.uniform() > 0.5:
+                        done[i] = False
 
             return done
 
@@ -306,13 +307,13 @@ class transition_experience():
         inx_fail = np.where(done)[0]
         print "Number of failed states " + str(inx_fail.shape[0])
         T = np.where(np.logical_not(done))[0]
-        inx_suc = T[np.random.choice(T.shape[0], 2000, replace=False)]
+        inx_suc = T[np.random.choice(T.shape[0], inx_fail.shape[0], replace=False)]
         SA = np.concatenate((SA[inx_fail], SA[inx_suc]), axis=0)
         done = np.concatenate((done[inx_fail], done[inx_suc]), axis=0)
 
-        with open(self.path + 't42_35_svm_data_' + self.mode + '_v3_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
+        with open(self.path + 't42_35_svm_data_' + self.mode + '_v4_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
             pickle.dump([SA, done], f)
-        with open('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_svm_data_' + self.mode + '_v3_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
+        with open('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_svm_data_' + self.mode + '_v4_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
             pickle.dump([SA, done], f)
         # savemat(self.path + 't42_35_svm_data_' + self.mode + '_v0_d4_m' + str(stepSize) + '.mat', {'SA': SA, 'done': done})
         print('Saved svm data.')

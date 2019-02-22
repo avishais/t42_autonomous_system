@@ -78,7 +78,7 @@ class collect_data():
             if self.global_trigger:
 
                 if collect_mode != 'manual':
-                    if np.random.uniform() > 0.4:
+                    if np.random.uniform() > 0.2:
                         collect_mode = 'plan'
                         # files = glob.glob('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/*.txt')
                         # if len(files)==0:
@@ -135,6 +135,7 @@ class collect_data():
 
                         if collect_mode == 'plan' and Af.shape[0] == ep_step: # Finished planned path and now applying random actions
                             collect_mode = 'auto'
+                            n = 0
                             print('[collect_data] Running random actions...')
                         
                         if n == 0:
@@ -189,8 +190,10 @@ class collect_data():
                         open_srv()
                         self.texp.save()
                         self.recorderSave_srv()
-                        if (self.num_episodes % 50):
+                        if (self.num_episodes % 50 == 0):
+                            print('[collect_data] Cooling down.')
                             rospy.sleep(180)
+
 
     def callbackGripperStatus(self, msg):
         self.gripper_closed = msg.data == "closed"
@@ -220,13 +223,13 @@ class collect_data():
                 else:
                     a = self.A[3]
 
-            n = np.random.randint(150)
-            if np.all(a == self.A[0]) or np.all(a == self.A[1]):
-                n = np.random.randint(70)
-            elif np.random.uniform() > 0.7:
-                n = np.random.randint(300)
-            else:
-                n = np.random.randint(100)
+            n = np.random.randint(60)
+            # if np.all(a == self.A[0]) or np.all(a == self.A[1]):
+            #     n = np.random.randint(70)
+            # elif np.random.uniform() > 0.7:
+            #     n = np.random.randint(300)
+            # else:
+            #     n = np.random.randint(100)
             return a, n
         else:
             a = np.random.uniform(-1.,1.,2)
