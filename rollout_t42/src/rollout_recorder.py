@@ -9,7 +9,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 
-
 class rolloutRecorder():
 
     gripper_load = np.array([0., 0.])
@@ -31,7 +30,7 @@ class rolloutRecorder():
         rospy.Service('/rollout/record_trigger', SetBool, self.callbackTrigger)
         rospy.Service('/rollout/get_states', gets, self.get_states)
 
-        self.rate = rospy.Rate(1) # 15hz
+        self.rate = rospy.Rate(10) # 15hz
         while not rospy.is_shutdown():
 
             if self.running:
@@ -41,8 +40,15 @@ class rolloutRecorder():
                 self.A.append(self.action)
                 
                 if self.drop:
-                    print('[rollout_recorder] Episode ended.')
-                    self.running = False
+                    success = True#self.drop # drop_srv().dropped # Check if dropped - end of episode
+                    c = 0
+                    while self.drop:
+                        if c == 10:
+                            print('[rollout_recorder] Episode ended.')
+                            self.running = False
+                            break
+                        c += 1
+                        self.rate.sleep()
 
             self.rate.sleep()
 
@@ -68,9 +74,8 @@ class rolloutRecorder():
 
     def get_states(self, msg):
         # S = self.medfilter(np.array(self.S), 20)
-        S = np.array(self.S)
 
-        return {'states': S.reshape((-1,)), 'actions': np.array(self.A).reshape((-1,))}
+        return {'states': np.array(self.S).reshape((-1,)), 'actions': np.array(self.A).reshape((-1,))}
 
     def medfilter(self, x, W):
         print('[rollout_recorder] Smoothing data...')

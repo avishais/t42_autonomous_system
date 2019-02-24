@@ -9,7 +9,7 @@
   <node pkg="hand_control" name="actor_record" type="actor_record.py" output="screen"/>
 
   <node pkg="rosbag" type="record" name="rosbag_record_data"
-       args="record -O /home/pracsys/catkin_ws/src/t42_control/hand_control/data/bag_v4_3 /hand_control/obj_pos_mm /gripper/load /collect/action /hand_control/drop"
+       args="record -O /home/pracsys/catkin_ws/src/t42_control/hand_control/data/bag_v4_4 /hand_control/obj_pos_mm /gripper/load /collect/action /hand_control/drop"
        if="$(arg recordData)" />
 
 </launch>

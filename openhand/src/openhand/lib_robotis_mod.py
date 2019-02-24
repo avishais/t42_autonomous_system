@@ -50,7 +50,7 @@ import registerDict
 class USB2Dynamixel_Device():
     ''' Class that manages serial port contention between servos on same bus
     '''
-    def __init__( self, dev_name = '/dev/ttyUSB0', baudrate = 2000000):
+    def __init__( self, dev_name = '/dev/ttyUSB0', baudrate = 57600):
         try:
             self.dev_name = string.atoi( dev_name ) # stores the serial port as 0-based integer for Windows
         except:
@@ -899,7 +899,7 @@ def recover_servo(dyn):
     raw_input('Make sure only one servo connected to USB2Dynamixel Device [ENTER]')
     raw_input('Disconnect power from the servo, but leave USB2Dynamixel connected to USB. [ENTER]')
 
-    #dyn.servo_dev.setBaudrate( 2000000 )
+    #dyn.servo_dev.setBaudrate( 57600 )
 
     print 'Get Ready.  Be ready to reconnect servo power when I say \'GO!\''
     print 'After a second, the red LED should become permanently lit.'
@@ -908,7 +908,7 @@ def recover_servo(dyn):
     print 'Then, you will need to use a serial terminal to issue additional commands.',
     print 'Here is an example using screen as serial terminal:'
     print
-    print 'Command Line:  screen /dev/robot/servo_left 2000000'
+    print 'Command Line:  screen /dev/robot/servo_left 57600'
     print 'Type: \'h\''
     print 'Response: Command : L(oad),G(o),S(ystem),A(pplication),R(eset),D(ump),C(lear)'
     print 'Type: \'C\''
@@ -944,7 +944,7 @@ if __name__ == '__main__':
     p.add_option('--id', action='store', type='int', dest='id',
                  help='id of servo to connect to, [default = 1]', default=1)
     p.add_option('--baud', action='store', type='int', dest='baud',
-                 help='baudrate for USB2Dynamixel connection [default = 2000000]', default=2000000)
+                 help='baudrate for USB2Dynamixel connection [default = 57600]', default=57600)
     p.add_option('--setID', action='store', type='int', dest='ids', nargs =2,
                 help='changing servo ids - usage "--setID <prev_id>, <new_id>" ')
     p.add_option('--moveTest', action='store', type='string', dest='mot_ids', nargs = 1,

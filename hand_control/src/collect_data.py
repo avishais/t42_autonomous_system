@@ -21,7 +21,7 @@ class collect_data():
     global_trigger = True
 
     num_episodes = 0
-    episode_length = 100000 # !!!
+    episode_length = 1000000 # !!!
     desired_action = np.array([0.,0.])
     drop = True
 
@@ -78,7 +78,7 @@ class collect_data():
             if self.global_trigger:
 
                 if collect_mode != 'manual':
-                    if np.random.uniform() > 0.2:
+                    if np.random.uniform() > 0.5:
                         collect_mode = 'plan'
                         # files = glob.glob('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/*.txt')
                         # if len(files)==0:
@@ -120,11 +120,11 @@ class collect_data():
                         # ia = np.random.randint(len(files))
                         # print('[collect_data] Rolling out file: ' + files[ia])
                         # Af = np.loadtxt(files[ia], delimiter = ',', dtype=float)[:,:2]
-                        print('[collect_data] Rolling out shooting.')
                         if np.random.uniform() > 0.5:
-                            Af = np.tile(np.array([-1.,1.]), (np.random.randint(40,170), 1))
+                            Af = np.tile(np.array([-1.,1.]), (np.random.randint(20,100), 1))
                         else:
-                            Af = np.tile(np.array([1.,-1.]), (np.random.randint(40,170), 1))
+                            Af = np.tile(np.array([1.,-1.]), (np.random.randint(20,100), 1))
+                        print('[collect_data] Rolling out shooting with %d steps.'%Af.shape[0])
                     
                     # Start episode
                     recorder_srv()
@@ -158,7 +158,14 @@ class collect_data():
                         next_state = np.array(obs_srv().state)
 
                         if suc:
-                            fail = self.drop # drop_srv().dropped # Check if dropped - end of episode
+                            fail = False#self.drop # drop_srv().dropped # Check if dropped - end of episode
+                            c = 0
+                            while self.drop:
+                                if c == 3:
+                                    fail = True
+                                    break
+                                c += 1
+                                rate.sleep()
                         else:
                             # End episode if overload or angle limits reached
                             rospy.logerr('[collect_data] Failed to move gripper. Episode declared failed.')
@@ -172,15 +179,7 @@ class collect_data():
                             break
                         
                         rate.sleep()
-
-                    # resp = open_srv()
-                    # try:
-                    #     rospy.wait_for_service('/OpenGripper', 5.0)
-                    #     resp = open_srv()
-                    # except (rospy.ServiceException, rospy.ROSException), e:
-                    #     rospy.logerr("Service call failed: %s" % (e,))
-                    #     return 1
-                    
+                  
 
                     self.trigger = False
                     print('[collect_data] Finished running episode %d with total number of collected points: %d' % (self.num_episodes, self.texp.getSize()))
@@ -224,12 +223,12 @@ class collect_data():
                     a = self.A[3]
 
             n = np.random.randint(60)
-            # if np.all(a == self.A[0]) or np.all(a == self.A[1]):
-            #     n = np.random.randint(70)
-            # elif np.random.uniform() > 0.7:
-            #     n = np.random.randint(300)
-            # else:
-            #     n = np.random.randint(100)
+            if np.all(a == self.A[0]) or np.all(a == self.A[1]):
+                n = np.random.randint(70)
+            elif np.random.uniform() > 0.7:
+                n = np.random.randint(300)
+            else:
+                n = np.random.randint(100)
             return a, n
         else:
             a = np.random.uniform(-1.,1.,2)

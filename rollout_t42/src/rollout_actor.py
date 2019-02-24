@@ -30,7 +30,7 @@ class rollout():
 
         print('[rollout] Ready to rollout...')
 
-        self.rate = rospy.Rate(1) # 15hz
+        self.rate = rospy.Rate(2.5) # 15hz
         while not rospy.is_shutdown():
 
             if self.running:
@@ -38,9 +38,18 @@ class rollout():
 
                 # next_state = np.array(self.obs_srv().state)
 
-                if not suc or self.drop:
+                if not suc:
                     print("[rollout] Fail")
                     self.running = False
+                elif self.drop:
+                    c = 0
+                    while self.drop:
+                        if c == 3:
+                            print("[rollout] Fail")
+                            self.running = False
+                            break
+                        c += 1
+                        self.rate.sleep()
 
             self.rate.sleep()
 

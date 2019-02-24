@@ -144,7 +144,7 @@ class hand_control():
                 self.rate.sleep()
 
 
-        closed_load = np.random.randint(70, self.closed_load+30) # !!!!!! Remember to change
+        closed_load = self.closed_load#np.random.randint(70, self.closed_load+30) # !!!!!! Remember to change
 
         self.object_grasped = False
         for i in range(100):
@@ -198,7 +198,7 @@ class hand_control():
     
     def moveGripper(self, angles, open=False):
         if not open:
-            if angles[0] > 0.9 or angles[1] > 0.9 or angles[0] < 0.05 or angles[1] < 0.05:
+            if angles[0] > 0.9 or angles[1] > 0.9 or angles[0] < 0.03 or angles[1] < 0.03:
                 rospy.logerr('[hand] Move Failed. Desired angles out of bounds.')
                 return False
 
@@ -217,7 +217,7 @@ class hand_control():
             verbose = '[hand] Object dropped.'
             return True, verbose
 
-        if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.05 or self.gripper_pos[1] < 0.05:
+        if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.03 or self.gripper_pos[1] < 0.03:
             verbose = '[hand] Desired angles out of bounds.'
             return True, verbose
 
