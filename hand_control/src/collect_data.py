@@ -78,7 +78,7 @@ class collect_data():
             if self.global_trigger:
 
                 if collect_mode != 'manual':
-                    if np.random.uniform() > 0.5:
+                    if np.random.uniform() > 0.7:
                         collect_mode = 'plan'
                         # files = glob.glob('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/*.txt')
                         # if len(files)==0:

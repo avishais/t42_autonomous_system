@@ -1,7 +1,7 @@
 <launch>
   <!-- Requires Python3 - source relavent venv -->
 
-  <arg name="recordData" default="true" />
+  <arg name="recordData" default="false" />
 
   <!--<include file="$(find hand_control)/launch/run.launch"></include>-->
 

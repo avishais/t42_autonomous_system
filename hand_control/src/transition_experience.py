@@ -178,98 +178,6 @@ class transition_experience():
             return D, done
 
 
-        # def smooth(D, done):
-        #     print('[transition_experience] Smoothing data...')
-
-        #     def medfilter(x, W):
-        #         w = int(W/2)
-        #         x_new = np.copy(x)
-        #         for i in range(1, x.shape[0]-1):
-        #             if i < w:
-        #                 x_new[i] = np.mean(x[:i+w])
-        #             elif i > x.shape[0]-w:
-        #                 x_new[i] = np.mean(x[i-w:])
-        #             else:
-        #                 x_new[i] = np.mean(x[i-w:i+w])
-        #         return x_new
-
-        #     ks = 0
-        #     kf = 1
-        #     finx = []
-        #     while kf < D.shape[0]:
-        #         if kf >= D.shape[0]:
-        #             break 
-
-        #         # Idenfify end of episode
-        #         while kf < D.shape[0]-1 and not done[kf]:
-        #             kf += 1
-
-        #         # print D[ks:kf+1,:6]
-        #         # print ks, kf
-        #         fl = np.random.uniform()
-        #         if fl < 0.05:
-        #             plt.plot(D[ks:kf+1,0], D[ks:kf+1,1],'.-b')
-        #             plt.plot(D[ks,0], D[ks,1],'oy', markersize=15)
-        #             print D[ks:kf+1,:6]
-        #             print D[ks:kf+1,:].shape
-        #             # d = done[ks:kf+1]*1
-        #             # plt.plot(d)
-        #             # plt.show()
-        #             # raw_input()
-                
-        #         kf_final = kf
-        #         if kf - ks > 20:
-                    
-        #             while np.linalg.norm(D[kf,:2]-D[kf-1,:2]) > 1:
-        #                 finx.append(kf)
-        #                 kf -= 1
-
-        #             # Apply filter to episode
-        #             for i in range(4):
-        #                 D[ks:kf,i] = medfilter(D[ks:kf,i], 20)
-                                
-        #             # Update next state columns
-        #             D[ks:kf, 6:10] = D[ks+1:kf+1, :4]
-        #             finx.append(kf)
-        #             gl = 'passed'
-        #         else:
-        #             for j in range(ks, kf+1):
-        #                 finx.append(j)
-        #             gl = 'pruned'
-
-        #         if fl < 0.05:
-        #             plt.plot(D[ks:kf+1,0], D[ks:kf+1,1],'.-r')
-        #             # d = done[ks:kf+1]*1
-        #             # plt.plot(d)
-
-                    
-        #             plt.title(gl)
-        #             plt.show()
-                    
-
-        #         ks = kf_final+1
-        #         kf = kf_final + 2  
-
-        #     return D, finx
-           
-        # def clean(D, done):
-        #     print('[transition_experience] Cleaning data...')
-
-        #     i = 0
-        #     inx = []
-        #     while i < D.shape[0]:
-        #         if i > 0 and np.linalg.norm( D[i, 0:2] - D[i-1, 0:2] ) > 1 and not done[i] and not done[i-1]:
-        #             i += 1
-        #             continue
-        #         if D[i,0] < -70. or D[i,0] > 120:
-        #             i += 1
-        #             continue
-        #         if (np.linalg.norm( D[i, 0:2] - D[i, 6:8] ) <= 1 or done[i]) and not np.all(D[i,4:6] == 0.0):
-        #             inx.append(i)
-        #         i += 1
-
-        #     return D[inx,:], done[inx]
-
         def multiStep(D, done, stepSize): 
             Dnew = []
             ia = range(4,6)
@@ -373,8 +281,8 @@ class transition_experience():
             # Cancel drop if load is not critical
             for i in range(states.shape[0]):
                 if done[i] and np.all(np.abs(states[i, 2:]) < 260) and np.all(np.abs(states[i, 2:]) > 40):
-                    if np.random.uniform() > 0.5:
-                        done[i] = False
+                    # if np.random.uniform() > 0.5:
+                    done[i] = False
 
             return done
 
@@ -415,6 +323,7 @@ class transition_experience():
         print('Transition data with steps size %d has now %d points'%(stepSize, SA.shape[0]))
 
         inx_fail = np.where(done)[0]
+        # inx_fail = inx_fail[np.random.choice(inx_fail.shape[0], 1000, replace=False)]
         print "Number of failed states " + str(inx_fail.shape[0])
         T = np.where(np.logical_not(done))[0]
         inx_suc = T[np.random.choice(T.shape[0], inx_fail.shape[0], replace=False)]
