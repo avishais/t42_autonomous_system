@@ -47,11 +47,19 @@ find_package(catkin REQUIRED COMPONENTS
 ##   * add every package in MSG_DEP_SET to generate_messages(DEPENDENCIES ...)
 
 ## Generate messages in the 'msg' folder
+<<<<<<< HEAD
  add_message_files(
    FILES
    plan_for_goal_request.msg
    plan_for_goal_response.msg
  )
+=======
+add_message_files(
+  FILES
+  plan_for_goal_request.msg
+  plan_for_goal_response.msg
+)
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 
 ## Generate services in the 'srv' folder
 add_service_files(

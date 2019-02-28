@@ -27,10 +27,8 @@ def key_listener(stdscr):
 
 class keyboard_control():
 
-    A = np.array([[1.0,1.0],[-1.,-1.],[-1.,1.],[1.,-1.],[1.,0.],[-1.,0.],[0.,-1.],[0.,1.],[0.,0.]])
+    A = np.array([[1.0,1.0],[-1.,-1.],[-1.,1.],[1.,-1.],[1.5,0.],[-1.5,0.],[0.,-1.5],[0.,1.5],[0.,0.]])
 
-    dq = 0.0003
-    
     def __init__(self):
         rospy.init_node('keyboard_control', anonymous=True)
 
@@ -121,7 +119,15 @@ class keyboard_control():
             return np.array([100,100])
         if chr(ch) == ']': # Open
             return np.array([-100, -100])
+<<<<<<< HEAD
         
+=======
+
+    def ResetKeyboard(self, msg):
+        self.ch = ord('s')
+
+        return EmptyResponse()
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 
 
 if __name__ == '__main__':

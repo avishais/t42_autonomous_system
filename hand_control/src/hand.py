@@ -6,14 +6,15 @@ Author: Avishai Sintov
 
 import rospy
 import numpy as np 
-from std_msgs.msg import Float64MultiArray, Float32MultiArray, String
+from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool
 from std_srvs.srv import Empty, EmptyResponse
-from openhand.srv import MoveServos
+from openhand.srv import MoveServos, ReadTemperature
 from hand_control.srv import TargetAngles, IsDropped, observation, close
 from marker_tracker.msg import ImageSpacePoseMsg
 from common_msgs_gl.srv import SendDoubleArray, SendBool
 import geometry_msgs.msg
 import math
+import time
 
 class hand_control():
 
@@ -25,6 +26,7 @@ class hand_control():
 
     gripper_pos = np.array([0., 0.])
     gripper_load = np.array([0., 0.])
+    gripper_temperature = np.array([0., 0.])
     base_pos = [0,0]
     base_theta = 0
     obj_pos = [0,0]
@@ -34,9 +36,14 @@ class hand_control():
     count = 1
     vel_ref = np.array([0.,0.])
     gripper_cur_pos = np.array([0.,0.])
+<<<<<<< HEAD
+=======
+    max_load = 280.0
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 
     gripper_status = 'open'
     object_grasped = False
+    drop_query = True
 
     move_servos_srv = 0.
 
@@ -52,6 +59,7 @@ class hand_control():
 
         rospy.Subscriber('/gripper/pos', Float32MultiArray, self.callbackGripperPos)
         rospy.Subscriber('/gripper/load', Float32MultiArray, self.callbackGripperLoad)
+<<<<<<< HEAD
         # rospy.Subscriber('/cylinder_pose', geometry_msgs.msg.Pose, self.callbackMarkersB)
         rospy.Subscriber('/marker_tracker/image_space_pose_msg', ImageSpacePoseMsg, self.callbackMarkers)
         pub_gripper_status = rospy.Publisher('/gripper/gripper_status', String, queue_size=10)
@@ -59,21 +67,38 @@ class hand_control():
         
         vel_ref_srv = rospy.ServiceProxy('/gripper_t42/vel_ref', SendDoubleArray)
         self.allow_motion_srv = rospy.ServiceProxy('/gripper_t42/allow_motion', SendBool)
+=======
+        rospy.Subscriber('/gripper/temperature', Float32MultiArray, self.callbackGripperTemp)
+        rospy.Subscriber('/cylinder_pose', geometry_msgs.msg.Pose, self.callbackMarkers)
+        rospy.Subscriber('cylinder_drop', Bool, self.callbackObjectDrop)
+        pub_gripper_status = rospy.Publisher('/gripper/gripper_status', String, queue_size=10)
+        pub_drop = rospy.Publisher('/hand_control/drop', Bool, queue_size=10)
+        pub_obj_pos = rospy.Publisher('/hand_control/obj_pos_mm', Float32MultiArray, queue_size=10)
+
+        # vel_ref_srv = rospy.ServiceProxy('/gripper_t42/vel_ref', SendDoubleArray)
+        # self.allow_motion_srv = rospy.ServiceProxy('/gripper_t42/allow_motion', SendBool)
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 
         rospy.Service('/OpenGripper', Empty, self.OpenGripper)
         rospy.Service('/CloseGripper', close, self.CloseGripper)
         rospy.Service('/MoveGripper', TargetAngles, self.MoveGripper)
-        rospy.Service('/IsObjDropped', IsDropped, self.CheckDropped)
+        rospy.Service('/IsObjDropped', IsDropped, self.CheckDroppedSrv)
         rospy.Service('/observation', observation, self.GetObservation)
 
         self.move_servos_srv = rospy.ServiceProxy('/MoveServos', MoveServos)
+        self.temperature_srv = rospy.ServiceProxy('/ReadTemperature', ReadTemperature)
 
+<<<<<<< HEAD
         msg = geometry_msgs.msg.Pose()
 
         #### Later I should remove the angles from hands.py and set initial angles here at the start ####
+=======
+        msg = Float32MultiArray()
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 
         self.rate = rospy.Rate(5)
         c = True
+        count = 0
         while not rospy.is_shutdown():
 
             msg.position.x = self.obj_pos[0]
@@ -86,6 +111,15 @@ class hand_control():
             obj_pos_pub.publish(msg)
 
             pub_gripper_status.publish(self.gripper_status)
+
+            msg.data = self.obj_pos
+            pub_obj_pos.publish(msg)
+
+            if count > 1000:
+                dr, verbose = self.CheckDropped()
+                pub_drop.publish(dr)
+                # rospy.logerr(verbose)
+            count += 1
 
             if c and not np.all(self.gripper_load==0): # Wait till openhand services ready and set gripper open pose
                 self.moveGripper(self.finger_opening_position)
@@ -111,6 +145,9 @@ class hand_control():
 
     def callbackGripperLoad(self, msg):
         self.gripper_load = np.array(msg.data)
+    
+    def callbackGripperTemp(self, msg):
+        self.gripper_temperature = np.array(msg.data)
 
     def callbackMarkersB(self, msg):
         try:
@@ -121,6 +158,7 @@ class hand_control():
             self.obj_pos = np.array([np.nan, np.nan])
             self.obj_height = np.nan
 
+<<<<<<< HEAD
     def callbackMarkers(self, msg):
         try:
             self.base_pos = np.array([msg.posx[msg.ids.index(0)], msg.posy[msg.ids.index(0)]])
@@ -143,11 +181,15 @@ class hand_control():
         except:
             self.obj_pos = np.array([np.nan, np.nan])
             self.obj_height = np.nan
+=======
+    def callbackObjectDrop(self, msg):
+        self.drop_query = msg.data
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 
     def OpenGripper(self, msg):
         # self.vel_ref = np.array([0.,0.,])
         # self.allow_motion_srv(False)
-        self.moveGripper(self.finger_opening_position)
+        self.moveGripper(self.finger_opening_position, open=True)
 
         self.gripper_status = 'open'
 
@@ -155,11 +197,23 @@ class hand_control():
 
     def CloseGripper(self, msg):
         # self.vel_ref = np.array([0.,0.,])
+        
+        if np.any(self.gripper_temperature > 52.):
+            rospy.logerr('[hand_control] Actuators overheated, taking a break...')
+            # rospy.signal_shutdown('[hand_control] Actuators overheated, shutting down. Disconnect power cord!')
+            while 1:
+                if np.all(self.gripper_temperature < 45.):
+                    break
+                # rospy.sleep(60*2)
+                self.rate.sleep()
+
+
+        closed_load = self.closed_load#np.random.randint(70, self.closed_load+30) # !!!!!! Remember to change
 
         self.object_grasped = False
         for i in range(100):
             # print('Angles: ' + str(self.gripper_pos) + ', load: ' + str(self.gripper_load), self.closed_load)
-            if abs(self.gripper_load[0]) > self.closed_load or abs(self.gripper_load[1]) > self.closed_load:
+            if abs(self.gripper_load[0]) > closed_load or abs(self.gripper_load[1]) > closed_load:
                 rospy.loginfo('[hand] Object grasped.')
                 self.gripper_status = 'closed'
                 break
@@ -188,6 +242,7 @@ class hand_control():
 
         self.rate.sleep()
         self.gripper_cur_pos = self.gripper_pos
+        self.drop_query = True
 
         return {'success': self.object_grasped}
 
@@ -206,6 +261,7 @@ class hand_control():
 
         return {'success': suc}
     
+<<<<<<< HEAD
     def moveGripper(self, angles):
         print angles
         if angles[0] > 0.7 or angles[1] > 0.7 or angles[0] < 0.05 or angles[1] < 0.05:
@@ -215,24 +271,54 @@ class hand_control():
         if abs(self.gripper_load[0]) > 400 or abs(self.gripper_load[1]) > 400:
             rospy.logerr('[hand] Pre-overload.')
             return False
+=======
+    def moveGripper(self, angles, open=False):
+        if not open:
+            if angles[0] > 0.9 or angles[1] > 0.9 or angles[0] < 0.03 or angles[1] < 0.03:
+                rospy.logerr('[hand] Move Failed. Desired angles out of bounds.')
+                return False
+
+            if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
+                rospy.logerr('[hand] Move failed. Pre-overload.')
+                return False
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 
         res = self.move_servos_srv.call(angles)
 
         return True
 
-    def CheckDropped(self, msg):
+    def CheckDropped(self):
         # Should spin (update topics) between moveGripper and this
 
+<<<<<<< HEAD
         # If object marker not visible, loop to verify and declare dropped.
         '''
+=======
+        if self.drop_query:
+            verbose = '[hand] Object dropped.'
+            return True, verbose
+
+        if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.03 or self.gripper_pos[1] < 0.03:
+            verbose = '[hand] Desired angles out of bounds.'
+            return True, verbose
+
+        # Check load
+        if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
+            verbose = '[hand] Pre-overload.'
+            return True, verbose
+
+        # If object marker not visible, loop to verify and declare dropped.
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
         if self.obj_height == -1000:
             dr = True
-            for _ in range(15):
-                self.rate.sleep()
+            for _ in range(25):
+                # print('self.obj_height is ', self.obj_height)
                 if self.obj_height != -1000:
                     dr = False
                     break
+                time.sleep(0.1)
             if dr:
+<<<<<<< HEAD
                 rospy.loginfo('[hand] Object not visible - assumed dropped.')
                 return {'dropped': True}
         '''
@@ -252,8 +338,22 @@ class hand_control():
                 print(self.obj_height)
                 self.object_grasped = False
                 return {'dropped': True}
+=======
+                verbose = '[hand] Object not visible - assumed dropped.'
+                return True, verbose
+        
+        return False, ''
 
-        return {'dropped': False}
+    def CheckDroppedSrv(self, msg):
+
+        dr, verbose = self.CheckDropped()
+        
+        if len(verbose) > 0:
+            rospy.logerr(verbose)
+
+        return {'dropped': dr}
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
+
 
     def GetObservation(self, msg):
         obs = np.concatenate((self.obj_pos, self.gripper_load))

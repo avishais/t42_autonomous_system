@@ -7,10 +7,10 @@
     <param name="camera_frame_id" value="usb_cam" />
     <param name="io_method" value="mmap"/>
 	<param name="autofocus" value="false"/>
-	<param name="focus" value="9"/>
+	<param name="focus" value="30"/>
 
-	<param name="contrast" value="32"/>
-	<param name="brightness" value="28"/>
+	<param name="contrast" value="60"/>
+	<param name="brightness" value="100"/>
 	<param name="saturation" value="32"/>
 	<param name="sharpness" value="22"/>	
   </node>

@@ -1,5 +1,9 @@
 finger_initial_offset: [0.00,0.0]
+<<<<<<< HEAD
 finger_opening_position: [0.33,0.355]
+=======
+finger_opening_position: [0.36,0.28]
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 finger_closing_position: [0.0,0.0]
 finger_move_offset: [0.065,0.065]
 finger_close_load: 100.0

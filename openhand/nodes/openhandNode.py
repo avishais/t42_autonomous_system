@@ -103,7 +103,7 @@ class OpenHandNode():
 	def ReadTemperatureProxy(self,req):
 		temp = [0.]*len(self.hand.servos)
 		for i in xrange(len(self.hand.servos)):
-			temp[i] = self.hand.servos[i].read_current()
+			temp[i] = self.hand.servos[i].read_temperature()
 		resp = ReadTemperatureResponse()
 		resp.temp = temp
 

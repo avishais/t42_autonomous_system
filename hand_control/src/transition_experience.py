@@ -5,18 +5,24 @@ import os.path
 import matplotlib.pyplot as plt
 from scipy.io import savemat
 
+version = '6'
 
 class transition_experience():
+<<<<<<< HEAD
     path = '/home/pracsys/catkin_ws/src/hand_t42/hand_control/data/'
+=======
+    path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/'
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 
-    def __init__(self, Load=True, discrete = True):
+    def __init__(self, Load=True, discrete = True, postfix=''):
 
         if discrete:
             self.mode = 'd' # Discrete actions
         else:
             self.mode = 'c' # Continuous actions
         
-        self.file_name = self.path + 'raw_35_' + self.mode + '_v0.obj'
+        self.postfix = postfix
+        self.file_name = self.path + 'raw_35_' + self.mode + '_v' + version + self.postfix + '.obj'
 
         if Load:
             self.load()
@@ -59,18 +65,27 @@ class transition_experience():
 
     def plot_data(self):
 
-        states = [item[0] for item in self.memory]
-        done = [item[3] for item in self.memory]
-        states = np.array(states)
+        states = np.array([item[0] for item in self.memory])
+        states[:,:2] *= 1000.
+        done = np.array([item[3] for item in self.memory])
         failed_states = states[done]
 
         plt.figure(1)
         ax1 = plt.subplot(121)
+<<<<<<< HEAD
         ax1.plot(states[:,0],states[:,1],'-k')
+=======
+        # ax1.plot(states[:,0],states[:,1],'-k')
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
         ax1.plot(states[:,0],states[:,1],'.y')
         ax1.plot(failed_states[:,0],failed_states[:,1],'.r')
         ax1.set(title='Object position')
         ax1.axis('equal')
+<<<<<<< HEAD
+=======
+        # plt.ylim((0.06, 0.12))
+        # plt.xlim((-0.03, 0.11))
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
         
         ax2 = plt.subplot(122)
         ax2.plot(states[:,2],states[:,3],'.k')
@@ -100,16 +115,90 @@ class transition_experience():
     
     def process_transition_data(self, stepSize = 1, plot = False):
 
+<<<<<<< HEAD
         def clean(D, done):
             print('[transition_experience] Cleaning data...')
+=======
+        def medfilter(x, W):
+            w = int(W/2)
+            x_new = np.copy(x)
+            for i in range(1, x.shape[0]-1):
+                if i < w:
+                    x_new[i] = np.mean(x[:i+w])
+                elif i > x.shape[0]-w:
+                    x_new[i] = np.mean(x[i-w:])
+                else:
+                    x_new[i] = np.mean(x[i-w:i+w])
+            return x_new
+
+        def Del(D, done, inx):
+            D = np.delete(D, inx, 0)
+            done = np.delete(done, inx, 0)
+
+            return D, done
+
+        def new_clean(D, done):
+
+            ks = 0
+            kf = 1
+            while kf < D.shape[0]:
+                if kf >= D.shape[0]:
+                    break 
+
+                # Idenfify end of episode
+                while kf < D.shape[0]-1 and not done[kf]:
+                    kf += 1
+
+                if kf - ks < 15:
+                    D, done = Del(D, done, range(ks, kf+1))
+                    kf = ks + 1
+                    continue
+
+                fl = np.random.uniform()+10
+                if fl < 0.05:
+                    plt.plot(D[ks:kf+1,0], D[ks:kf+1,1],'.-b')
+                    plt.plot(D[ks,0], D[ks,1],'oy', markersize=15)
+                    print D[ks:kf+1,:6]
+                    print D[ks:kf+1,:].shape
+                    # d = done[ks:kf+1]*1
+                    # plt.plot(d)
+
+                while np.linalg.norm(D[kf,:2]-D[kf-1,:2]) > 1.2 or np.linalg.norm(D[kf,:2]-D[kf,6:8]) > 1.2:
+                    D, done = Del(D, done, kf)
+                    kf -= 1
+
+                # Apply filter to episode
+                for i in range(4):
+                    D[ks:kf,i] = medfilter(D[ks:kf,i], 20)
+
+                if fl < 0.05:
+                    plt.plot(D[ks:kf+1,0], D[ks:kf+1,1],'.-r')
+                    plt.show()
+                            
+                # Update next state columns
+                D[ks:kf, 6:10] = D[ks+1:kf+1, :4]
+                D, done = Del(D, done, kf)
+
+                ks = kf
+                kf += 1
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 
             i = 0
-            inx = []
             while i < D.shape[0]:
+<<<<<<< HEAD
                 if np.linalg.norm( D[i, 0:2] - D[i, 6:8] ) < 2:
                     inx.append(i)
                 i += 1
             return D[inx,:], done[inx]
+=======
+                if np.linalg.norm(D[i,:2]-D[i,6:8]) > 1.2 or D[i,0] < -70. or D[i,0] > 120 or D[i,6] < -70. or D[i,6] > 120:
+                    D, done = Del(D, done, i)
+                else:
+                    i += 1
+
+            return D, done
+
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 
         def multiStep(D, done, stepSize): 
             Dnew = []
@@ -130,12 +219,22 @@ class transition_experience():
         states = np.array([item[0] for item in self.memory])
         actions = np.array([item[1] for item in self.memory])
         next_states = np.array([item[2] for item in self.memory])
+<<<<<<< HEAD
         done = np.array([item[3] for item in self.memory])
+=======
+        next_states[:,:2] *= 1000.
+        done = np.array([item[3] for item in self.memory]) 
+
+        # For data from recorder
+        if self.postfix == 'bu':
+            next_states = np.roll(states, -1, axis=0) 
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 
         self.state_dim = states.shape[1]
 
         inx = np.where(done)
         D = np.concatenate((states, actions, next_states), axis = 1)
+<<<<<<< HEAD
         D = np.delete(D, inx, 0)
         done = np.delete(done, inx, 0)
 
@@ -151,9 +250,85 @@ class transition_experience():
 
         if plot:
             plt.scatter(D[:,0], D[:,1])
+=======
+        D, done = new_clean(D, done)
+        # D, finx = smooth(D, done)
+
+        # for i in range(done.shape[0]):
+        #     if done[i]:
+        #         done[i-2:i] = True
+
+        # Start dist.
+        # St = [D[0,:4]]
+        # for i in range(D.shape[0]-1):
+        #     if done[i] and not done[i+1]:
+        #         St.append(D[i+1,:4])
+        # St = np.array(St)
+        # s_start = np.mean(St, 0)
+        # s_std = np.std(St, 0)
+        # print "start mean: ", s_start
+        # print "start std.: ", s_std
+
+        # plt.plot(D[:,2], D[:,3], '.k')
+        # plt.plot(St[:,2], St[:,3], '.r')
+        # plt.plot(s_start[2], s_start[3], 'og')
+        # plt.show()
+        # exit(1)
+
+        # if stepSize > 1:
+        #     D = multiStep(D, done, stepSize)
+
+        inx = np.where(done)
+        D = np.delete(D, inx, 0) # Remove drop transitions
+        done = np.delete(done, inx, 0)
+              
+        self.D = D
+
+        # Bounds
+        print "Max: ", np.max(D, 0)[:4]
+        print "Min: ", np.min(D, 0)[:4]
+
+        is_start = 60000
+        is_end = is_start+100
+        # plt.plot(D[is_start,0], D[is_start,1],'or')
+        # plt.plot(D[is_start:is_end,0], D[is_start:is_end,1],'.-b')
+        # plt.show()
+        # exit(1)
+
+        savemat(self.path + 't42_35_data_discrete_v' + version + '_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
+        savemat('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_data_discrete_v' + version + '_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
+        print "Saved mat file with " + str(D.shape[0]) + " transition points."
+
+        if plot:
+            plt.figure(0)
+            plt.plot(D[:,0], D[:,1],'.-k')
+            # for _ in range(1000):
+            #     j = np.random.randint(D.shape[0])
+            #     plt.plot([D[j,0], D[j,6]], [D[j,1], D[j,7]],'o-r')
+            plt.title(str(stepSize))
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
             plt.show()
     
     def process_svm(self, stepSize = 1):
+
+        def clean_done(states, done):
+            # Cancel drop mark if episode is very short
+            i = 0
+            while i < states.shape[0]-1:
+                j = i + 1
+                while j < states.shape[0] and not done[j]:
+                    j +=1
+                if done[j] and j-i < 10:
+                    done[j] = False 
+                i = j
+
+            # Cancel drop if load is not critical
+            for i in range(states.shape[0]):
+                if done[i] and np.all(np.abs(states[i, 2:]) < 260) and np.all(np.abs(states[i, 2:]) > 40):
+                    # if np.random.uniform() > 0.5:
+                    done[i] = False
+
+            return done
 
         def multiStep(D, done, stepSize): 
             Dnew = []
@@ -180,18 +355,38 @@ class transition_experience():
         actions = np.array([item[1] for item in self.memory])
         done = np.array([item[3] for item in self.memory])
 
+<<<<<<< HEAD
+=======
+        done = clean_done(states, done)
+
+        for i in range(done.shape[0]):
+            if done[i]:
+                done[i-3:i] = True
+
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
         SA = np.concatenate((states, actions), axis=1)
         SA, done = multiStep(SA, done, stepSize)
         print('Transition data with steps size %d has now %d points'%(stepSize, SA.shape[0]))
 
         inx_fail = np.where(done)[0]
+        # inx_fail = inx_fail[np.random.choice(inx_fail.shape[0], 1000, replace=False)]
         print "Number of failed states " + str(inx_fail.shape[0])
         T = np.where(np.logical_not(done))[0]
+<<<<<<< HEAD
         inx_suc = T[np.random.choice(T.shape[0], 1000, replace=False)]
         SA = np.concatenate((SA[inx_fail], SA[inx_suc]), axis=0)
         done = np.concatenate((done[inx_fail], done[inx_suc]), axis=0)
 
         with open(self.path + 't42_svm_data_' + self.mode + '_v0_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
+=======
+        inx_suc = T[np.random.choice(T.shape[0], inx_fail.shape[0], replace=False)]
+        SA = np.concatenate((SA[inx_fail], SA[inx_suc]), axis=0)
+        done = np.concatenate((done[inx_fail], done[inx_suc]), axis=0)
+
+        with open(self.path + 't42_35_svm_data_' + self.mode + '_v' + version + '_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
+            pickle.dump([SA, done], f)
+        with open('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_svm_data_' + self.mode + '_v' + version + '_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
             pickle.dump([SA, done], f)
         print('Saved svm data.')
 

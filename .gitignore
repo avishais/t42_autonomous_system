@@ -1,6 +1,8 @@
 
 *.mat
 *.mp4
+*.bag
+*.active
 
 
 # Prerequisites

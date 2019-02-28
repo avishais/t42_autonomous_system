@@ -704,8 +704,13 @@ class Model_T42(OpenHand):
 		self.moveMotor(1,amnt)
 
 	def release(self):
+<<<<<<< HEAD
 		self.moveMotor(0,self.amnt_release + 0.2) # (+) Added by Avishai - should match the finger_opening_position in gripper.yaml
 		self.moveMotor(1,self.amnt_release + 0.33)
+=======
+		self.moveMotor(0,self.amnt_release + 0.36) # (+) Added by Avishai - should match the finger_opening_position in gripper.yaml
+		self.moveMotor(1,self.amnt_release + 0.28)
+>>>>>>> d8bdba09fb630f5cb93340f38caebb1b23810fd9
 
 	#model-specific OpenHand commands:
 	def flip_init(self):
