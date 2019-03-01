@@ -62,6 +62,7 @@ add_service_files(
   observation.srv
   close.srv
   RegraspObject.srv
+  planroll.srv
 )
 
 ## Generate actions in the 'action' folder

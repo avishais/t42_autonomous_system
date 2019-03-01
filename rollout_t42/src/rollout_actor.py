@@ -18,6 +18,8 @@ class rollout():
     drop = True
     running = False
     action = np.array([0.,0.])
+    suc = True
+    drop_counter = 0
 
     def __init__(self):
         rospy.init_node('rollout_t42', anonymous=True)
@@ -27,29 +29,41 @@ class rollout():
         rospy.Subscriber('/cylinder_drop', Bool, self.callbackObjectDrop)
         rospy.Subscriber('/rollout/action', Float32MultiArray, self.callbackAction)
         rospy.Service('/rollout/run_trigger', SetBool, self.callbackTrigger)
+        # suc_pub = rospy.Publisher('/rollout/move_success', Bool, queue_size=10)
+        fail_pub = rospy.Publisher('/rollout/fail', Bool, queue_size = 10)
 
         print('[rollout] Ready to rollout...')
 
         self.rate = rospy.Rate(2.5) # 15hz
         while not rospy.is_shutdown():
+            # suc_pub.publish(self.suc)
 
             if self.running:
-                suc = self.move_srv(self.action).success
+                self.suc = self.move_srv(self.action).success
+
+                fail_pub.publish(not self.suc or self.drop)
 
                 # next_state = np.array(self.obs_srv().state)
 
-                if not suc:
-                    print("[rollout] Fail")
+                # if not self.suc:
+                #     print("[rollout_actor] Load Fail")
+                #     self.running = False
+                # elif self.drop:
+                #     c = 0
+                #     while self.drop:
+                #         if c == 3:
+                #             print("[rollout_actor] Drop Fail")
+                #             self.running = False
+                #             break
+                #         c += 1
+                #         self.rate.sleep()
+                
+                if not self.suc:
+                    print("[rollout_actor] Load Fail")
                     self.running = False
                 elif self.drop:
-                    c = 0
-                    while self.drop:
-                        if c == 3:
-                            print("[rollout] Fail")
-                            self.running = False
-                            break
-                        c += 1
-                        self.rate.sleep()
+                    print("[rollout_actor] Drop Fail")
+                    self.running = False
 
             self.rate.sleep()
 
@@ -57,10 +71,16 @@ class rollout():
         self.action = np.array(msg.data)
 
     def callbackObjectDrop(self, msg):
-        self.drop = msg.data
+        if (msg.data):
+            self.drop_counter +=1
+        else:
+            self.drop_counter = 0
+        self.drop = (self.drop_counter >= 7)
 
     def callbackTrigger(self, msg):
         self.running = msg.data
+        if self.running:
+            self.suc = True
 
         return {'success': True, 'message': ''}
 

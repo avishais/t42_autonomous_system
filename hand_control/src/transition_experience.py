@@ -177,16 +177,15 @@ class transition_experience():
 
             return D, done
 
-
         def multiStep(D, done, stepSize): 
             Dnew = []
             ia = range(4,6)
             for i in range(D.shape[0]-stepSize):
                 a = D[i, ia] 
-                if not np.all(a == D[i:i+stepSize+1, ia]) or np.any(done[i:i+stepSize+1]):
+                if not np.all(a == D[i:i+stepSize, ia]) or np.any(done[i:i+stepSize]):
                     continue
 
-                Dnew.append( np.concatenate((D[i,:ia[0]], a, D[i+stepSize, ia[-1]+1:]), axis=0) )
+                Dnew.append( np.concatenate((D[i,:ia[0]], a, D[i+stepSize-1, ia[-1]+1:]), axis=0) )
 
             return np.array(Dnew)
 
@@ -208,32 +207,38 @@ class transition_experience():
         self.state_dim = states.shape[1]
 
         D = np.concatenate((states, actions, next_states), axis = 1)
+
+        # Remove false drops when motion is continuous
+        for i in range(len(done)-1):
+            if done[i]:
+                if np.linalg.norm(states[i,:2]-states[i+1,:2]) < 3.:
+                    done[i] = False
+
+        # Start dist.
+        St = [D[0,:4]]
+        for i in range(1, D.shape[0]-1):
+            if done[i-1] and not done[i]:
+                St.append(D[i,:4])
+        St = np.array(St)
+        s_start = np.mean(St, 0)
+        s_std = np.std(St, 0)
+        print "start mean: ", s_start
+        print "start std.: ", s_std
+
+        # plt.plot(D[:,0], D[:,1], '.k')
+        # plt.plot(St[:,0], St[:,1], '.r')
+        # plt.plot(s_start[0], s_start[1], 'og')
+        # plt.show()
+        # exit(1)
+
         D, done = new_clean(D, done)
-        # D, finx = smooth(D, done)
+
+        if stepSize > 1:
+            D = multiStep(D, done, stepSize)
 
         # for i in range(done.shape[0]):
         #     if done[i]:
         #         done[i-2:i] = True
-
-        # Start dist.
-        # St = [D[0,:4]]
-        # for i in range(D.shape[0]-1):
-        #     if done[i] and not done[i+1]:
-        #         St.append(D[i+1,:4])
-        # St = np.array(St)
-        # s_start = np.mean(St, 0)
-        # s_std = np.std(St, 0)
-        # print "start mean: ", s_start
-        # print "start std.: ", s_std
-
-        # plt.plot(D[:,2], D[:,3], '.k')
-        # plt.plot(St[:,2], St[:,3], '.r')
-        # plt.plot(s_start[2], s_start[3], 'og')
-        # plt.show()
-        # exit(1)
-
-        # if stepSize > 1:
-        #     D = multiStep(D, done, stepSize)
 
         inx = np.where(done)
         D = np.delete(D, inx, 0) # Remove drop transitions
@@ -252,9 +257,9 @@ class transition_experience():
         # plt.show()
         # exit(1)
 
-        savemat(self.path + 't42_35_data_discrete_v' + version + '_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
-        savemat('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_data_discrete_v' + version + '_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
-        print "Saved mat file with " + str(D.shape[0]) + " transition points."
+        # savemat(self.path + 't42_35_data_discrete_v' + version + '_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
+        # savemat('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_data_discrete_v' + version + '_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
+        # print "Saved mat file with " + str(D.shape[0]) + " transition points."
 
         if plot:
             plt.figure(0)
@@ -292,10 +297,10 @@ class transition_experience():
             ia = range(4,6)
             for i in range(D.shape[0]-stepSize):
                 a = D[i, ia] 
-                if not np.all(a == D[i:i+stepSize+1, ia]):
+                if not np.all(a == D[i:i+stepSize, ia]):
                     continue
                 
-                if np.any(done[i:i+stepSize+1]):
+                if np.any(done[i:i+stepSize]):
                     done_new.append(True)
                 else:
                     done_new.append(False)
@@ -312,6 +317,12 @@ class transition_experience():
         actions = np.array([item[1] for item in self.memory])
         done = np.array([item[3] for item in self.memory])
 
+        # Remove false drops when motion is continuous
+        for i in range(len(done)-1):
+            if done[i]:
+                if np.linalg.norm(states[i,:2]-states[i+1,:2]) < 3.:
+                    done[i] = False
+
         done = clean_done(states, done)
 
         for i in range(done.shape[0]):
@@ -319,7 +330,8 @@ class transition_experience():
                 done[i-3:i] = True
 
         SA = np.concatenate((states, actions), axis=1)
-        SA, done = multiStep(SA, done, stepSize)
+        if stepSize > 1:
+            SA, done = multiStep(SA, done, stepSize)
         print('Transition data with steps size %d has now %d points'%(stepSize, SA.shape[0]))
 
         inx_fail = np.where(done)[0]

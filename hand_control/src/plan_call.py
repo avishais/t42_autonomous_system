@@ -13,7 +13,9 @@ class planCall():
 
     goal_counter = 0
     publishToPlanner = True
-    goals = np.array([[-40, 70],[-35, 80],[-20, 90],[80, 80],[70, 95],[47, 93],[15, 86],[61, 107],[-30, 96]])
+    goals = np.array([[12,103],[2.8,110],[57,108],[77,95],[-25, 96],[95, 76],[-38, 82],[58, 81]])
+    # goals = np.array([[-25, 96],[95, 76],[-38, 82],[58, 81]])
+    planning_algorithm = 'naive'
 
     def __init__(self):
         rospy.init_node('plan_call', anonymous=True)
@@ -37,10 +39,11 @@ class planCall():
 
         msg.goal_state = goal
         msg.goal_radius = 10.0
-        msg.time_limit = 600 #seconds
+        msg.time_limit = 2*600 #seconds
         msg.probability_success_threshold = 0.5 #affects SVM validity check 
+        msg.planning_algorithm = self.planning_algorithm
 
-        print('Publishing...')
+        print('Requesting goal %d with algorithm %s...'%(self.goal_counter, self.planning_algorithm))
         self.planning_request_pub.publish(msg)
 
         self.planning_done = False
@@ -54,14 +57,20 @@ class planCall():
 
         self.planning_done = True
 
-
         self.planning_actions = np.array(self.planning_actions).reshape((-1,2))
+        self.planned_path = np.array(self.planned_path).reshape((-1,4))
 
-        File = 'path_' + str(np.random.randint(1000)) + '.txt'
+        File = self.planning_algorithm + '_goal' + str(self.goal_counter) + '_plan.txt'
         np.savetxt(self.path + File, self.planning_actions, delimiter = ', ')
+        File =  self.planning_algorithm + '_goal' + str(self.goal_counter) + '_traj.txt'
+        np.savetxt(self.path + File, self.planned_path, delimiter = ', ')
 
         print('[plan_call] Planned received and saved in ' + File)
-        self.goal_counter += 1
+        if self.planning_algorithm == 'naive':
+            self.planning_algorithm = 'robust'
+        else:
+            self.goal_counter += 1
+            self.planning_algorithm = 'naive'
         self.publishToPlanner = True
         
 

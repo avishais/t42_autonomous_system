@@ -9,7 +9,6 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 
-
 class rolloutPublisher():
 
     states = []
@@ -17,6 +16,9 @@ class rolloutPublisher():
     arm_status = ' '
     trigger = False # Enable collection
     drop = True
+    suc = True
+    drop_counter = 0
+    fail = False
 
     def __init__(self):
         rospy.init_node('rollout_t42', anonymous=True)
@@ -25,12 +27,14 @@ class rolloutPublisher():
         rospy.Service('/rollout/rollout_from_file', rolloutReqFile, self.CallbackRolloutFile)
         self.record_srv = rospy.ServiceProxy('/rollout/record_trigger', SetBool)
         self.action_pub = rospy.Publisher('/rollout/action', Float32MultiArray, queue_size = 10)
+        # rospy.Subscriber('/rollout/move_success', Bool, self.callbackSuccess)
+        rospy.Subscriber('/rollout/fail', Bool, self.callbacFail)
 
         self.rollout_actor_srv = rospy.ServiceProxy('/rollout/run_trigger', SetBool)
 
         self.arm_reset_srv = rospy.ServiceProxy('/RegraspObject', RegraspObject)
         rospy.Subscriber('/ObjectIsReset', String, self.callbackTrigger)
-        rospy.Subscriber('/cylinder_drop', Bool, self.callbackObjectDrop)
+        # rospy.Subscriber('/cylinder_drop', Bool, self.callbackObjectDrop)
         self.drop_srv = rospy.ServiceProxy('/IsObjDropped', IsDropped)
         self.move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
         self.obs_srv = rospy.ServiceProxy('/observation', observation)
@@ -39,7 +43,7 @@ class rolloutPublisher():
 
         self.state_dim = 4
         self.action_dim = 2
-        self.stepSize = 1 
+        self.stepSize = 1
 
         print('[rollout] Ready to rollout...')
 
@@ -66,7 +70,7 @@ class rolloutPublisher():
     def run_rollout(self, A):
         self.rollout_transition = []
         self.trigger = False
-        self.ResetArm()        
+        # self.ResetArm()        
 
         msg = Float32MultiArray()  
 
@@ -80,14 +84,20 @@ class rolloutPublisher():
         
         # Publish episode actions
         success = True
-        i = 1
-        for action in A:
+        n = 0
+        i = 0
+        while 1:
+
+            if n == 0:
+                action = A[i,:]
+                i += 1
+                n = self.stepSize
+                print('[rollout] Applying action (' + str(action) + ') ' + str(i) + ' out of ' + str(A.shape[0]) + '.' )
 
             msg.data = action
             self.action_pub.publish(msg)
+            n -= 1
             # suc = self.move_srv(action).success
-            print('[rollout] Applying action (' + str(action) + ') ' + str(i) + ' out of ' + str(A.shape[0]) + '.' )
-            i += 1
 
             # # Get observation
             # next_state = np.array(self.obs_srv().state)
@@ -104,18 +114,28 @@ class rolloutPublisher():
 
             # state = np.copy(next_state)
 
-            if self.drop:# not suc or fail:
-                success = True#self.drop # drop_srv().dropped # Check if dropped - end of episode
-                c = 0
-                while self.drop:
-                    if c == 10:
-                        success = False
-                        break
-                    c += 1
-                    self.rate.sleep()
-                if not success:
-                    print("[rollout] Fail.")
-                    break
+            # if not self.suc: # Observes load failures
+            #     print("[rollout] Load Fail.")
+            #     success = False
+            #     break
+
+            if self.fail:# not suc or fail:
+                # success = True#self.drop # drop_srv().dropped # Check if dropped - end of episode
+                # c = 0
+                # while self.drop:
+                #     if c == 10:
+                success = False
+                print("[rollout] Drop Fail.")
+                break
+                #     c += 1
+                #     self.rate.sleep()
+                # if not success:
+                    # break
+
+            if i == A.shape[0] and n == 0:
+                print("[rollout] Complete.")
+                success = True
+                break
 
             self.rate.sleep()
 
@@ -128,8 +148,11 @@ class rolloutPublisher():
 
         return success
 
-    def callbackObjectDrop(self, msg):
-        self.drop = msg.data
+    def callbacFail(self, msg):
+        self.fail = msg.data
+
+    def callbackSuccess(self, msg):
+        self.suc = msg.data
 
     def callbackTrigger(self, msg):
         self.arm_status = msg.data

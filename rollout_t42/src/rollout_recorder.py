@@ -17,6 +17,9 @@ class rolloutRecorder():
     running = False
     action = np.array([0.,0.])
     S = A = []
+    suc = True
+    drop_counter = 0
+    fail = False
     
 
     def __init__(self):
@@ -24,8 +27,10 @@ class rolloutRecorder():
 
         rospy.Subscriber('/gripper/load', Float32MultiArray, self.callbackGripperLoad)
         rospy.Subscriber('/hand_control/obj_pos_mm', Float32MultiArray, self.callbackObj)
-        rospy.Subscriber('/cylinder_drop', Bool, self.callbackObjectDrop)
+        # rospy.Subscriber('/cylinder_drop', Bool, self.callbackObjectDrop)
         rospy.Subscriber('/rollout/action', Float32MultiArray, self.callbackAction)
+        # rospy.Subscriber('/rollout/move_success', Bool, self.callbackSuccess)
+        rospy.Subscriber('/rollout/fail', Bool, self.callbacFail)
         
         rospy.Service('/rollout/record_trigger', SetBool, self.callbackTrigger)
         rospy.Service('/rollout/get_states', gets, self.get_states)
@@ -38,17 +43,12 @@ class rolloutRecorder():
 
                 self.S.append(self.state)
                 self.A.append(self.action)
-                
-                if self.drop:
-                    success = True#self.drop # drop_srv().dropped # Check if dropped - end of episode
-                    c = 0
-                    while self.drop:
-                        if c == 10:
-                            print('[rollout_recorder] Episode ended.')
-                            self.running = False
-                            break
-                        c += 1
-                        self.rate.sleep()
+
+                if self.fail:
+                    print('[rollout_recorder] Episode ended.')
+                    self.running = False
+                    # File = self.path + self.planning_algorithm + '_goal' + str(goal[0]) + '_' + str(goal[1]) + '_n' + self.id + '_rollout.txt'
+                    # np.savetxt(File, S, delimiter = ', ')
 
             self.rate.sleep()
 
@@ -61,8 +61,8 @@ class rolloutRecorder():
     def callbackAction(self, msg):
         self.action = np.array(msg.data)
 
-    def callbackObjectDrop(self, msg):
-        self.drop = msg.data
+    def callbacFail(self, msg):
+        self.fail = msg.data
 
     def callbackTrigger(self, msg):
         self.running = msg.data
