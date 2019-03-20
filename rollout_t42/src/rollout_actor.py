@@ -72,7 +72,7 @@ class rollout():
 
     def callbackObjectDrop(self, msg):
         if (msg.data):
-            self.drop_counter +=1
+            self.drop_counter += 1
         else:
             self.drop_counter = 0
         self.drop = (self.drop_counter >= 7)

@@ -70,7 +70,8 @@ class rolloutPublisher():
     def run_rollout(self, A):
         self.rollout_transition = []
         self.trigger = False
-        # self.ResetArm()        
+        self.ResetArm()  
+        self.fail = False      
 
         msg = Float32MultiArray()  
 
@@ -142,7 +143,6 @@ class rolloutPublisher():
         self.record_srv(False)
         self.rollout_actor_srv(False)
 
-        print("[rollout_action_publisher] Rollout done.")
         rospy.sleep(1)
         self.open_srv()
 

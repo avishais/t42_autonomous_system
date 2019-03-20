@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from std_msgs.msg import String, Float32MultiArray
+from std_msgs.msg import String, Float32MultiArray, Bool
 from std_srvs.srv import Empty, EmptyResponse
 from rollout_node.srv import rolloutReq, rolloutReqFile, plotReq, observation, IsDropped, TargetAngles
 from hand_control.srv import RegraspObject, close
@@ -18,12 +18,15 @@ class rollout_demo():
     trigger = False # Enable demo
     resetf = False
     gripper_pos = np.array([0., 0.])
-    A = np.array([[-1.,1.], [1.,-1.]])*2.
+    A = np.array([[-1.,1.], [1.,-1.], [-1.,-1.]])*2.
+    drop = True
 
     def __init__(self):
         rospy.init_node('rollout_node', anonymous=True)
 
         rospy.Service('/run_demo', Empty, self.callbackTrigger)
+        rospy.Subscriber('/ObjectIsReset', String, self.callbackArm)
+        rospy.Subscriber('/cylinder_drop', Bool, self.callbackObjectDrop)
 
         self.obs_srv = rospy.ServiceProxy('/observation', observation)
         self.drop_srv = rospy.ServiceProxy('/IsObjDropped', IsDropped)
@@ -41,38 +44,61 @@ class rollout_demo():
 
         self.rate = rospy.Rate(15) # 15hz
         ia = 1
+        count = 0
+        drop_count = []
         while not rospy.is_shutdown():
 
             if self.trigger:
                 self.ResetArm()
+                # self.resetf = True
+                # self.trigger = False
 
-            if self.trigger and self.resetf:
-                print self.A[ia]
+            if self.resetf:
+                print self.A[ia], count
 
                 suc = self.move_srv(self.A[ia]).success
                 self.rate.sleep()
 
-                if self.gripper_pos[1] > 0.61:
+                if self.gripper_pos[1] > 0.51:
                     ia = 1
-                if self.gripper_pos[1] < 0.52:
+                if self.gripper_pos[1] < 0.33:
                     ia = 0
+                # if count > 200:
+                #     ia = 2
 
-                if not suc:# or self.drop_srv().dropped:
-                    self.trigger = False
-                    self.resetf = False      
+                if not suc or self.drop:
+                    if self.drop:
+                        drop_count.append(count)
+                        print "Drop!!! Avg.: ", np.mean(drop_count)
+                        raw_input()
+                    self.trigger = True
+                    self.resetf = False 
+                    count = 0
+                    ia = 1
+
+                count += 1
 
             self.rate.sleep()
 
     def ResetArm(self):
-        # if not self.drop_srv().dropped:
-            # return
-        # self.open_srv()
-        # rospy.sleep(2.0)
-        # self.close_srv()
-        # rospy.sleep(0.5)
-        # print('[rollout_demo] Press key to continue...')
-        # raw_input()
+        while 1:
+            if self.trigger and self.arm_status == 'waiting':
+                print('[rollout_action_publisher] Waiting for arm to grasp object...')
+                self.arm_reset_srv()
+                rospy.sleep(1.0)
+            self.rate.sleep()
+            if self.arm_status != 'moving' and self.trigger:
+                self.rate.sleep()
+                if self.drop: # Check if really grasped
+                    self.trigger = True
+                    print('[rollout_action_publisher] Grasp failed. Restarting')
+                    continue
+                else:
+                    break
+
         self.resetf = True
+        self.trigger = False
+        
 
     def callbackGripperPos(self, msg):
         self.gripper_pos = np.array(msg.data)
@@ -80,7 +106,7 @@ class rollout_demo():
     def run_rollout(self, A):
         self.rollout_transition = []
         self.trigger = False
-        self.ResetArm()            
+        # self.ResetArm()            
 
         print("[rollout] Rolling-out...")
         
@@ -112,7 +138,7 @@ class rollout_demo():
             next_state = np.array(self.obs_srv().state)
 
             if suc:
-                fail = self.drop_srv().dropped # Check if dropped - end of episode
+                fail = self.drop # Check if dropped - end of episode
             else:
                 # End episode if overload or angle limits reached
                 rospy.logerr('[rollout] Failed to move gripper. Episode declared failed.')
@@ -134,10 +160,14 @@ class rollout_demo():
 
         return np.array(S), success
 
+    def callbackArm(self, msg):
+        self.arm_status = msg.data
+
     def callbackTrigger(self, msg):
         self.trigger = not self.trigger
 
-        return EmptyResponse()
+    def callbackObjectDrop(self, msg):
+        self.drop = msg.data
 
     def CallbackRollout(self, req):
         
