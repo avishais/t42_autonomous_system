@@ -116,6 +116,7 @@ class general_control():
         rospy.sleep(1.0)
         
         self.plot_clear_srv()
+        
         self.plot_ref_srv(S.reshape((-1,)))
         self.trigger_srv(True)
         n = -1

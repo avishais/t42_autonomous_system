@@ -66,8 +66,8 @@ class rollout_demo():
                 # if count > 200:
                 #     ia = 2
 
-                if not suc or self.drop:
-                    if self.drop:
+                if not suc:# or self.drop:
+                    if 0:#self.drop:
                         drop_count.append(count)
                         print "Drop!!! Avg.: ", np.mean(drop_count)
                         raw_input()
@@ -89,7 +89,7 @@ class rollout_demo():
             self.rate.sleep()
             if self.arm_status != 'moving' and self.trigger:
                 self.rate.sleep()
-                if self.drop: # Check if really grasped
+                if 0:#self.drop: # Check if really grasped
                     self.trigger = True
                     print('[rollout_action_publisher] Grasp failed. Restarting')
                     continue

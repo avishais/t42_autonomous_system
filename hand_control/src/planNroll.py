@@ -3,7 +3,7 @@
 import rospy
 import numpy as np
 from hand_control.msg import plan_for_goal_request, plan_for_goal_response
-from rollout_node.srv import rolloutReq
+from rollout_t42.srv import rolloutReq
 from hand_control.srv import RegraspObject, close, observation, planroll
 from std_msgs.msg import String, Float32MultiArray, Bool
 from std_srvs.srv import Empty, EmptyResponse
@@ -115,7 +115,7 @@ class planRoll():
         print('[plan_call] Process ended.')
         self.open_srv()
 
-        if 1:
+        if 0:
             fig, ax = plt.subplots()
             St = np.copy(S)
             for i in range(2):
@@ -128,7 +128,7 @@ class planRoll():
             plt.legend()
             plt.show()
 
-        return self.planning_succeeded
+        return {'suc': self.planning_succeeded, 'file': pklfile[:-3]}
 
     def callbackObjectDrop(self, msg):
         self.drop = msg.data

@@ -2,3 +2,4 @@ float32[] goal
 string planning_algorithm
 ---
 bool suc
+string file

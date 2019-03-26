@@ -8,10 +8,12 @@ import pickle
 import time
 import glob
 from hand_control.srv import RegraspObject, close, observation, planroll
+from rollout_t42.srv import rolloutReq
 
 
 pr_srv = rospy.ServiceProxy('/planNroll', planroll)
 pr_proc_srv = rospy.ServiceProxy('/planNroll/process', Empty)
+rollout_srv = rospy.ServiceProxy('/rollout/rollout', rolloutReq)
 
 rospy.init_node('run_planNroll', anonymous=True)
 
@@ -21,13 +23,33 @@ set_modes = ['robust', 'naive']
 
 msg = planroll()
 
-for i in range(10):
-    for goal in goals:
-        for set_mode in set_modes:
-            print "Running " + set_mode + " with goal " + str(goal) + ", iteration " + str(i+1) + "..."
-            msg.goal = goal
-            msg.planning_algorithm = set_mode
+for goal in goals:
+    for set_mode in set_modes:
+        print "Running " + set_mode + " with goal " + str(goal) + "..."
+        msg.goal = goal
+        msg.planning_algorithm = set_mode
 
-            pr_srv(goal, set_mode)
+        # First rollout is from the known start state
+        res = pr_srv(goal, set_mode)
+        File = res.file
 
-pr_proc_srv()
+        # Now, more runs from approximately the start state
+        A = np.loadtxt(File + 'txt', delimiter=',', dtype=float)[:,:2]
+        with open(File + 'pkl' ,'r') as f:  
+            S = pickle.load(f)
+
+        P = []
+        P.append(S)
+
+        Af = A.reshape((-1,))
+        for j in range(9):
+            print("Rollout number " + str(j) + ".")
+            
+            Sro = np.array(rollout_srv(Af).states).reshape(-1,state_dim)
+
+            P.append(Sro)
+
+            with open(File + 'pkl', 'w') as f: 
+                pickle.dump(P, f)
+
+# pr_proc_srv()
