@@ -69,6 +69,7 @@ class rolloutRecorder():
         if self.running:
             self.S = []
             self.A = []
+            print('[rollout_recorder] Recording started.')
 
         return {'success': True, 'message': ''}
 
