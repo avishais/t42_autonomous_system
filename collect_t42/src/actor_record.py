@@ -5,10 +5,8 @@ import numpy as np
 import time
 import random
 from transition_experience import *
-from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool
+from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool,Float32
 from std_srvs.srv import Empty, EmptyResponse
-
-
 
 class actorPubRec():
     discrete_actions = True
@@ -21,6 +19,7 @@ class actorPubRec():
     running = False
     action = np.array([0.,0.])
     state = np.array([0.,0., 0., 0.])
+    angle = 0
     n = 0
     
     texp = transition_experience(Load=True, discrete = discrete_actions, postfix = 'bu')
@@ -30,9 +29,9 @@ class actorPubRec():
 
         rospy.Subscriber('/gripper/load', Float32MultiArray, self.callbackGripperLoad)
         rospy.Subscriber('/hand_control/obj_pos_mm', Float32MultiArray, self.callbackObj)
-        rospy.Subscriber('/hand_control/drop', Bool, self.callbackDrop)
+        rospy.Subscriber('/cylinder_drop', Bool, self.callbackDrop)
         rospy.Subscriber('/collect/action', Float32MultiArray, self.callbackAction)
-
+        rospy.Subscriber('/object_orientation',Float32MultiArray, self.callbackOrientation)
         rospy.Service('/actor/trigger', Empty, self.callbackTrigger)
         rospy.Service('/actor/save', Empty, self.callbackSave)
 
@@ -43,8 +42,8 @@ class actorPubRec():
             if self.running:
                 #count += 1
 
-                self.state = np.concatenate((self.obj_pos, self.gripper_load), axis=0)
-                self.texp.add(self.state, self.action, self.state, self.drop)
+                self.state = np.concatenate((self.obj_pos, self.angle, self.gripper_load), axis=0)
+                self.texp.add(rospy.get_rostime()-self.T, self.state, self.action, self.state, self.drop)
 
                 if self.drop:
                     c = 0
@@ -67,11 +66,17 @@ class actorPubRec():
     def callbackDrop(self, msg):
         self.drop = msg.data
 
+    def callbackOrientation(self,msg):
+        self.angle = msg.data
+
     def callbackAction(self, msg):
         self.action = np.array(msg.data)
 
     def callbackTrigger(self, msg):
         self.running = not self.running
+
+        if self.running:
+            self.T = rospy.get_rostime()
 
         return EmptyResponse()
 

@@ -17,6 +17,8 @@
         <rosparam command="load" file="$(find hand_control)/param/control_blue.yaml" />
   </node>
 
+
+
   <!--<node name="camera" pkg="usb_cam" type="usb_cam_node">
     <param name="image_width" value="1024"/>
     <param name="image_height" value="576"/>

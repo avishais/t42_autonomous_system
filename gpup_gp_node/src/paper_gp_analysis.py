@@ -54,20 +54,23 @@ if tr == '4':
             np.array([[ 1., -1.] for _ in range(int(250*1./stepSize))]),
             np.array([[ -1., -1.] for _ in range(int(250*1./stepSize))])), axis=0 )
 if tr == '5':
-    # A = np.tile(np.array([-1.,1.]), (800*1./stepSize,1))
-    A = np.concatenate(  (np.array([[-1.,  1.] for _ in range(int(800*1./stepSize))]), 
-            np.array([[ 1., -1.] for _ in range(int(200*1./stepSize))])), axis=0 )
+    A = np.tile(np.array([-1.,1.]), (800*1./stepSize,1))
+    # A = np.concatenate(  (np.array([[-1.,  1.] for _ in range(int(800*1./stepSize))]), 
+    #         np.array([[ 1., -1.] for _ in range(int(200*1./stepSize))])), axis=0 )
 
 
-if 0:
+if 1:
     Af = A.reshape((-1,))
     Pro = []
-    for j in range(10):
+    for j in range(2):
         print("Rollout number " + str(j) + ".")
         
         roll = rollout_srv(Af)
         R = np.array(roll.states).reshape(-1,state_dim)
         suc = roll.success
+
+        if R.shape[0] < 10:
+            continue
 
         Pro.append(R)
         
@@ -91,9 +94,9 @@ def medfilter(x, W):
     return x_new
 
 print('Smoothing data...')
-for R in Pro:
-    for i in range(4):
-        R[:,i] = medfilter(R[:,i], 20)
+# for R in Pro:
+#     for i in range(4):
+#         R[:,i] = medfilter(R[:,i], 100)
 # for i in range(2,4):
 #     R[:,i] = medfilter(R[:,i], 40)
 
@@ -118,20 +121,21 @@ R = Pro[0]
 s_start = R[0,:]
 sigma_start = np.ones((1,4))*1e-3
 
-# for R in Pro:
-#     if R.shape[0] < 100:
-#         continue
-#     plt.plot(R[:,0], R[:,1], '.-k')
-#     plt.plot(R[0,0], R[0,1], 'or')
+for R in Pro:
+    print R.shape
+    if R.shape[0] < 2:
+        continue
+    plt.plot(R[:,0], R[:,1], '.-k')
+    plt.plot(R[0,0], R[0,1], 'or')
 # plt.plot(Smean[:,0],Smean[:,1], '-b')
-# plt.show()
-# exit(1)
+plt.show()
+exit(1)
 
 
 rospy.init_node('verification_t42', anonymous=True)
 
 
-if 1:   
+if 0:   
     Np = 100 # Number of particles
 
     ######################################## GP propagation ##################################################
@@ -370,7 +374,7 @@ ix = [0, 1]
 # ax2.plot(t, Ypred_naive[:,1], '-k')
 # ax2.plot(t, Ypred_bmean[:,1], '-m')
 
-plt.figure(2)
+# plt.figure(2)
 # ax1 = plt.subplot(1,2,1)
 try:
     plt.plot(R[:,ix[0]], R[:,ix[1]], '.-k', label='rollout')

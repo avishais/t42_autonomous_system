@@ -6,10 +6,11 @@ Author: Avishai Sintov
 
 import rospy
 import numpy as np 
-from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool
+from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool, Float32
 from std_srvs.srv import Empty, EmptyResponse
 from openhand.srv import MoveServos, ReadTemperature
-from hand_control.srv import TargetAngles, IsDropped, observation, close
+from hand_control.srv import TargetAngles, IsDropped, observation, close, ObjOrientation
+
 # from common_msgs_gl.srv import SendDoubleArray, SendBool
 import geometry_msgs.msg
 import math
@@ -41,6 +42,9 @@ class hand_control():
     object_grasped = False
     drop_query = True
 
+    angle = 0
+    cornerPos = []
+    
     move_servos_srv = 0.
 
     def __init__(self):
@@ -61,7 +65,7 @@ class hand_control():
         pub_gripper_status = rospy.Publisher('/gripper/gripper_status', String, queue_size=10)
         pub_drop = rospy.Publisher('/hand_control/drop', Bool, queue_size=10)
         pub_obj_pos = rospy.Publisher('/hand_control/obj_pos_mm', Float32MultiArray, queue_size=10)
-
+        pub_obj_orientation = rospy.Publisher('/object_orientation', Float32MultiArray, queue_size=10)
         # vel_ref_srv = rospy.ServiceProxy('/gripper_t42/vel_ref', SendDoubleArray)
         # self.allow_motion_srv = rospy.ServiceProxy('/gripper_t42/allow_motion', SendBool)
 
@@ -70,7 +74,9 @@ class hand_control():
         rospy.Service('/MoveGripper', TargetAngles, self.MoveGripper)
         rospy.Service('/IsObjDropped', IsDropped, self.CheckDroppedSrv)
         rospy.Service('/observation', observation, self.GetObservation)
+        rospy.Service('objectOrientation',ObjOrientation,self.getOrientation)
 
+        rospy.Subscriber('/cylinder_corner',geometry_msgs.msg.Pose,self.getCorner)
         self.move_servos_srv = rospy.ServiceProxy('/MoveServos', MoveServos)
         self.temperature_srv = rospy.ServiceProxy('/ReadTemperature', ReadTemperature)
 
@@ -84,6 +90,9 @@ class hand_control():
 
             msg.data = self.obj_pos
             pub_obj_pos.publish(msg)
+
+            #publishing the angle of the object
+            pub_obj_orientation.publish(self.angle)
 
             if count > 1000:
                 dr, verbose = self.CheckDropped()
@@ -99,7 +108,21 @@ class hand_control():
             #     vel_ref_srv(self.vel_ref)
 
             # rospy.spin()
+            
             self.rate.sleep()
+
+    def getOrientation(self,req):
+        arr1=self.cornerPos
+        arr2 = self.obj_pos
+        self.angle = np.arctan2((arr1[0]-arr2[0]),(arr1[1]-arr2[1]))#*(180/np.pi)finding the arctan value and converting it to degrees
+        return {'ori':self.angle}
+	#this is to calculate the orientation of the object in space
+    
+    def getCorner(self,msg):
+        self.cornerPos = [msg.position.x, msg.position.y]
+        arr1 = self.cornerPos
+        arr2 = self.obj_pos
+        self.angle = np.arctan2((arr1[1]-arr2[1]),(arr1[0]-arr2[0]))#*(180/np.pi)finding the arctan value and converting it to degrees
 
     def callbackGripperPos(self, msg):
         self.gripper_pos = np.array(msg.data)
@@ -158,7 +181,7 @@ class hand_control():
             if desired[0] > 0.7 or desired[1] > 0.7:
                 rospy.logerr('[hand] Desired angles out of bounds.')
                 break
-            print self.gripper_pos, desired
+            # print self.gripper_pos, desired
             self.moveGripper(desired)
             rospy.sleep(0.2)  
 
@@ -252,7 +275,7 @@ class hand_control():
 
 
     def GetObservation(self, msg):
-        obs = np.concatenate((self.obj_pos, self.gripper_load))
+        obs = np.concatenate((self.obj_pos, self.angle, self.gripper_load))
 
         return {'state': obs}
 

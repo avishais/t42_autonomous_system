@@ -9,7 +9,7 @@ class OpenHandNode():
 	hand = None
 	sRefs = None
 
-	def __init__(self,hand):
+	def __init__(self, hand):
 		self.hand = hand
 		self.sRefs = [0.]*len(self.hand.servos)
 		for i in xrange(len(self.hand.servos)):
@@ -108,7 +108,6 @@ class OpenHandNode():
 		resp.temp = temp
 
 		return resp
-
 
 
 if __name__=="__main__":

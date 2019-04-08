@@ -25,6 +25,7 @@ class rolloutPublisher():
 
         rospy.Service('/rollout/rollout', rolloutReq, self.CallbackRollout)
         rospy.Service('/rollout/rollout_from_file', rolloutReqFile, self.CallbackRolloutFile)
+        rospy.Service('/rollout/run_trigger', SetBool, self.callbackStop)
         self.record_srv = rospy.ServiceProxy('/rollout/record_trigger', SetBool)
         self.action_pub = rospy.Publisher('/rollout/action', Float32MultiArray, queue_size = 10)
         # rospy.Subscriber('/rollout/move_success', Bool, self.callbackSuccess)
@@ -40,6 +41,7 @@ class rolloutPublisher():
         self.obs_srv = rospy.ServiceProxy('/observation', observation)
         self.gets_srv = rospy.ServiceProxy('/rollout/get_states', gets)
         self.open_srv = rospy.ServiceProxy('/OpenGripper', Empty) 
+        self.close_srv = rospy.ServiceProxy('/CloseGripper', close) 
 
         self.state_dim = 4
         self.action_dim = 2
@@ -70,8 +72,12 @@ class rolloutPublisher():
     def run_rollout(self, A):
         self.rollout_transition = []
         self.trigger = False
-        self.ResetArm()  
-        self.fail = False      
+        # self.ResetArm()  
+        self.fail = False  
+
+        self.close_srv()
+        print("set") 
+        raw_input()
 
         msg = Float32MultiArray()  
 
@@ -84,16 +90,17 @@ class rolloutPublisher():
         self.rollout_actor_srv(True)
         
         # Publish episode actions
+        self.running = True
         success = True
         n = 0
         i = 0
-        while 1:
+        while self.running:
 
             if n == 0:
                 action = A[i,:]
                 i += 1
                 n = self.stepSize
-                print('[rollout] Applying action (' + str(action) + ') ' + str(i) + ' out of ' + str(A.shape[0]) + '.' )
+                # print('[rollout] Applying action (' + str(action) + ') ' + str(i) + ' out of ' + str(A.shape[0]) + '.' )
 
             msg.data = action
             self.action_pub.publish(msg)
@@ -143,8 +150,14 @@ class rolloutPublisher():
         self.record_srv(False)
         self.rollout_actor_srv(False)
 
+        if not self.running:
+            print("[rollout] Stopped due to noise.")
+            raw_input()
+
         rospy.sleep(1)
         self.open_srv()
+
+        
 
         return success
 
@@ -158,6 +171,11 @@ class rolloutPublisher():
         self.arm_status = msg.data
         if not self.trigger and self.arm_status == 'finished':
             self.trigger = True
+
+    def callbackStop(self, msg):
+        self.running = msg.data
+
+        return {'success': True, 'message': ''}
 
     def CallbackRollout(self, req):
 

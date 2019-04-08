@@ -63,6 +63,7 @@ add_service_files(
   close.srv
   RegraspObject.srv
   planroll.srv
+  ObjOrientation.srv
 )
 
 ## Generate actions in the 'action' folder

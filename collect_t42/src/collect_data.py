@@ -15,7 +15,7 @@ from bowen_pose_estimate.srv import recordHandPose
 class collect_data():
 
     gripper_closed = False
-    trigger = False # Enable collection
+    trigger = True # Enable collection
     discrete_actions = True # Discrete or continuous actions
     arm_status = ' '
     global_trigger = True
@@ -43,7 +43,7 @@ class collect_data():
         rospy.Subscriber('/ObjectIsReset', String, self.callbackTrigger)
         arm_reset_srv = rospy.ServiceProxy('/RegraspObject', RegraspObject)
         record_srv = rospy.ServiceProxy('/record_hand_pose', recordHandPose)
-        rospy.Subscriber('/hand_control/drop', Bool, self.callbackObjectDrop)
+        rospy.Subscriber('/cylinder_drop', Bool, self.callbackObjectDrop)
         recorder_srv = rospy.ServiceProxy('/actor/trigger', Empty)
 
         collect_mode = 'auto' # 'manual' or 'auto' or 'plan'
@@ -65,7 +65,6 @@ class collect_data():
         msg = Float32MultiArray()
 
         msgd = record_srv()
-        print msgd.info
         open_srv()
         time.sleep(2.)
 
@@ -91,8 +90,10 @@ class collect_data():
                     if collect_mode == 'manual': 
                         ResetKeyboard_srv()
                     if 1:#drop_srv().dropped:
-                        arm_reset_srv()
+                        # arm_reset_srv()
+                        close_srv()
                         print('[collect_data] Waiting for arm to grasp object...')
+                        raw_input()
                         time.sleep(1.0)
                     else:
                         self.trigger = True
@@ -131,6 +132,7 @@ class collect_data():
                     n = 0
                     action = np.array([0.,0.])
                     state = np.array(obs_srv().state)
+                    T = rospy.get_rostime()
                     for ep_step in range(self.episode_length):
 
                         if collect_mode == 'plan' and Af.shape[0] == ep_step: # Finished planned path and now applying random actions
@@ -171,7 +173,7 @@ class collect_data():
                             rospy.logerr('[collect_data] Failed to move gripper. Episode declared failed.')
                             fail = True
 
-                        self.texp.add(state, action, next_state, not suc or fail)
+                        self.texp.add(rospy.get_rostime()-T, state, action, next_state, not suc or fail)
                         state = np.copy(next_state)
 
                         if not suc or fail:

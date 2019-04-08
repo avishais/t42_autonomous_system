@@ -7,6 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '6'
+Obj = '35'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/'
@@ -19,15 +20,15 @@ class transition_experience():
             self.mode = 'c' # Continuous actions
         
         self.postfix = postfix
-        self.file_name = self.path + 'raw_35_' + self.mode + '_v' + version + self.postfix + '.obj'
+        self.file_name = self.path + 'raw_' + Obj + '_' + self.mode + '_v' + version + self.postfix + '.obj'
 
         if Load:
             self.load()
         else:
             self.clear()
         
-    def add(self, state, action, next_state, done):
-        self.memory += [(state, action, next_state, done)]
+    def add(self, time, state, action, next_state, done):
+        self.memory += [(time, state, action, next_state, done)]
         
     def clear(self):
         self.memory = []
@@ -240,7 +241,7 @@ class transition_experience():
         #     if done[i]:
         #         done[i-2:i] = True
 
-        inx = np.where(done)
+        inx = np.where(done)[0]
         D = np.delete(D, inx, 0) # Remove drop transitions
         done = np.delete(done, inx, 0)
               
