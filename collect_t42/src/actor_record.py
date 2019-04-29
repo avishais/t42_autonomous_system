@@ -7,6 +7,7 @@ import random
 from transition_experience import *
 from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool,Float32
 from std_srvs.srv import Empty, EmptyResponse
+import geometry_msgs.msg
 
 class actorPubRec():
     discrete_actions = True
@@ -19,10 +20,14 @@ class actorPubRec():
     running = False
     action = np.array([0.,0.])
     state = np.array([0.,0., 0., 0.])
-    angle = 0
+    angle = np.array([0.,0.])
     n = 0
+    marker0 = np.array([0.,0.])
+    marker1 = np.array([0.,0.])
+    marker2 = np.array([0.,0.])
+    marker3 = np.array([0.,0.])
     
-    texp = transition_experience(Load=True, discrete = discrete_actions, postfix = 'bu')
+    texp = transition_experience(Load=True, discrete = discrete_actions, postfix = '')
 
     def __init__(self):
         rospy.init_node('actor_pub_record', anonymous=True)
@@ -32,6 +37,7 @@ class actorPubRec():
         rospy.Subscriber('/cylinder_drop', Bool, self.callbackDrop)
         rospy.Subscriber('/collect/action', Float32MultiArray, self.callbackAction)
         rospy.Subscriber('/object_orientation',Float32MultiArray, self.callbackOrientation)
+        rospy.Subscriber('/finger_markers', geometry_msgs.msg.PoseArray, self.callAddFingerPos)
         rospy.Service('/actor/trigger', Empty, self.callbackTrigger)
         rospy.Service('/actor/save', Empty, self.callbackSave)
 
@@ -42,7 +48,7 @@ class actorPubRec():
             if self.running:
                 #count += 1
 
-                self.state = np.concatenate((self.obj_pos, self.angle, self.gripper_load), axis=0)
+                self.state = np.concatenate((self.obj_pos, self.angle, self.marker0, self.marker1, self.marker2, self.marker3, self.gripper_load), axis=0)
                 self.texp.add(rospy.get_rostime()-self.T, self.state, self.action, self.state, self.drop)
 
                 if self.drop:
@@ -62,15 +68,31 @@ class actorPubRec():
 
     def callbackObj(self, msg):
         self.obj_pos = np.array(msg.data)
+        print(self.obj_pos)
 
     def callbackDrop(self, msg):
         self.drop = msg.data
 
     def callbackOrientation(self,msg):
-        self.angle = msg.data
+        self.angle[0] = msg.data
 
     def callbackAction(self, msg):
         self.action = np.array(msg.data)
+
+    def callAddFingerPos(self, msg):
+        tempMarkers =  msg.poses
+
+        self.marker0[0] = tempMarkers[0].position.x
+        self.marker0[1] = tempMarkers[0].position.y
+
+        self.marker1[0] = tempMarkers[1].position.x
+        self.marker1[1] = tempMarkers[1].position.y
+
+        self.marker2[0] = tempMarkers[2].position.x
+        self.marker2[1] = tempMarkers[2].position.y 
+
+        self.marker3[0] = tempMarkers[3].position.x
+        self.marker3[1] = tempMarkers[3].position.y
 
     def callbackTrigger(self, msg):
         self.running = not self.running

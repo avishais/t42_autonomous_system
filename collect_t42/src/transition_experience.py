@@ -6,11 +6,11 @@ import matplotlib.pyplot as plt
 from scipy.io import savemat
 import scipy.signal
 
-version = '6'
-Obj = '35'
+version = '0'
+Obj = 'cyl35'
 
 class transition_experience():
-    path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/'
+    path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
     def __init__(self, Load=True, discrete = True, postfix=''):
 
@@ -20,7 +20,10 @@ class transition_experience():
             self.mode = 'c' # Continuous actions
         
         self.postfix = postfix
-        self.file_name = self.path + 'raw_' + Obj + '_' + self.mode + '_v' + version + self.postfix + '.obj'
+        if postfix == 'bu':
+            self.file_name = self.path + 'internal/' + 'raw_' + Obj + '_' + self.mode + '_v' + version + self.postfix + '.obj'
+        else:
+            self.file_name = self.path + 'raw_' + Obj + '_' + self.mode + '_v' + version + self.postfix + '.obj'
 
         if Load:
             self.load()

@@ -27,7 +27,7 @@ class collect_data():
 
     A = np.array([[1.0,1.0],[-1.,-1.],[-1.,1.],[1.,-1.],[1.5,0.],[-1.5,0.],[0.,-1.5],[0.,1.5]])
 
-    texp = transition_experience(Load = True, discrete = discrete_actions)
+    texp = transition_experience(Load = True, discrete = discrete_actions, postfix = 'bu')
 
     def __init__(self):
         rospy.init_node('collect_data', anonymous=True)
@@ -90,10 +90,10 @@ class collect_data():
                     if collect_mode == 'manual': 
                         ResetKeyboard_srv()
                     if 1:#drop_srv().dropped:
-                        # arm_reset_srv()
-                        close_srv()
+                        arm_reset_srv()
+                        # close_srv()
                         print('[collect_data] Waiting for arm to grasp object...')
-                        raw_input()
+                        # raw_input()
                         time.sleep(1.0)
                     else:
                         self.trigger = True

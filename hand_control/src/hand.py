@@ -42,7 +42,11 @@ class hand_control():
     object_grasped = False
     drop_query = True
 
-    angle = 0
+    angle = [0,0]
+    marker0 = np.array([0.,0.])
+    marker1 = np.array([0.,0.])
+    marker2 = np.array([0.,0.])
+    marker3 = np.array([0.,0.])
     cornerPos = []
     
     move_servos_srv = 0.
@@ -62,6 +66,7 @@ class hand_control():
         rospy.Subscriber('/gripper/temperature', Float32MultiArray, self.callbackGripperTemp)
         rospy.Subscriber('/cylinder_pose', geometry_msgs.msg.Pose, self.callbackMarkers)
         rospy.Subscriber('cylinder_drop', Bool, self.callbackObjectDrop)
+        rospy.Subscriber('/finger_markers', geometry_msgs.msg.PoseArray, self.callAddFingerPos)
         pub_gripper_status = rospy.Publisher('/gripper/gripper_status', String, queue_size=10)
         pub_drop = rospy.Publisher('/hand_control/drop', Bool, queue_size=10)
         pub_obj_pos = rospy.Publisher('/hand_control/obj_pos_mm', Float32MultiArray, queue_size=10)
@@ -74,7 +79,7 @@ class hand_control():
         rospy.Service('/MoveGripper', TargetAngles, self.MoveGripper)
         rospy.Service('/IsObjDropped', IsDropped, self.CheckDroppedSrv)
         rospy.Service('/observation', observation, self.GetObservation)
-        rospy.Service('objectOrientation',ObjOrientation,self.getOrientation)
+        # rospy.Service('objectOrientation',ObjOrientation,self.getOrientation)
 
         rospy.Subscriber('/cylinder_corner',geometry_msgs.msg.Pose,self.getCorner)
         self.move_servos_srv = rospy.ServiceProxy('/MoveServos', MoveServos)
@@ -92,7 +97,7 @@ class hand_control():
             pub_obj_pos.publish(msg)
 
             #publishing the angle of the object
-            pub_obj_orientation.publish(self.angle)
+            # pub_obj_orientation.publish(self.angle)
 
             if count > 1000:
                 dr, verbose = self.CheckDropped()
@@ -112,17 +117,20 @@ class hand_control():
             self.rate.sleep()
 
     def getOrientation(self,req):
-        arr1=self.cornerPos
+        self.cornerPos = [msg.position.x, msg.position.y]
+        arr1 = self.cornerPos
         arr2 = self.obj_pos
-        self.angle = np.arctan2((arr1[0]-arr2[0]),(arr1[1]-arr2[1]))#*(180/np.pi)finding the arctan value and converting it to degrees
-        return {'ori':self.angle}
+        self.angle[0] = np.arctan2((arr1[1]-arr2[1]),(arr1[0]-arr2[0]))
+        self.angle = np.array(self.angle)
+        return {'ori':self.angle[0]}
 	#this is to calculate the orientation of the object in space
     
     def getCorner(self,msg):
         self.cornerPos = [msg.position.x, msg.position.y]
         arr1 = self.cornerPos
         arr2 = self.obj_pos
-        self.angle = np.arctan2((arr1[1]-arr2[1]),(arr1[0]-arr2[0]))#*(180/np.pi)finding the arctan value and converting it to degrees
+        self.angle[0] = np.arctan2((arr1[1]-arr2[1]),(arr1[0]-arr2[0]))
+        self.angle = np.array(self.angle)
 
     def callbackGripperPos(self, msg):
         self.gripper_pos = np.array(msg.data)
@@ -144,6 +152,21 @@ class hand_control():
 
     def callbackObjectDrop(self, msg):
         self.drop_query = msg.data
+
+    def callAddFingerPos(self, msg):
+        tempMarkers =  msg.poses
+        
+        self.marker0[0] = tempMarkers[0].position.x
+        self.marker0[1] = tempMarkers[0].position.y
+
+        self.marker1[0] = tempMarkers[1].position.x
+        self.marker1[1] = tempMarkers[1].position.y
+
+        self.marker2[0] = tempMarkers[2].position.x
+        self.marker2[1] = tempMarkers[2].position.y 
+
+        self.marker3[0] = tempMarkers[3].position.x
+        self.marker3[1] = tempMarkers[3].position.y
 
     def OpenGripper(self, msg):
         # self.vel_ref = np.array([0.,0.,])
@@ -275,8 +298,7 @@ class hand_control():
 
 
     def GetObservation(self, msg):
-        obs = np.concatenate((self.obj_pos, self.angle, self.gripper_load))
-
+        obs = np.concatenate((self.obj_pos, self.angle,self.marker0,self.marker1,self.marker2,self.marker3, self.gripper_load))
         return {'state': obs}
 
 
