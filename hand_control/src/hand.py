@@ -42,7 +42,7 @@ class hand_control():
     object_grasped = False
     drop_query = True
 
-    angle = [0,0]
+    angle = np.array([0.])
     marker0 = np.array([0.,0.])
     marker1 = np.array([0.,0.])
     marker2 = np.array([0.,0.])
@@ -97,7 +97,8 @@ class hand_control():
             pub_obj_pos.publish(msg)
 
             #publishing the angle of the object
-            # pub_obj_orientation.publish(self.angle)
+            msg.data = self.angle
+            pub_obj_orientation.publish(msg)
 
             if count > 1000:
                 dr, verbose = self.CheckDropped()

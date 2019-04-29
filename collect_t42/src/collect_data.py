@@ -187,7 +187,7 @@ class collect_data():
                     print('[collect_data] Finished running episode %d with total number of collected points: %d' % (self.num_episodes, self.texp.getSize()))
                     print('[collect_data] Waiting for next episode initialization...')
 
-                    if self.num_episodes > 0 and not (self.num_episodes % 10):
+                    if self.num_episodes > 0 and not (self.num_episodes % 1):
                         open_srv()
                         self.texp.save()
                         self.recorderSave_srv()

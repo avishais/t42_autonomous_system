@@ -20,7 +20,7 @@ class actorPubRec():
     running = False
     action = np.array([0.,0.])
     state = np.array([0.,0., 0., 0.])
-    angle = np.array([0.,0.])
+    angle = np.array([0.])
     n = 0
     marker0 = np.array([0.,0.])
     marker1 = np.array([0.,0.])
@@ -68,13 +68,12 @@ class actorPubRec():
 
     def callbackObj(self, msg):
         self.obj_pos = np.array(msg.data)
-        print(self.obj_pos)
 
     def callbackDrop(self, msg):
         self.drop = msg.data
 
     def callbackOrientation(self,msg):
-        self.angle[0] = msg.data
+        self.angle = msg.data
 
     def callbackAction(self, msg):
         self.action = np.array(msg.data)
