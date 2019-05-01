@@ -66,26 +66,35 @@ class transition_experience():
 
     def plot_data(self):
 
-        states = np.array([item[0] for item in self.memory])
+        T = np.array([item[0] for item in self.memory])
+        states = np.array([item[1] for item in self.memory])
         states[:,:2] *= 1000.
-        done = np.array([item[3] for item in self.memory])
+        states[:,3:-2] *= 1000.
+        done = np.array([item[4] for item in self.memory])
         failed_states = states[done]
 
         plt.figure(1)
         ax1 = plt.subplot(121)
         # ax1.plot(states[:,0],states[:,1],'-k')
+        ax1.plot(states[:,3],states[:,4],'.b')
+        ax1.plot(states[:,5],states[:,6],'.b')
+        ax1.plot(states[:,7],states[:,8],'.b')
+        ax1.plot(states[:,9],states[:,10],'.b')
         ax1.plot(states[:,0],states[:,1],'.y')
         ax1.plot(failed_states[:,0],failed_states[:,1],'.r')
         ax1.set(title='Object position')
         ax1.axis('equal')
-        # plt.ylim((0.06, 0.12))
-        # plt.xlim((-0.03, 0.11))
+        plt.ylim((-50, 140))
+        plt.xlim((-60, 130))
         
         ax2 = plt.subplot(122)
-        ax2.plot(states[:,2],states[:,3],'.k')
-        ax2.plot(failed_states[:,2],failed_states[:,3],'.r')
+        ax2.plot(states[:,-2],states[:,-1],'.k')
+        ax2.plot(failed_states[:,-2],failed_states[:,-1],'.r')
         ax2.set(title='Actuator loads')
-        
+        ax2.axis('equal')
+        plt.xlim((-10, 300))
+        plt.ylim((-300, 10))
+
         plt.show()
 
     def save_to_file(self):
@@ -197,15 +206,15 @@ class transition_experience():
         is_start = 1
         is_end = 277
 
-        states = np.array([item[0] for item in self.memory])
+        states = np.array([item[1] for item in self.memory])
         states[:,:2] *= 1000.
-        actions = np.array([item[1] for item in self.memory])
-        next_states = np.array([item[2] for item in self.memory])
+        actions = np.array([item[2] for item in self.memory])
+        next_states = np.array([item[3] for item in self.memory])
         next_states[:,:2] *= 1000.
-        done = np.array([item[3] for item in self.memory]) 
+        done = np.array([item[4] for item in self.memory]) 
 
         # For data from recorder
-        if self.postfix == 'bu':
+        if self.postfix != 'bu':
             next_states = np.roll(states, -1, axis=0) 
 
         self.state_dim = states.shape[1]

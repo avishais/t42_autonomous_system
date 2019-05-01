@@ -42,7 +42,7 @@ class collect_data():
         move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
         rospy.Subscriber('/ObjectIsReset', String, self.callbackTrigger)
         arm_reset_srv = rospy.ServiceProxy('/RegraspObject', RegraspObject)
-        record_srv = rospy.ServiceProxy('/record_hand_pose', recordHandPose)
+        # record_srv = rospy.ServiceProxy('/record_hand_pose', recordHandPose)
         rospy.Subscriber('/cylinder_drop', Bool, self.callbackObjectDrop)
         recorder_srv = rospy.ServiceProxy('/actor/trigger', Empty)
 
@@ -64,7 +64,7 @@ class collect_data():
 
         msg = Float32MultiArray()
 
-        msgd = record_srv()
+        # msgd = record_srv()
         open_srv()
         time.sleep(2.)
 
@@ -132,7 +132,7 @@ class collect_data():
                     n = 0
                     action = np.array([0.,0.])
                     state = np.array(obs_srv().state)
-                    T = rospy.get_rostime()
+                    T = rospy.get_time()
                     for ep_step in range(self.episode_length):
 
                         if collect_mode == 'plan' and Af.shape[0] == ep_step: # Finished planned path and now applying random actions
@@ -173,7 +173,7 @@ class collect_data():
                             rospy.logerr('[collect_data] Failed to move gripper. Episode declared failed.')
                             fail = True
 
-                        self.texp.add(rospy.get_rostime()-T, state, action, next_state, not suc or fail)
+                        self.texp.add(rospy.get_time()-T, state, action, next_state, not suc or fail)
                         state = np.copy(next_state)
 
                         if not suc or fail:
@@ -187,7 +187,7 @@ class collect_data():
                     print('[collect_data] Finished running episode %d with total number of collected points: %d' % (self.num_episodes, self.texp.getSize()))
                     print('[collect_data] Waiting for next episode initialization...')
 
-                    if self.num_episodes > 0 and not (self.num_episodes % 1):
+                    if self.num_episodes > 0 and not (self.num_episodes % 10):
                         open_srv()
                         self.texp.save()
                         self.recorderSave_srv()
@@ -218,7 +218,7 @@ class collect_data():
                     a = self.A[0]
                 else:
                     a = self.A[1]
-            elif np.random.uniform(0,1,1) > 0.7:
+            elif np.random.uniform(0,1,1) > 0.85:
                 if np.random.uniform(0,1,1) > 0.5:
                     a = self.A[2]
                 else:

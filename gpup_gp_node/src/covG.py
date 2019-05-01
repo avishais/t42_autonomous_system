@@ -1,5 +1,12 @@
 #!/usr/bin/env python
 
+'''
+Author: Avishai Sintov
+        Rutgers University
+        2018-2019
+This code is based on Girard's PhD thesis implementation of the Gaussian Kernel and covariance matrix
+'''
+
 import numpy as np
 from scipy.optimize import minimize
 from scipy.linalg import inv
@@ -106,11 +113,11 @@ class Covariance(object):
         bounds = [(-100.,20.) for _ in range(self.d+2)]
         # res = minimize(self.neg_log_marginal_likelihood, self.theta, method='l-bfgs-b', bounds=bounds,tol=1e-20, options={'disp':False,'eps':1e-10})
         # self.theta = res['x']
+        # print "Optimized hyper-parameters with cost function " + str(res['fun']) + "."
 
         from Utilities import minimize
         self.theta = minimize(self.neg_log_marginal_likelihood, self.theta, bounds = bounds, constr = None,fprime = None, method=["l_bfgs_b"])#all, tnc, l_bfgs_b, cobyla, slsqp, bfgs, powell, cg, simplex or list of some of them
 
-        # print "Optimized hyper-parameters with cost function " + str(res['fun']) + "."
         print "Theta is now " + str(self.theta)
 
     def neg_log_marginal_likelihood(self, theta):
@@ -122,4 +129,3 @@ class Covariance(object):
             Kinv = np.linalg.inv(K)
 
         return 0.5*np.dot(self.Y.T, np.dot(Kinv, self.Y)) + 0.5*np.log(np.linalg.det(K)) + 0.5*self.N*np.log(2*np.pi)
-

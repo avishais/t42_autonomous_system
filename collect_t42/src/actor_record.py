@@ -49,7 +49,7 @@ class actorPubRec():
                 #count += 1
 
                 self.state = np.concatenate((self.obj_pos, self.angle, self.marker0, self.marker1, self.marker2, self.marker3, self.gripper_load), axis=0)
-                self.texp.add(rospy.get_rostime()-self.T, self.state, self.action, self.state, self.drop)
+                self.texp.add(rospy.get_time()-self.T, self.state, self.action, self.state, self.drop)
 
                 if self.drop:
                     c = 0
@@ -97,7 +97,7 @@ class actorPubRec():
         self.running = not self.running
 
         if self.running:
-            self.T = rospy.get_rostime()
+            self.T = rospy.get_time()
 
         return EmptyResponse()
 
