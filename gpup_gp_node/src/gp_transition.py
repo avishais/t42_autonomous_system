@@ -17,7 +17,7 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
-simORreal = 't42_35'
+simORreal = 't42_cyl35'
 discreteORcont = 'discrete'
 useDiffusionMaps = False
 probability_threshold = 0.65
@@ -47,7 +47,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
             print('[gp_transition] No diffusion maps used, K=%d.'%self.K)
             data_load.__init__(self, simORreal = simORreal, discreteORcont = discreteORcont, K = self.K, dr = 'spec')
 
-        svm_failure.__init__(self, discrete = (True if discreteORcont=='discrete' else False))
+        svm_failure.__init__(self, simORreal = simORreal, discrete = (True if discreteORcont=='discrete' else False))
         mean_shift.__init__(self)
 
         rospy.Service('/gp/transition', batch_transition, self.GetTransition)

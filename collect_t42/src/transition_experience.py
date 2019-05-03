@@ -7,10 +7,11 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'cyl35'
+Obj = 'cyl35-locked'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+    dest_path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/' 
 
     def __init__(self, Load=True, discrete = True, postfix=''):
 
@@ -208,9 +209,11 @@ class transition_experience():
 
         states = np.array([item[1] for item in self.memory])
         states[:,:2] *= 1000.
+        states = states[:,[0,1,11,12]]
         actions = np.array([item[2] for item in self.memory])
         next_states = np.array([item[3] for item in self.memory])
         next_states[:,:2] *= 1000.
+        next_states = next_states[:,[0,1,11,12]]
         done = np.array([item[4] for item in self.memory]) 
 
         # For data from recorder
@@ -270,9 +273,8 @@ class transition_experience():
         # plt.show()
         # exit(1)
 
-        # savemat(self.path + 't42_35_data_discrete_v' + version + '_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
-        # savemat('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_data_discrete_v' + version + '_d4_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
-        # print "Saved mat file with " + str(D.shape[0]) + " transition points."
+        savemat(self.dest_path + 't42_' + Obj + '_data_discrete_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
+        print "Saved mat file with " + str(D.shape[0]) + " transition points."
 
         if plot:
             plt.figure(0)
@@ -325,10 +327,11 @@ class transition_experience():
         from sklearn import svm
         from sklearn.preprocessing import StandardScaler
 
-        states = np.array([item[0] for item in self.memory])
+        states = np.array([item[1] for item in self.memory])
         states[:,:2] *= 1000.
-        actions = np.array([item[1] for item in self.memory])
-        done = np.array([item[3] for item in self.memory])
+        states = states[:,[0,1,11,12]]
+        actions = np.array([item[2] for item in self.memory])
+        done = np.array([item[4] for item in self.memory])
 
         # Remove false drops when motion is continuous
         for i in range(len(done)-1):
@@ -354,12 +357,9 @@ class transition_experience():
         inx_suc = T[np.random.choice(T.shape[0], inx_fail.shape[0], replace=False)]
         SA = np.concatenate((SA[inx_fail], SA[inx_suc]), axis=0)
         done = np.concatenate((done[inx_fail], done[inx_suc]), axis=0)
-
-        with open(self.path + 't42_35_svm_data_' + self.mode + '_v' + version + '_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
+        
+        with open(self.dest_path + 't42_' + Obj + '_svm_data_' + self.mode + '_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '.obj', 'wb') as f: 
             pickle.dump([SA, done], f)
-        with open('/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/data/' + 't42_35_svm_data_' + self.mode + '_v' + version + '_d4_m' + str(stepSize) + '.obj', 'wb') as f: 
-            pickle.dump([SA, done], f)
-        # savemat(self.path + 't42_35_svm_data_' + self.mode + '_v0_d4_m' + str(stepSize) + '.mat', {'SA': SA, 'done': done})
         print('Saved svm data.')
 
         ##  Test data

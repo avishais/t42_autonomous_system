@@ -28,56 +28,58 @@ rollout_srv = rospy.ServiceProxy('/rollout/rollout', rolloutReq)
 path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/results/'
 
 
-# DL = data_load(simORreal = 't42_35', K = 10)
-# Smean = R = DL.Qtest[:,:4]
-# A = DL.Qtest[:,4:6]
+DL = data_load(simORreal = 't42_cyl35', K = 100)
+Smean = R = DL.Qtest[:,:4]
+A = DL.Qtest[:,4:6]
+Pro = []
+Pro.append(Smean)
 
 # Smean = np.loadtxt('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/robust_particles_pc_svmHeuristic_goal1_run0_traj.txt', delimiter=',')[:,:4]
 # A = np.loadtxt('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/robust_particles_pc_svmHeuristic_goal1_run0_plan.txt', delimiter=',')[:,:2]
 # R = np.loadtxt('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/robust_particles_pc_svmHeuristic_goal1_run0_roll.txt', delimiter=',')[:,:4]
 
-if tr == '1':
-    # A = np.tile(np.array([1.,-1.]), (600*1./stepSize,1))
-    A = np.concatenate(  (np.array([[1.,  -1.] for _ in range(int(800*1./stepSize))]), 
-            np.array([[ -1., 1.] for _ in range(int(200*1./stepSize))])), axis=0 )
-if tr == '2':
-    A = np.concatenate( (np.array([[-1.,  1.] for _ in range(int(300*1./stepSize))]), 
-            np.array([[ 1., -1.] for _ in range(int(300*1./stepSize))]),
-            np.array([[-1., 1.] for _ in range(int(300*1./stepSize))]) ), axis=0 )
-if tr == '3':
-    A = np.concatenate( (np.array([[1.,  -1.] for _ in range(int(200*1./stepSize))]), 
-            np.array([[1.,  1.] for _ in range(int(130*1./stepSize))]), 
-            np.array([[ -1., 1.] for _ in range(int(250*1./stepSize))])), axis=0 )
-if tr == '4':
-    A = np.concatenate( (np.array([[-1.,  1.] for _ in range(int(200*1./stepSize))]), 
-            np.array([[1.,  1.] for _ in range(int(130*1./stepSize))]), 
-            np.array([[ 1., -1.] for _ in range(int(250*1./stepSize))]),
-            np.array([[ -1., -1.] for _ in range(int(250*1./stepSize))])), axis=0 )
-if tr == '5':
-    A = np.tile(np.array([-1.,1.]), (800*1./stepSize,1))
+# if tr == '1':
+#     # A = np.tile(np.array([1.,-1.]), (600*1./stepSize,1))
+#     A = np.concatenate(  (np.array([[1.,  -1.] for _ in range(int(800*1./stepSize))]), 
+#             np.array([[ -1., 1.] for _ in range(int(200*1./stepSize))])), axis=0 )
+# if tr == '2':
+#     A = np.concatenate( (np.array([[-1.,  1.] for _ in range(int(300*1./stepSize))]), 
+#             np.array([[ 1., -1.] for _ in range(int(300*1./stepSize))]),
+#             np.array([[-1., 1.] for _ in range(int(300*1./stepSize))]) ), axis=0 )
+# if tr == '3':
+#     A = np.concatenate( (np.array([[1.,  -1.] for _ in range(int(200*1./stepSize))]), 
+#             np.array([[1.,  1.] for _ in range(int(130*1./stepSize))]), 
+#             np.array([[ -1., 1.] for _ in range(int(250*1./stepSize))])), axis=0 )
+# if tr == '4':
+#     A = np.concatenate( (np.array([[-1.,  1.] for _ in range(int(200*1./stepSize))]), 
+#             np.array([[1.,  1.] for _ in range(int(130*1./stepSize))]), 
+#             np.array([[ 1., -1.] for _ in range(int(250*1./stepSize))]),
+#             np.array([[ -1., -1.] for _ in range(int(250*1./stepSize))])), axis=0 )
+# if tr == '5':
+#     A = np.tile(np.array([-1.,1.]), (800*1./stepSize,1))
     # A = np.concatenate(  (np.array([[-1.,  1.] for _ in range(int(800*1./stepSize))]), 
     #         np.array([[ 1., -1.] for _ in range(int(200*1./stepSize))])), axis=0 )
 
 
-if 1:
-    Af = A.reshape((-1,))
-    Pro = []
-    for j in range(2):
-        print("Rollout number " + str(j) + ".")
+# if 0:
+#     Af = A.reshape((-1,))
+#     Pro = []
+#     for j in range(2):
+#         print("Rollout number " + str(j) + ".")
         
-        roll = rollout_srv(Af)
-        R = np.array(roll.states).reshape(-1,state_dim)
-        suc = roll.success
+#         roll = rollout_srv(Af)
+#         R = np.array(roll.states).reshape(-1,state_dim)
+#         suc = roll.success
 
-        if R.shape[0] < 10:
-            continue
+#         if R.shape[0] < 10:
+#             continue
 
-        Pro.append(R)
+#         Pro.append(R)
         
-        with open(path + 'rollout_' + tr + '_v' + str(version) + '_d' + str(state_dim) + '_m' + str(stepSize) + '.pkl', 'w') as f: 
-            pickle.dump([Pro, suc], f)
-with open(path + 'rollout_' + tr + '_v' + str(version) + '_d' + str(state_dim) + '_m' + str(stepSize) + '.pkl', 'r') as f:  
-    Pro, _ = pickle.load(f) 
+#         with open(path + 'rollout_' + tr + '_v' + str(version) + '_d' + str(state_dim) + '_m' + str(stepSize) + '.pkl', 'w') as f: 
+#             pickle.dump([Pro, suc], f)
+# with open(path + 'rollout_' + tr + '_v' + str(version) + '_d' + str(state_dim) + '_m' + str(stepSize) + '.pkl', 'r') as f:  
+#     Pro, _ = pickle.load(f) 
 
 
 
@@ -121,21 +123,21 @@ R = Pro[0]
 s_start = R[0,:]
 sigma_start = np.ones((1,4))*1e-3
 
-for R in Pro:
-    print R.shape
-    if R.shape[0] < 2:
-        continue
-    plt.plot(R[:,0], R[:,1], '.-k')
-    plt.plot(R[0,0], R[0,1], 'or')
+# for R in Pro:
+#     print R.shape
+#     if R.shape[0] < 2:
+#         continue
+#     plt.plot(R[:,0], R[:,1], '.-k')
+#     plt.plot(R[0,0], R[0,1], 'or')
 # plt.plot(Smean[:,0],Smean[:,1], '-b')
-plt.show()
-exit(1)
+# plt.show()
+# exit(1)
 
 
 rospy.init_node('verification_t42', anonymous=True)
 
 
-if 0:   
+if 1:   
     Np = 100 # Number of particles
 
     ######################################## GP propagation ##################################################
