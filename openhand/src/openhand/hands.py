@@ -50,9 +50,9 @@ class OpenHand():
 		self.servos = []
 		for servo_id in self.servo_ids:
 			if series == "RX" or series =="MX":
-				self.servos.append(Robotis_Servo(self.dyn,servo_id,series))
+				self.servos.append(Robotis_Servo(self.dyn, servo_id, series))
 			else: #We will be using protocol 2 instead
-				self.servos.append(Robotis_Servo_X(self.dyn,servo_id,series))
+				self.servos.append(Robotis_Servo_X(self.dyn, servo_id, series))
 			print "Adding servo id "+repr(servo_id)
 			time.sleep(self.pause)
 		for servo in self.servos:
@@ -62,7 +62,6 @@ class OpenHand():
 			servo.apply_speed(self.servo_speed)
 			time.sleep(self.pause)
 			servo.apply_max_torque(self.max_torque)
-
 		if len(self.motorDir)!=num_servos or len(self.motorMin)!=num_servos or len(self.motorMax)!=num_servos:
 			print "[ERR] Servo number mismatch, resetting motor limits"
 			self.motorDir = [1]*num_servos
@@ -371,10 +370,10 @@ class Model_M(OpenHand):
 		self.moveMotor(0,amnt)
 
 class Model_O(OpenHand):
-	servo_speed = 1.0
-	max_torque = 0.4
+	servo_speed = 0.25
+	max_torque = 0.1
 	amnt_close = 0.5 #default close position
-	max_close = 0.7 #max motor movement from open to close for individual hand
+	max_close = 0.9 #max motor movement from open to close for individual hand
 
 	modes = [True,True,True,True] #True if in position control
 
@@ -384,7 +383,7 @@ class Model_O(OpenHand):
 	#RESET THE MOTOR MINS FOR FASTER INITIALIZATION
 	motorDir = [1,1,-1,1] # one finger is opposite due to placement on the openhand base
 	motorMin = [0.0,0.22,0.13,0.27]
-	motorMax = [motorMin[0]+0.48,motorMin[1]+max_close,motorMin[2]+max_close,motorMin[3]+max_close]
+	motorMax = [motorMin[0]+0.39,motorMin[1]+max_close,motorMin[2]+max_close,motorMin[3]+max_close]
 
 	HAND_HEIGHT = 0.14
 	WRIST_OFFSET = -np.pi/4
@@ -402,17 +401,18 @@ class Model_O(OpenHand):
 			self.motorMin = mot_offset
 			self.motorMax = [self.motorMin[0]+0.48,self.motorMin[1]+self.max_close,self.motorMin[2]+self.max_close,self.motorMin[3]+self.max_close]
 
-			OpenHand.__init__(self,port,[s1,s2,s3,s4],dyn_model)
+		OpenHand.__init__(self, port, [s1,s2,s3,s4], dyn_model)
 
 	def reset(self):
 		self.release()
-		time.sleep(0.5)
-		self.moveMotor(0,0.)	#moves fingers into lateral pinch mode with fingers orthogonal to thumb
+		# time.sleep(0.5)
+		# self.moveMotor(0,0. + 0.5)	#moves fingers into lateral pinch mode with fingers orthogonal to thumb
 
 	def release(self):
-		self.moveMotor(1,0.)
-		self.moveMotor(2,0.)
-		self.moveMotor(3,0.)
+		pass
+		# self.moveMotor(1,0. + 0.17)
+		# self.moveMotor(2,0. + 0.07)
+		# self.moveMotor(3,0. + 0.26)
 
 	def open(self):
 		self.moveMotor(1,0.)

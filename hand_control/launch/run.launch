@@ -3,7 +3,7 @@
   <!-- <arg name="recordData" default="false" /> -->
 
   <node pkg="openhand" name="openhandNode" type="openhandNode.py" output="screen">
-		<rosparam command="load" file="$(find hand_control)/param/model_t42_red.yaml"/>
+		<rosparam command="load" file="$(find hand_control)/param/model_o.yaml"/>
   </node>
 
   <!-- <node name="move_gripper" pkg="move_gripper" type="move_gripper" output="screen"/>
@@ -14,7 +14,7 @@
   <node name="gripper_state_publisher" pkg="gripper_state_publisher" type="gripper_state_publisher_node" output="screen"/>
 
   <node pkg="hand_control" name="hand_control" type="hand.py" output="screen">
-        <rosparam command="load" file="$(find hand_control)/param/control_red.yaml" />
+        <rosparam command="load" file="$(find hand_control)/param/control_o.yaml" />
   </node>
 
 
