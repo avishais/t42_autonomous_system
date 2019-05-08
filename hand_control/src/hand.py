@@ -9,7 +9,7 @@ import numpy as np
 from std_msgs.msg import Float64MultiArray, Float32MultiArray, String, Bool, Float32
 from std_srvs.srv import Empty, EmptyResponse
 from openhand.srv import *
-from hand_control.srv import TargetAngles, IsDropped, observation, close, ObjOrientation
+from hand_control.srv import TargetAngles, IsDropped, observation, close, ObjOrientation, MovePrim
 
 # from common_msgs_gl.srv import SendDoubleArray, SendBool
 import geometry_msgs.msg
@@ -50,6 +50,7 @@ class hand_control():
     cornerPos = []
     
     move_servos_srv = 0.
+    df = 0.0
 
     def __init__(self):
         rospy.init_node('hand_control', anonymous=True)
@@ -80,11 +81,12 @@ class hand_control():
         rospy.Service('/MoveGripper', TargetAngles, self.MoveGripper)
         rospy.Service('/IsObjDropped', IsDropped, self.CheckDroppedSrv)
         rospy.Service('/observation', observation, self.GetObservation)
+        rospy.Service('/MovePrimitive', MovePrim, self.MovePrimitives)
         # rospy.Service('objectOrientation',ObjOrientation,self.getOrientation)
 
         rospy.Subscriber('/cylinder_corner',geometry_msgs.msg.Pose,self.getCorner)
         self.move_servos_srv = rospy.ServiceProxy('/MoveServos', MoveServos)
-        self.move1servo_srv = rospy.ServiceProxy('/MoveOneServo', MoveOneServo)
+        self.moveReqservo_srv = rospy.ServiceProxy('/MoveReqServos', MoveReqServos)
         self.temperature_srv = rospy.ServiceProxy('/ReadTemperature', ReadTemperature)
 
         msg = Float32MultiArray()
@@ -105,18 +107,16 @@ class hand_control():
             if count > 1000:
                 dr, verbose = self.CheckDropped()
                 pub_drop.publish(dr)
-                # rospy.logerr(verbose)
             count += 1
 
             if c and not np.all(self.gripper_load==0): # Wait till openhand services ready and set gripper open pose
                 self.moveGripper(self.finger_opening_position)
+                for i in range(50):
+                    self.rate.sleep()
+                self.gripper_cur_pos = np.copy(self.gripper_pos)
+                self.gripper_cur_pos[0] = self.finger_opening_position[0]
                 c = False
 
-            # if self.object_grasped:
-            #     vel_ref_srv(self.vel_ref)
-
-            # rospy.spin()
-            
             self.rate.sleep()
 
     def getOrientation(self,req):
@@ -179,6 +179,10 @@ class hand_control():
         self.moveGripper(self.finger_opening_position, open=True)
 
         self.gripper_status = 'open'
+        for i in range(50):
+            self.rate.sleep()
+        self.gripper_cur_pos = np.copy(self.gripper_pos)
+        print "Open ", self.gripper_pos, self.gripper_cur_pos
 
         return EmptyResponse()
 
@@ -203,15 +207,13 @@ class hand_control():
             # print('Angles: ' + str(self.gripper_pos) + ', load: ' + str(self.gripper_load), self.closed_load)
 
             if np.any(abs(self.gripper_load[Ex[1]]) > closed_load):
-                self.gripper_status = 'closed'
                 c = 0
                 for k in range(10):
                     if np.any(abs(self.gripper_load[Ex[1]]) > closed_load):
                         c += 1
-                        self.rate.sleep()
+                    self.rate.sleep()
                 if c > 7:
-                    print self.gripper_load
-                    raw_input()
+                    self.gripper_status = 'closed'
                     # rospy.loginfo('[hand] Object grasped.')
                     break
 
@@ -220,31 +222,36 @@ class hand_control():
 
             desired = self.gripper_pos + inc
             print self.gripper_pos, inc, desired
-            if np.any(desired[1:] > 0.75):
-                rospy.logerr('[hand] Desired angles out of bounds.')
+            if np.any(desired[1:] > 0.75) or np.any(self.gripper_load > 220):
+                rospy.logerr('[hand] Desired angles out of bounds or pre-overload.')
                 break
             # print self.gripper_pos, desired
             self.moveGripper(desired)
-            rospy.sleep(0.03)  
+            # self.rate.sleep()
 
         # Close thumb
         if self.gripper_status == 'closed':
             self.gripper_status = 'open'
             for i in range(100):
                 # print('Angles: ' + str(self.gripper_pos) + ', load: ' + str(self.gripper_load), self.closed_load)
-
-                if abs(self.gripper_load[Ex[0][1]]) > closed_load/2:
-                    self.gripper_status = 'closed'
-                    rospy.loginfo('[hand] Object grasped.')
-                    break
+                d = 1.
+                if abs(self.gripper_load[Ex[0][1]]) > closed_load / d:
+                    c = 0
+                    for k in range(10):
+                        if abs(self.gripper_load[Ex[0][1]]) > closed_load / d:
+                            c += 1
+                        self.rate.sleep()
+                    if c > 9:
+                        self.gripper_status = 'closed'
+                        rospy.loginfo('[hand] Object grasped.')
+                        break
 
                 desired = self.gripper_pos[Ex[0][1]] + self.finger_move_offset[Ex[0][1]]/2
-                print self.gripper_pos, desired
-                if desired > 0.75:
-                    rospy.logerr('[hand] Desired angle out of bounds.')
+                if desired > 0.75 or np.any(self.gripper_load > 220):
+                    rospy.logerr('[hand] Desired angle out of bounds or pre-overload.')
                     break
-                self.move1servo_srv(desired, Ex[0][1])
-                rospy.sleep(0.03)  
+                self.moveReqservo_srv(np.array([desired]), np.array([Ex[0][1]]))
+                self.rate.sleep()
 
 
         self.rate.sleep()
@@ -267,9 +274,8 @@ class hand_control():
 
         return True
 
-
     def MoveGripper(self, msg):
-        # This function should accept a vector of normalized incraments to the current angles: msg.angles = [dq1, dq2], where dq1 and dq2 can be equal to 0 (no move), 1,-1 (increase or decrease angles by finger_move_offset)
+        # This function should accept a vector of normalized increments to the current angles: msg.angles = [dq1, dq2], where dq1 and dq2 can be equal to 0 (no move), 1,-1 (increase or decrease angles by finger_move_offset)
         f = 100.0
 
         inc = np.array(msg.angles)
@@ -295,6 +301,103 @@ class hand_control():
         self.move_servos_srv.call(angles)
 
         return True
+
+    def MovePrimitives(self, req):
+        action = req.action
+
+        if np.any(action == np.array(['w','x','d','a','e','q','c','z'])):
+            # w - Up
+            if action == 'w':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1., -1., 0.]))
+            # x - Down
+            if action == 'x':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., 1., 0.]))
+            # d - Right
+            if action == 'd':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., -1., 0.]))
+            # a - left
+            if action == 'a':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1., 1., 0.]))
+            # e - Up Right
+            if action == 'e':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1.5, 0., 0.]))
+            # q - Up left
+            if action == 'q':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., -1.5, 0.]))
+            # c - Down Right
+            if action == 'c':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1.5, 0., 0.]))
+            # z - Down left
+            if action == 'z':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., 1.5, 0.]))
+            # s - Stop
+            # if action == 's':
+            #     inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., 0., 0.]))
+            f = 50.0 + self.df
+            self.gripper_cur_pos += inc_angles*1.0/f
+            self.moveReqservo_srv(self.gripper_cur_pos[1:3], [1,2])
+            return True
+
+        # Open and close
+        if action == 'o':
+            msg = close()
+            self.CloseGripper(msg)
+            return True
+        if action == 'p':
+            msg = Empty()
+            self.OpenGripper(msg)
+            return True
+        
+        # Power grip/close
+        if action == 'v':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., 1., 1.]))
+            f = 50.0 + self.df
+            self.gripper_cur_pos += inc_angles*1.0/f
+            self.moveReqservo_srv(self.gripper_cur_pos[1:], [1,2,3])
+            return True
+
+        # Move individual finger
+        if np.any(action == np.array(['1','2','3','7','8','9'])):
+            if action == '7':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0.0, 1.0, 0.0, 0.0]))
+            if action == '1':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0.0, -1.0, 0.0, 0.0]))
+            if action == '8':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0.0, 0.0, 1.0, 0.0]))
+            if action == '2':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0.0, 0.0, -1.0, 0.0]))
+            if action == '9':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0.0, 0.0, 0.0, 1.0]))
+            if action == '3':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0.0, 0.0, 0.0, -1.0]))
+            f = 20.0 + self.df
+            self.gripper_cur_pos += inc_angles*1.0/f
+            self.moveReqservo_srv(self.gripper_cur_pos[1:], np.array([1, 2, 3]))
+            return True
+
+        # Spread
+        if np.any(action == np.array(['k','l'])):
+            if action == 'k':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([1.0, 0., 0., 0.]))
+            if action == 'l':
+                inc_angles = np.multiply(self.finger_move_offset, np.array([-1.0, 0., 0., 0.]))
+            f = 5.0 + self.df
+            self.gripper_cur_pos += inc_angles * 1.0 / f
+            self.gripper_cur_pos[0] = max(self.gripper_cur_pos[0], 0.0)
+            self.gripper_cur_pos[0] = min(self.gripper_cur_pos[0], 1.0)
+            self.moveReqservo_srv(np.array([self.gripper_cur_pos[0]]), np.array([0]))
+            return True
+
+        if np.any(action == np.array(['n','m'])):
+            if action == 'n':
+                self.df += 1.0
+                print "Increased velocity by 1"
+            if action == 'm':
+                self.df -= 1.0
+                print "Decreased velocity by 1"
+        
+        return False       
+
 
     def CheckDropped(self):
         # Should spin (update topics) between moveGripper and this

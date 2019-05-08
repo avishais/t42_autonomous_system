@@ -14,7 +14,7 @@ catkin_python_setup()
 add_service_files(
    FILES
    MoveServos.srv
-   MoveOneServo.srv
+   MoveReqServos.srv
    ReadServos.srv
    HoldServos.srv
    ReadCurrent.srv

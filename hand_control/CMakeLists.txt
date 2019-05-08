@@ -56,6 +56,7 @@ add_message_files(
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
+  MovePrim.srv
   TargetAngles.srv
   IsDropped.srv
   net_eval.srv

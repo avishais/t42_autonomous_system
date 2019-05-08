@@ -18,7 +18,7 @@ class OpenHandNode():
 
 		#initialize service handlers:
 		rospy.Service('MoveServos',MoveServos,self.MoveServosProxy)
-		rospy.Service('MoveOneServo',MoveOneServo,self.MoveOneServoProxy)
+		rospy.Service('MoveReqServos',MoveReqServos,self.MoveReqServosProxy)
 		rospy.Service('TorqueServos',MoveServos,self.TorqueServosProxy)
 		rospy.Service('ReadServos',ReadServos,self.ReadServosProxy)
 		rospy.Service('HoldServos',HoldServos,self.HoldServosProxy)
@@ -54,22 +54,23 @@ class OpenHandNode():
 		return resp
 
 	# Added by Avishai Sintov, 5/7/2019
-	def MoveOneServoProxy(self,req):
+	def MoveReqServosProxy(self,req):
 		pos = req.pos
-		i = req.id
+		ID = req.id
 		#rospy.loginfo("Received command: "+repr(pos))
-		resp = MoveOneServoResponse()
+		resp = MoveReqServosResponse()
 		resp.err = 0
 		#print ("MOVE PROXXXYYYY: ref %f ", pos[i])
-		if i < len(self.hand.servos):
-			#rospy.loginfo("Moving motor "+repr(i)+" to "+repr(pos[i]))
-			if direction[i] > 0:
-				self.hand.moveMotor(i, pos)
+		for i in range(len(ID)):
+			if i < len(self.hand.servos):
+				#rospy.loginfo("Moving motor "+repr(i)+" to "+repr(pos[i]))
+				if direction[i] > 0:
+					self.hand.moveMotor(ID[i], pos[i])
+				else:
+					self.hand.moveMotor(ID[i], 1-pos[i])
+				self.sRefs[i] = pos[i]	#store the reference value sent through ROS
 			else:
-				self.hand.moveMotor(i, 1-pos)
-			self.sRefs[i] = pos	#store the reference value sent through ROS
-		else:
-			resp.err = 1
+				resp.err = 1
 		return resp
 
 	def TorqueServosProxy(self,req):

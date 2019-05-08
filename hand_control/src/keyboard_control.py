@@ -17,7 +17,7 @@ from openhand.srv import MoveServos
 from std_srvs.srv import Empty, EmptyResponse
 # import tty, termios, sys
 from std_srvs.srv import Empty, EmptyResponse
-from hand_control.srv import observation, IsDropped, TargetAngles, RegraspObject, close
+from hand_control.srv import observation, IsDropped, TargetAngles, RegraspObject, close, MovePrim
 import curses, time
 
 def key_listener(stdscr):
@@ -34,56 +34,27 @@ class keyboard_control():
 
         pub_action = rospy.Publisher('/keyboard/desired_action', Float32MultiArray, queue_size=10)
         rospy.Subscriber('/gripper/pos', Float32MultiArray, self.ActPosCallback)
-        move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
-        close_srv = rospy.ServiceProxy('/CloseGripper', close)
-        open_srv = rospy.ServiceProxy('/OpenGripper', Empty)
         rospy.Service('/ResetKeyboard', Empty, self.ResetKeyboard)
+        move_srv = rospy.ServiceProxy('/MovePrimitive', MovePrim)
 
-        k_prev = np.array([-200,-200])
-
-        rate = rospy.Rate(100)
-        self.ch = ord('s')
+        rate = rospy.Rate(5)
+        self.ch = 's'
         while not rospy.is_shutdown():
             c = curses.wrapper(key_listener)#self.getchar()
             if c!=-1:
-                self.ch = c
+                self.ch = chr(c)
 
-            if self.ch == 27:
+            if ord(self.ch) == 27:
                 break
 
-            k = self.Move(self.ch)
-            if all(k == np.array([100.,100.])):
-                print "closing"
-                close_srv()
-                self.ch = ord('s')
-                k = self.A[8]
-                rospy.sleep(1.0)
-            elif all(k == np.array([-100.,-100.])):
-                print "opening"
-                open_srv()
-                self.ch = ord('s')
-                k = self.A[8]
-                print "open"
+            if np.any(self.ch == np.array(['o','p','n','m'])):
+                move_srv(self.ch)
+                self.ch = 's'
                 rospy.sleep(1.0)
             else:
-                msg = Float32MultiArray()
-                msg.data = k
-                pub_action.publish(msg)
+                move_srv(self.ch)
 
             rate.sleep()
-
-#     def getchar(self):
-#    #Returns a single character from standard input
-        
-#         fd = sys.stdin.fileno()
-#         old_settings = termios.tcgetattr(fd)
-#         try:
-#             tty.setraw(sys.stdin.fileno())
-#             ch = sys.stdin.read(1)
-#         finally:
-#             termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-#         return ch
-
 
     def ActPosCallback(self, msg):
         self.act_angles = np.array(msg.data)
