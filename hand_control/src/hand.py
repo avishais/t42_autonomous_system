@@ -81,7 +81,8 @@ class hand_control():
         rospy.Service('/MoveGripper', TargetAngles, self.MoveGripper)
         rospy.Service('/IsObjDropped', IsDropped, self.CheckDroppedSrv)
         rospy.Service('/observation', observation, self.GetObservation)
-        rospy.Service('/MovePrimitive', MovePrim, self.MovePrimitives)
+        rospy.Service('/MoveKeys', MovePrim, self.MoveKeys)
+        rospy.Service('/MovePrimitives', MovePrim, self.MovePrimitives)
         # rospy.Service('objectOrientation',ObjOrientation,self.getOrientation)
 
         rospy.Subscriber('/cylinder_corner',geometry_msgs.msg.Pose,self.getCorner)
@@ -290,7 +291,7 @@ class hand_control():
     def moveGripper(self, angles, open=False):
         if not open:
             for angle in angles:
-                if angle > 0.9 or angle < 0.00:
+                if angle > 1.0 or angle < 0.00:
                     rospy.logerr('[hand] Move Failed. Desired angles out of bounds.')
                     return False
             for L in self.gripper_load:
@@ -303,6 +304,76 @@ class hand_control():
         return True
 
     def MovePrimitives(self, req):
+        action = req.action
+        
+        # Stop
+        if action == 's':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., 0., 0.]))
+        # Up
+        if action == 'w': 
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1., -1., 0.]))
+        # Down
+        if action == 'x':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., 1., -1.]))
+        # Tilt right
+        if action == 'd':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., -1., 0.]))
+        # Tilt Left
+        if action == 'a':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1., 1., 0.]))
+        # Close all
+        if action == 'v':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., 1., 1.]))
+        # Open all
+        if action == 'r':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1., -1., -1.]))
+
+        # Finger 1 - Open
+        if action == '1':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1., 0., 0.]))
+        # Finger 2 - Open
+        if action == '2':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., -1., 0.]))
+        # Finger 3 - Open
+        if action == '3':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., 0., -1.]))
+        # Finger 1 - Close
+        if action == '4':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., 0., 0.]))
+        # Finger 2 - Close
+        if action == '5':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., 1., 0.]))
+        # Finger 3 - Close
+        if action == '6':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., 0., 1.]))
+        # Spread - Open
+        if action == '7':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([-1., 0., 0., 0.]))*4.
+        # Spread - Close
+        if action == '9':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([1., 0., 0., 0.]))*4.
+
+        # Pull upper fingers
+        if action == 'e':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., 1., 0.]))
+        # Release upper fingers
+        if action == 'c':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1., -1., 0.]))
+
+        # if action == 'q':
+        #     inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., 0., 0.]))
+        # if action == 'z':
+        #     inc_angles = np.multiply(self.finger_move_offset, np.array([1., 1., 0., 0.]))
+
+        f = 15.0
+        self.gripper_cur_pos += inc_angles*1.0/f
+        self.gripper_cur_pos[ np.where( self.gripper_cur_pos < 0.0 )[0]] = 0.0
+        self.gripper_cur_pos[ np.where( self.gripper_cur_pos > 1.0 )[0]] = 1.0
+        suc = self.moveGripper(self.gripper_cur_pos)
+        return suc
+
+
+    def MoveKeys(self, req):
         action = req.action
 
         if np.any(action == np.array(['w','x','d','a','e','q','c','z'])):
@@ -320,16 +391,16 @@ class hand_control():
                 inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1., 1., 0.]))
             # e - Up Right
             if action == 'e':
-                inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1.5, 0., 0.]))
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1., 0., 0.]))
             # q - Up left
             if action == 'q':
-                inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., -1.5, 0.]))
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., -1., 0.]))
             # c - Down Right
             if action == 'c':
-                inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1.5, 0., 0.]))
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., 0., 0.]))
             # z - Down left
             if action == 'z':
-                inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., 1.5, 0.]))
+                inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., 1., 0.]))
             # s - Stop
             # if action == 's':
             #     inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., 0., 0.]))
