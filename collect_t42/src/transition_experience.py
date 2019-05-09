@@ -7,24 +7,26 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'cyl35-locked'
+Obj = 'poly10'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
     dest_path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/' 
 
-    def __init__(self, Load=True, discrete = True, postfix=''):
+    def __init__(self, Load=True, discrete = True, postfix='', Object = Obj):
 
         if discrete:
             self.mode = 'd' # Discrete actions
         else:
             self.mode = 'c' # Continuous actions
+
+        self.Object = Object
         
         self.postfix = postfix
         if postfix == 'bu':
-            self.file_name = self.path + 'internal/' + 'raw_' + Obj + '_' + self.mode + '_v' + version + self.postfix + '.obj'
+            self.file_name = self.path + 'internal/' + 'raw_' + self.Object + '_' + self.mode + '_v' + version + self.postfix + '.obj'
         else:
-            self.file_name = self.path + 'raw_' + Obj + '_' + self.mode + '_v' + version + self.postfix + '.obj'
+            self.file_name = self.path + 'raw_' + self.Object + '_' + self.mode + '_v' + version + self.postfix + '.obj'
 
         if Load:
             self.load()
@@ -273,7 +275,7 @@ class transition_experience():
         # plt.show()
         # exit(1)
 
-        savemat(self.dest_path + 't42_' + Obj + '_data_discrete_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
+        savemat(self.dest_path + 't42_' + self.Object + '_data_discrete_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
         print "Saved mat file with " + str(D.shape[0]) + " transition points."
 
         if plot:
@@ -294,6 +296,7 @@ class transition_experience():
                 j = i + 1
                 while j < states.shape[0] and not done[j]:
                     j +=1
+                j = min(j, states.shape[0]-1)
                 if done[j] and j-i < 10:
                     done[j] = False 
                 i = j
@@ -358,7 +361,7 @@ class transition_experience():
         SA = np.concatenate((SA[inx_fail], SA[inx_suc]), axis=0)
         done = np.concatenate((done[inx_fail], done[inx_suc]), axis=0)
         
-        with open(self.dest_path + 't42_' + Obj + '_svm_data_' + self.mode + '_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '.obj', 'wb') as f: 
+        with open(self.dest_path + 't42_' + self.Object + '_svm_data_' + self.mode + '_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '.obj', 'wb') as f: 
             pickle.dump([SA, done], f)
         print('Saved svm data.')
 

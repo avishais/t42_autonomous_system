@@ -98,6 +98,8 @@ class actorPubRec():
 
         if self.running:
             self.T = rospy.get_time()
+        else:
+            print('[actor_record] Episode ended (%d points so far).' % self.texp.getSize())
 
         return EmptyResponse()
 

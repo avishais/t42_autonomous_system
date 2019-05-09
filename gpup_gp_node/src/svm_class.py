@@ -12,6 +12,7 @@ import var
 class svm_failure():
 
     r = 0.1
+    path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
 
     def __init__(self, simORreal = 'sim', discrete = True):
 
@@ -24,8 +25,6 @@ class svm_failure():
 
     def load_data(self):
 
-        path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
-
         self.postfix = '_v' + str(var.data_version_) + '_d' + str(var.dim_) + '_m' + str(var.stepSize_)
         if os.path.exists(self.path + self.simORreal + '_svm_fit_discrete' + self.mode + self.postfix + '.obj'):
             with open(self.path + self.simORreal + '_svm_fit_discrete' + self.mode + self.postfix + '.obj', 'rb') as f: 
@@ -35,7 +34,7 @@ class svm_failure():
             File = self.simORreal + '_svm_data_' + self.mode +  self.postfix + '.obj' # <= File name here!!!!!
 
             print('[SVM] Loading data from ' + File)
-            with open(path + File, 'rb') as f: 
+            with open(self.path + File, 'rb') as f: 
                 self.SA, self.done = pickle.load(f)
             print('[SVM] Loaded svm data.')            
 

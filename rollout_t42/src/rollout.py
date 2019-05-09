@@ -72,12 +72,12 @@ class rolloutPublisher():
     def run_rollout(self, A):
         self.rollout_transition = []
         self.trigger = False
-        # self.ResetArm()  
+        self.ResetArm()  
         self.fail = False  
 
-        self.close_srv()
-        print("set") 
-        raw_input()
+        # self.close_srv()
+        # print("set") 
+        # raw_input()
 
         msg = Float32MultiArray()  
 
@@ -105,50 +105,20 @@ class rolloutPublisher():
             msg.data = action
             self.action_pub.publish(msg)
             n -= 1
-            # suc = self.move_srv(action).success
-
-            # # Get observation
-            # next_state = np.array(self.obs_srv().state)
-
-            # if suc:
-            #     fail = self.drop # Check if dropped - end of episode
-            # else:
-            #     # End episode if overload or angle limits reached
-            #     rospy.logerr('[collect_data] Failed to move gripper. Episode declared failed.')
-            #     fail = True
-
-            # self.S.append(np.copy(next_state))
-            # self.rollout_transition += [(state, action, next_state, not suc or fail)]
-
-            # state = np.copy(next_state)
-
-            # if not self.suc: # Observes load failures
-            #     print("[rollout] Load Fail.")
-            #     success = False
-            #     break
 
             if self.fail:# not suc or fail:
-                # success = True#self.drop # drop_srv().dropped # Check if dropped - end of episode
-                # c = 0
-                # while self.drop:
-                #     if c == 10:
                 success = False
                 print("[rollout] Drop Fail.")
                 break
-                #     c += 1
-                #     self.rate.sleep()
-                # if not success:
-                    # break
 
             if i == A.shape[0] and n == 0:
                 print("[rollout] Complete.")
                 success = True
+                self.record_srv(False)
+                self.rollout_actor_srv(False)
                 break
 
             self.rate.sleep()
-
-        self.record_srv(False)
-        self.rollout_actor_srv(False)
 
         if not self.running:
             print("[rollout] Stopped due to noise.")
@@ -156,8 +126,6 @@ class rolloutPublisher():
 
         rospy.sleep(1)
         self.open_srv()
-
-        
 
         return success
 

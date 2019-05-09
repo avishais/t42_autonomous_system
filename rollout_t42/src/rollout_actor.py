@@ -42,22 +42,7 @@ class rollout():
                 self.suc = self.move_srv(self.action).success
 
                 fail_pub.publish(not self.suc or self.drop)
-
-                # next_state = np.array(self.obs_srv().state)
-
-                # if not self.suc:
-                #     print("[rollout_actor] Load Fail")
-                #     self.running = False
-                # elif self.drop:
-                #     c = 0
-                #     while self.drop:
-                #         if c == 3:
-                #             print("[rollout_actor] Drop Fail")
-                #             self.running = False
-                #             break
-                #         c += 1
-                #         self.rate.sleep()
-                
+               
                 if not self.suc:
                     print("[rollout_actor] Load Fail")
                     self.running = False

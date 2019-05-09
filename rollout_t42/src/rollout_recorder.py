@@ -37,8 +37,7 @@ class rolloutRecorder():
         rollout_actor_srv = rospy.ServiceProxy('/rollout/run_trigger', SetBool)
         rollout_srv = rospy.ServiceProxy('/rollout/run_trigger', SetBool)
 
-        d = 0.0
-        self.rate = rospy.Rate(10) # 15hz
+        self.rate = rospy.Rate(10) # 10hz
         while not rospy.is_shutdown():
 
             if self.running:
@@ -47,27 +46,9 @@ class rolloutRecorder():
                 self.S.append(self.state)
                 self.A.append(self.action)
 
-                if len(self.S) > 2:
-                    d = np.linalg.norm(self.S[-2][:2] - self.S[-1][:2])
-                    # print self.state[:2], self.S[-1][:2], d
-
-                print d
-
                 if self.fail:
-                    print('[rollout_recorder] Episode ended.')
+                    print('[rollout_recorder] Episode ended with %d points.'%len(self.S))
                     self.running = False
-                    # File = self.path + self.planning_algorithm + '_goal' + str(goal[0]) + '_' + str(goal[1]) + '_n' + self.id + '_rollout.txt'
-                    # np.savetxt(File, S, delimiter = ', ')
-                elif d >  3.0 and len(self.S) > 10:
-                    # print "D: ", d, self.fail
-                    # rospy.sleep(0.2)
-                    # self.rate.sleep()
-                    # if not self.fail:
-                    #     print "D1: ", d, self.fail
-                    rollout_actor_srv(False)
-                    rollout_srv(False)
-                    self.running = False
-                    print("Stopped due to noise...")
 
             self.rate.sleep()
 
@@ -89,6 +70,9 @@ class rolloutRecorder():
             self.S = []
             self.A = []
             print('[rollout_recorder] Recording started.')
+            self.fail = False
+        else:
+            print('[rollout_recorder] Recording stopped with %d points.'%len(self.S))
 
         return {'success': True, 'message': ''}
 

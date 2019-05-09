@@ -159,6 +159,9 @@ class collect_data():
                         # Get observation
                         next_state = np.array(obs_srv().state)
 
+                        # if self.drop:
+                            # raw_input()
+
                         if suc:
                             fail = False#self.drop # drop_srv().dropped # Check if dropped - end of episode
                             c = 0
@@ -172,6 +175,7 @@ class collect_data():
                             # End episode if overload or angle limits reached
                             rospy.logerr('[collect_data] Failed to move gripper. Episode declared failed.')
                             fail = True
+                            recorder_srv()
 
                         self.texp.add(rospy.get_time()-T, state, action, next_state, not suc or fail)
                         state = np.copy(next_state)
@@ -181,11 +185,11 @@ class collect_data():
                             break
                         
                         rate.sleep()
-                  
-
+                
                     self.trigger = False
                     print('[collect_data] Finished running episode %d with total number of collected points: %d' % (self.num_episodes, self.texp.getSize()))
                     print('[collect_data] Waiting for next episode initialization...')
+                    rospy.sleep(5.0)
 
                     if self.num_episodes > 0 and not (self.num_episodes % 10):
                         open_srv()
