@@ -44,7 +44,7 @@ def main():
     objs = get_objs(discrete)
 
     # Process raw data
-    if 0:
+    if 1:
         for obj in objs:
             print("\n\n[process_dataset] Processing object '%s'...\n\n"%obj)
             texp = transition_experience(Load = True, discrete=discrete, postfix='', Object = obj)
@@ -55,7 +55,7 @@ def main():
     # Generate kd-trees and pre-compute hyper-parameters
     for obj in objs:
         print("\n\n[process_dataset] Computing hyper-parameters for object '%s'...\n\n"%obj)
-        DL = data_load(simORreal = 't42_' + obj, discreteORcont = ('discrete' if discrete else 'cont'), K = 100)    
+        DL = data_load(simORreal = 't42_' + obj, discreteORcont = ('discrete' if discrete else 'cont'), K = 1000)    
 
         SVM = svm_failure(simORreal = 't42_' + obj, discrete = discrete)   
 

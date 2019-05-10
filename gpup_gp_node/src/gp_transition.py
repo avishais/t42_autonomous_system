@@ -17,13 +17,12 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
-simORreal = 't42_cyl35'
+simORreal = 't42_poly10'
 discreteORcont = 'discrete'
 useDiffusionMaps = False
 probability_threshold = 0.65
 plotRegData = False
 diffORspec = 'diff'
-
 
 class Spin_gp(data_load, mean_shift, svm_failure):
 

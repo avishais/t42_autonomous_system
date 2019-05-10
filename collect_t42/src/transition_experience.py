@@ -7,7 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'poly10'
+Obj = 'elp40_20'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -211,18 +211,25 @@ class transition_experience():
 
         states = np.array([item[1] for item in self.memory])
         states[:,:2] *= 1000.
-        states = states[:,[0,1,11,12]]
         actions = np.array([item[2] for item in self.memory])
         next_states = np.array([item[3] for item in self.memory])
         next_states[:,:2] *= 1000.
-        next_states = next_states[:,[0,1,11,12]]
+        
         done = np.array([item[4] for item in self.memory]) 
+
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
+            states = states[:,[0,1,2,11,12]]
+            next_states = next_states[:,[0,1,2,11,12]]
+        else:
+            states = states[:,[0,1,11,12]]
+            next_states = next_states[:,[0,1,11,12]]
 
         # For data from recorder
         if self.postfix != 'bu':
             next_states = np.roll(states, -1, axis=0) 
 
         self.state_dim = states.shape[1]
+        self.action_dim = actions.shape[1]
 
         D = np.concatenate((states, actions, next_states), axis = 1)
 
@@ -275,8 +282,9 @@ class transition_experience():
         # plt.show()
         # exit(1)
 
-        savemat(self.dest_path + 't42_' + self.Object + '_data_discrete_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '.mat', {'D': D, 'is_start': is_start, 'is_end': is_end})
-        print "Saved mat file with " + str(D.shape[0]) + " transition points."
+        with open(self.dest_path + 't42_' + self.Object + '_data_discrete_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '.obj', 'wb') as f: 
+            pickle.dump([D, self.state_dim, self.action_dim, is_start, is_end], f)
+        print "Saved processed data file with " + str(D.shape[0]) + " transition points."
 
         if plot:
             plt.figure(0)

@@ -19,7 +19,7 @@ class data_load(object):
         self.Dillute = Dillute
         self.postfix = '_v' + str(var.data_version_) + '_d' + str(var.dim_) + '_m' + str(var.stepSize_)
         self.prefix =  simORreal + '_'
-        self.file = simORreal + '_data_' + discreteORcont + self.postfix + '.mat'
+        self.file = simORreal + '_data_' + discreteORcont + self.postfix + '.obj'
         self.path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
         self.dr = dr
         self.K = K
@@ -35,35 +35,25 @@ class data_load(object):
     def load(self):
 
         print('[data_load] Loading data from "' + self.file + '"...' )
-        Q = loadmat(self.path + self.file)
-        Qtrain = Q['D']
-        # plt.plot(Qtrain[:,0],Qtrain[:,1],'.')
-        # plt.show()
+        with open(self.path + self.file, 'rb') as f: 
+            D, self.state_dim, self.action_dim, is_start, is_end = pickle.load(f)
+        Qtrain = D
 
-        is_start = 0# 30532 #1540#int(Q['is_start'])#100080
-        # while is_start < 200000:
-        #     if np.all(Qtrain[is_start, 2:4] == np.array([16., 16.])):
-        #         break
-        #     is_start += 1
-        # print is_start
-        is_end = is_start + 200#int(Q['is_end'])
-        self.Qtest = Qtrain[is_start:is_end, :]
-        Qtrain = np.delete(Qtrain, range(is_start, is_end), 0)
-
+        # Test data
+        # is_start = 0
+        # is_end = is_start + 200#int(Q['is_end'])
+        # self.Qtest = Qtrain[is_start:is_end, :]
+        # Qtrain = np.delete(Qtrain, range(is_start, is_end), 0)
         # plt.plot(self.Qtest[:,0], self.Qtest[:,1],'.-k')
         # plt.plot(self.Qtest[0,0], self.Qtest[0,1],'o')
         # plt.show()
         # exit(1)
 
-        if 'Dreduced' in Q:
-            self.Xreduced = Q['Dreduced']
-
         # if self.Dillute > 0:
         #     Qtrain = Qtrain[np.random.choice(Qtrain.shape[0], self.Dillute, replace=False),:] # Dillute
         print('[data_load] Loaded training data of ' + str(Qtrain.shape[0]) + '.')
 
-        self.state_action_dim = var.state_action_dim_
-        self.state_dim = var.state_dim_
+        self.state_action_dim = self.state_dim + self.action_dim
 
         self.Xtrain = Qtrain[:,:self.state_action_dim]
         self.Ytrain = Qtrain[:,self.state_action_dim:]
