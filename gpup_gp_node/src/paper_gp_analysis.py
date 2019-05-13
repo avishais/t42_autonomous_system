@@ -18,7 +18,7 @@ import var
 state_dim = var.state_dim_
 stepSize = var.stepSize_
 version = var.data_version_
-Obj = 'poly10'
+Obj = 'sqr30'
 
 gp_srv = rospy.ServiceProxy('/gp/transition', batch_transition)
 naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
@@ -26,8 +26,6 @@ rospy.init_node('GP_t42', anonymous=True)
 
 path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/results/'
 test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
-
-
 
 def medfilter(x, W):
     w = int(W/2)
@@ -48,91 +46,96 @@ if 1:
     GP_batch = []
     GP_naive = []
     for A, S in zip(action_seq, test_paths):
+        if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
+            S = S[:,[0,1,11,12,2]]
+        else:
+            S = S[:,[0,1,11,12]]
+
+        state_dim = S.shape[1]
 
         print('Smoothing data...')
-        for i in range(4):
-            S[:,i] = medfilter(S[:,i], 100)
+        for i in range(state_dim):
+            S[:,i] = medfilter(S[:,i], 20)
 
         s_start = S[0,:]
-        sigma_start = np.ones((1,4))*1e-3
+        sigma_start = np.ones((1,state_dim))*1e-3
 
-        if 1:   
-            Np = 100 # Number of particles
+        Np = 100 # Number of particles
 
-            ######################################## GP propagation ##################################################
+        ######################################## GP propagation ##################################################
 
-            print "Running GP."
-            
-            t_gp = 0
+        print "Running GP."
+        
+        t_gp = 0
 
-            s = np.copy(s_start)
-            S = np.tile(s, (Np,1)) + np.random.normal(0, sigma_start, (Np, state_dim))
-            Ypred_mean_gp = s.reshape(1,state_dim)
-            Ypred_std_gp = sigma_start.reshape(1,state_dim)
+        s = np.copy(s_start)
+        S = np.tile(s, (Np,1)) + np.random.normal(0, sigma_start, (Np, state_dim))
+        Ypred_mean_gp = s.reshape(1,state_dim)
+        Ypred_std_gp = sigma_start.reshape(1,state_dim)
 
-            Pgp = []; 
-            p_gp = 1
-            print("Running (open loop) path...")
-            for i in range(0, A.shape[0]):
-                print("[GP] Step " + str(i) + " of " + str(A.shape[0]))
-                Pgp.append(S)
-                a = A[i,:]
+        Pgp = []; 
+        p_gp = 1
+        print("Running (open loop) path...")
+        for i in range(0, A.shape[0]):
+            print("[GP] Step " + str(i) + " of " + str(A.shape[0]))
+            Pgp.append(S)
+            a = A[i,:]
 
-                st = time.time()
-                res = gp_srv(S.reshape(-1,1), a)
-                t_gp += (time.time() - st) 
+            st = time.time()
+            res = gp_srv(S.reshape(-1,1), a)
+            t_gp += (time.time() - st) 
 
-                S_next = np.array(res.next_states).reshape(-1,state_dim)
-                if res.node_probability < p_gp:
-                    p_gp = res.node_probability
-                s_mean_next = np.mean(S_next, 0)
-                s_std_next = np.std(S_next, 0)
-                S = S_next
+            S_next = np.array(res.next_states).reshape(-1,state_dim)
+            if res.node_probability < p_gp:
+                p_gp = res.node_probability
+            s_mean_next = np.mean(S_next, 0)
+            s_std_next = np.std(S_next, 0)
+            S = S_next
 
-                if S_next.shape[0] == 0:
-                    break
+            if S_next.shape[0] == 0:
+                break
 
-                # s_mean_next = np.array([0,0,0,0])
-                # s_std_next = np.array([0,0,0,0])
+            # s_mean_next = np.array([0,0,0,0])
+            # s_std_next = np.array([0,0,0,0])
 
-                Ypred_mean_gp = np.append(Ypred_mean_gp, s_mean_next.reshape(1,state_dim), axis=0)
-                Ypred_std_gp = np.append(Ypred_std_gp, s_std_next.reshape(1,state_dim), axis=0)
+            Ypred_mean_gp = np.append(Ypred_mean_gp, s_mean_next.reshape(1,state_dim), axis=0)
+            Ypred_std_gp = np.append(Ypred_std_gp, s_std_next.reshape(1,state_dim), axis=0)
 
-            t_gp /= A.shape[0]
+        t_gp /= A.shape[0]
 
-            GP_batch.append([(Ypred_mean_gp), (Ypred_std_gp)])
-            
+        GP_batch.append([(Ypred_mean_gp), (Ypred_std_gp)])
+        
 
-            ######################################## naive propagation ###############################################
+        ######################################## naive propagation ###############################################
 
-            print "Running Naive."
-            Np = 1 # Number of particles
-            t_naive = 0
+        print "Running Naive."
+        Np = 1 # Number of particles
+        t_naive = 0
 
-            s = np.copy(s_start) + np.random.normal(0, sigma_start)
-            # s = np.tile(s, (Np,1)) + np.random.normal(0, sigma_start, (Np, state_dim))
-            Ypred_naive = s.reshape(1,state_dim)
+        s = np.copy(s_start) + np.random.normal(0, sigma_start)
+        # s = np.tile(s, (Np,1)) + np.random.normal(0, sigma_start, (Np, state_dim))
+        Ypred_naive = s.reshape(1,state_dim)
 
-            print("Running (open loop) path...")
-            p_naive = 1
-            for i in range(0, A.shape[0]):
-                print("[Naive] Step " + str(i) + " of " + str(A.shape[0]))
-                a = A[i,:]
+        print("Running (open loop) path...")
+        p_naive = 1
+        for i in range(0, A.shape[0]):
+            print("[Naive] Step " + str(i) + " of " + str(A.shape[0]))
+            a = A[i,:]
 
-                st = time.time()
-                res = naive_srv(s.reshape(-1,1), a)
-                t_naive += (time.time() - st) 
+            st = time.time()
+            res = naive_srv(s.reshape(-1,1), a)
+            t_naive += (time.time() - st) 
 
-                if res.node_probability < p_naive:
-                    p_naive = res.node_probability
-                s_next = np.array(res.next_state)
-                s = s_next
+            if res.node_probability < p_naive:
+                p_naive = res.node_probability
+            s_next = np.array(res.next_state)
+            s = s_next
 
-                Ypred_naive = np.append(Ypred_naive, s_next.reshape(1,state_dim), axis=0)
+            Ypred_naive = np.append(Ypred_naive, s_next.reshape(1,state_dim), axis=0)
 
-            GP_naive.append(Ypred_naive)
+        GP_naive.append(Ypred_naive)
 
-            t_naive /= A.shape[0]
+        t_naive /= A.shape[0]
 
     ######################################## Save ###########################################################
 

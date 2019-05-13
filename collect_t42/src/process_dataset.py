@@ -46,6 +46,8 @@ def main():
     # Process raw data
     if 1:
         for obj in objs:
+            if np.any(obj == np.array(['sqr30','poly10','cyl35','poly6'])):
+                continue
             print("\n\n[process_dataset] Processing object '%s'...\n\n"%obj)
             texp = transition_experience(Load = True, discrete=discrete, postfix='', Object = obj)
 
@@ -53,11 +55,12 @@ def main():
             texp.process_svm(stepSize = 1)
 
     # Generate kd-trees and pre-compute hyper-parameters
-    for obj in objs:
-        print("\n\n[process_dataset] Computing hyper-parameters for object '%s'...\n\n"%obj)
-        DL = data_load(simORreal = 't42_' + obj, discreteORcont = ('discrete' if discrete else 'cont'), K = 1000)    
+    if 1:
+        for obj in objs:
+            print("\n\n[process_dataset] Computing hyper-parameters for object '%s'...\n\n"%obj)
+            DL = data_load(simORreal = 't42_' + obj, discreteORcont = ('discrete' if discrete else 'cont'), K = 100)    
 
-        SVM = svm_failure(simORreal = 't42_' + obj, discrete = discrete)   
+            SVM = svm_failure(simORreal = 't42_' + obj, discrete = discrete)   
 
     return 1
 

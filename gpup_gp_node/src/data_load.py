@@ -16,8 +16,13 @@ class data_load(object):
 
     def __init__(self, simORreal = 'sim', discreteORcont = 'discrete', K = 100, K_manifold=-1, sigma=-1, dim=-1, Dillute = var.N_dillute_, dr = 'diff'):
         
+        if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40'])): # Include orientation angle
+            dim_ = 5
+        else:
+            dim_ = 4
+
         self.Dillute = Dillute
-        self.postfix = '_v' + str(var.data_version_) + '_d' + str(var.dim_) + '_m' + str(var.stepSize_)
+        self.postfix = '_v' + str(var.data_version_) + '_d' + str(dim_) + '_m' + str(var.stepSize_)
         self.prefix =  simORreal + '_'
         self.file = simORreal + '_data_' + discreteORcont + self.postfix + '.obj'
         self.path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'

@@ -13,7 +13,7 @@ import sys
 sys.path.insert(0, '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/')
 import var
 
-state_dim = var.state_dim_
+state_dim = 13
 stepSize = var.stepSize_
 version = var.data_version_
 
@@ -55,7 +55,7 @@ action_seq.append(A)
 rollout_srv = rospy.ServiceProxy('/rollout/rollout', rolloutReq)
 rospy.init_node('collect_test_paths', anonymous=True)
 
-Obj = 'elp40_20'
+Obj = 'sqr30'
 path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 if 1:
@@ -79,12 +79,22 @@ if 1:
         pickle.dump([action_seq, test_paths, Obj, Suc], f)
 else:
     with open(path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
-        action_seq, test_paths, Obj = pickle.load(f)
+        action_seq, test_paths, Obj, Suc = pickle.load(f)
 
 
+plt.figure(1)
+plt.title('Object position')
 i = 0
 for S in test_paths:
     plt.plot(S[:,0], S[:,1], color=(random.random(), random.random(), random.random()), label='path ' + str(i))
+    i += 1
+plt.legend()
+
+plt.figure(2)
+plt.title('Angle')
+i = 0
+for S in test_paths:
+    plt.plot(np.rad2deg(S[:,2]), color=(random.random(), random.random(), random.random()), label='path ' + str(i))
     i += 1
 plt.legend()
 plt.show()

@@ -8,6 +8,7 @@ from hand_control.srv import RegraspObject, close
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
+import geometry_msgs.msg
 
 class rolloutRecorder():
 
@@ -20,6 +21,11 @@ class rolloutRecorder():
     suc = True
     drop_counter = 0
     fail = False
+    angle = np.array([0.])
+    marker0 = np.array([0.,0.])
+    marker1 = np.array([0.,0.])
+    marker2 = np.array([0.,0.])
+    marker3 = np.array([0.,0.])
     
 
     def __init__(self):
@@ -31,6 +37,8 @@ class rolloutRecorder():
         rospy.Subscriber('/rollout/action', Float32MultiArray, self.callbackAction)
         # rospy.Subscriber('/rollout/move_success', Bool, self.callbackSuccess)
         rospy.Subscriber('/rollout/fail', Bool, self.callbacFail)
+        rospy.Subscriber('/object_orientation',Float32MultiArray, self.callbackOrientation)
+        rospy.Subscriber('/finger_markers', geometry_msgs.msg.PoseArray, self.callAddFingerPos)
         
         rospy.Service('/rollout/record_trigger', SetBool, self.callbackTrigger)
         rospy.Service('/rollout/get_states', gets, self.get_states)
@@ -41,7 +49,7 @@ class rolloutRecorder():
         while not rospy.is_shutdown():
 
             if self.running:
-                self.state = np.concatenate((self.obj_pos, self.gripper_load), axis=0)
+                self.state = np.concatenate((self.obj_pos, self.angle, self.marker0, self.marker1, self.marker2, self.marker3, self.gripper_load), axis=0)
                     
                 self.S.append(self.state)
                 self.A.append(self.action)
@@ -63,6 +71,24 @@ class rolloutRecorder():
 
     def callbacFail(self, msg):
         self.fail = msg.data
+
+    def callbackOrientation(self,msg):
+        self.angle = msg.data
+
+    def callAddFingerPos(self, msg):
+        tempMarkers =  msg.poses
+
+        self.marker0[0] = tempMarkers[0].position.x
+        self.marker0[1] = tempMarkers[0].position.y
+
+        self.marker1[0] = tempMarkers[1].position.x
+        self.marker1[1] = tempMarkers[1].position.y
+
+        self.marker2[0] = tempMarkers[2].position.x
+        self.marker2[1] = tempMarkers[2].position.y 
+
+        self.marker3[0] = tempMarkers[3].position.x
+        self.marker3[1] = tempMarkers[3].position.y
 
     def callbackTrigger(self, msg):
         self.running = msg.data

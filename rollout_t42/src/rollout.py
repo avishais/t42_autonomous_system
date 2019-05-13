@@ -106,7 +106,7 @@ class rolloutPublisher():
             self.action_pub.publish(msg)
             n -= 1
 
-            if self.fail:# not suc or fail:
+            if self.fail: # not suc or fail:
                 success = False
                 print("[rollout] Drop Fail.")
                 break
@@ -119,10 +119,6 @@ class rolloutPublisher():
                 break
 
             self.rate.sleep()
-
-        if not self.running:
-            print("[rollout] Stopped due to noise.")
-            raw_input()
 
         rospy.sleep(1)
         self.open_srv()

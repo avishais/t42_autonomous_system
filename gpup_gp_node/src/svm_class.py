@@ -19,13 +19,18 @@ class svm_failure():
         self.mode = 'd' if 'discrete' else 'c'
         self.simORreal = simORreal
 
+        if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40'])): # Include orientation angle
+            self.dim_ = 5
+        else:
+            self.dim_ = 4
+
         self.load_data()
 
         print 'All set!'
 
     def load_data(self):
 
-        self.postfix = '_v' + str(var.data_version_) + '_d' + str(var.dim_) + '_m' + str(var.stepSize_)
+        self.postfix = '_v' + str(var.data_version_) + '_d' + str(self.dim_) + '_m' + str(var.stepSize_)
         if os.path.exists(self.path + self.simORreal + '_svm_fit_discrete' + self.mode + self.postfix + '.obj'):
             with open(self.path + self.simORreal + '_svm_fit_discrete' + self.mode + self.postfix + '.obj', 'rb') as f: 
                 self.clf, self.x_mean, self.x_std = pickle.load(f)

@@ -46,13 +46,13 @@ class collect_data():
         rospy.Subscriber('/cylinder_drop', Bool, self.callbackObjectDrop)
         recorder_srv = rospy.ServiceProxy('/actor/trigger', Empty)
 
-        collect_mode = 'auto' # 'manual' or 'auto' or 'plan'
+        self.collect_mode = 'auto' # 'manual' or 'auto' or 'plan'
         
-        if collect_mode == 'manual':
+        if self.collect_mode == 'manual':
             rospy.Subscriber('/keyboard/desired_action', Float32MultiArray, self.callbackDesiredAction)
             ResetKeyboard_srv = rospy.ServiceProxy('/ResetKeyboard', Empty)
 
-        # if collect_mode == 'plan':
+        # if self.collect_mode == 'plan':
         # filest = glob.glob('/home/pracsys/catkin_ws/src/hand_control/plans/*.txt')
         # files = []
         # for f in filest:
@@ -76,18 +76,18 @@ class collect_data():
 
             if self.global_trigger:
 
-                if collect_mode != 'manual':
+                if self.collect_mode != 'manual':
                     if np.random.uniform() > 0.7:
-                        collect_mode = 'plan'
+                        self.collect_mode = 'plan'
                         # files = glob.glob('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/*.txt')
                         # if len(files)==0:
-                        #     collect_mode = 'auto'
+                        #     self.collect_mode = 'auto'
                     else:
-                        collect_mode = 'auto'
+                        self.collect_mode = 'auto'
 
                 if not self.trigger and self.arm_status == 'waiting':
                     
-                    if collect_mode == 'manual': 
+                    if self.collect_mode == 'manual': 
                         ResetKeyboard_srv()
                     if 1:#drop_srv().dropped:
                         arm_reset_srv()
@@ -117,7 +117,7 @@ class collect_data():
                     self.num_episodes += 1
                     Done = False
 
-                    if collect_mode == 'plan':
+                    if self.collect_mode == 'plan':
                         # ia = np.random.randint(len(files))
                         # print('[collect_data] Rolling out file: ' + files[ia])
                         # Af = np.loadtxt(files[ia], delimiter = ',', dtype=float)[:,:2]
@@ -135,15 +135,15 @@ class collect_data():
                     T = rospy.get_time()
                     for ep_step in range(self.episode_length):
 
-                        if collect_mode == 'plan' and Af.shape[0] == ep_step: # Finished planned path and now applying random actions
-                            collect_mode = 'auto'
+                        if self.collect_mode == 'plan' and Af.shape[0] == ep_step: # Finished planned path and now applying random actions
+                            self.collect_mode = 'auto'
                             n = 0
                             print('[collect_data] Running random actions...')
                         
                         if n == 0:
-                            if collect_mode == 'auto':
+                            if self.collect_mode == 'auto':
                                 action, n = self.choose_action()
-                            elif collect_mode == 'manual':
+                            elif self.collect_mode == 'manual':
                                 action = self.desired_action
                                 n = 1
                             else: # 'plan'
@@ -229,12 +229,15 @@ class collect_data():
                     a = self.A[3]
 
             n = np.random.randint(60)
-            if np.all(a == self.A[0]) or np.all(a == self.A[1]):
-                n = np.random.randint(70)
-            elif np.random.uniform() > 0.7:
-                n = np.random.randint(300)
+            if self.collect_mode == 'plan':
+                n = np.random.randint(50)
             else:
-                n = np.random.randint(100)
+                if np.all(a == self.A[0]) or np.all(a == self.A[1]):
+                    n = np.random.randint(70)
+                elif np.random.uniform() > 0.7:
+                    n = np.random.randint(300)
+                else:
+                    n = np.random.randint(100)
             return a, n
         else:
             a = np.random.uniform(-1.,1.,2)

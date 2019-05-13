@@ -7,7 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'elp40_20'
+Obj = 'cyl45'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -118,6 +118,19 @@ class transition_experience():
 
         np.savetxt(filen, M, delimiter=' ')
 
+    def transform_angles(self, angles):
+        if np.any(self.Object == np.array(['cyl35','cyl45'])):
+            return angles
+        if self.Object == 'sqr30':
+             return angles % (np.pi/2.)
+        if self.Object == 'poly6':
+             return angles % (np.pi/3.)
+        if self.Object == 'poly10':
+             return angles % (np.pi/5.)
+        if self.Object == 'elp40':
+             return angles % (np.pi)
+        return angles
+
     
     def process_transition_data(self, stepSize = 1, plot = False):
 
@@ -160,17 +173,15 @@ class transition_experience():
                 if fl < 0.05:
                     plt.plot(D[ks:kf+1,0], D[ks:kf+1,1],'.-b')
                     plt.plot(D[ks,0], D[ks,1],'oy', markersize=15)
-                    print D[ks:kf+1,:6]
-                    print D[ks:kf+1,:].shape
                     # d = done[ks:kf+1]*1
                     # plt.plot(d)
 
-                while np.linalg.norm(D[kf,:2]-D[kf-1,:2]) > 1.2 or np.linalg.norm(D[kf,:2]-D[kf,6:8]) > 1.2:
+                while np.linalg.norm(D[kf,:2]-D[kf-1,:2]) > 1.2 or np.linalg.norm(D[kf,:2]-D[kf,self.state_action_dim:self.state_action_dim+2]) > 1.2:
                     D, done = Del(D, done, kf)
                     kf -= 1
 
                 # Apply filter to episode
-                for i in range(4):
+                for i in range(self.state_dim):
                     D[ks:kf,i] = medfilter(D[ks:kf,i], 20)
 
                 if fl < 0.05:
@@ -178,7 +189,7 @@ class transition_experience():
                     plt.show()
                             
                 # Update next state columns
-                D[ks:kf, 6:10] = D[ks+1:kf+1, :4]
+                D[ks:kf, self.state_action_dim:] = D[ks+1:kf+1, :self.state_dim]
                 D, done = Del(D, done, kf)
 
                 ks = kf
@@ -186,7 +197,7 @@ class transition_experience():
 
             i = 0
             while i < D.shape[0]:
-                if np.linalg.norm(D[i,:2]-D[i,6:8]) > 1.2 or D[i,0] < -70. or D[i,0] > 120 or D[i,6] < -70. or D[i,6] > 120:
+                if np.linalg.norm(D[i,:2]-D[i,self.state_action_dim:self.state_action_dim+2]) > 1.2 or D[i,0] < -70. or D[i,0] > 120 or D[i,self.state_action_dim] < -70. or D[i,self.state_action_dim] > 120:
                     D, done = Del(D, done, i)
                 else:
                     i += 1
@@ -195,7 +206,7 @@ class transition_experience():
 
         def multiStep(D, done, stepSize): 
             Dnew = []
-            ia = range(4,6)
+            ia = range(self.state_dim,self.state_dim+self.action_dim)
             for i in range(D.shape[0]-stepSize):
                 a = D[i, ia] 
                 if not np.all(a == D[i:i+stepSize, ia]) or np.any(done[i:i+stepSize]):
@@ -217,9 +228,13 @@ class transition_experience():
         
         done = np.array([item[4] for item in self.memory]) 
 
+        # Explot symmetry of object profile
+        states[:,2] = self.transform_angles(states[:,2])
+        next_states[:,2] = self.transform_angles(next_states[:,2])
+        
         if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
-            states = states[:,[0,1,2,11,12]]
-            next_states = next_states[:,[0,1,2,11,12]]
+            states = states[:,[0,1,11,12,2]]
+            next_states = next_states[:,[0,1,11,12,2]]
         else:
             states = states[:,[0,1,11,12]]
             next_states = next_states[:,[0,1,11,12]]
@@ -230,6 +245,7 @@ class transition_experience():
 
         self.state_dim = states.shape[1]
         self.action_dim = actions.shape[1]
+        self.state_action_dim = self.state_dim + self.action_dim 
 
         D = np.concatenate((states, actions, next_states), axis = 1)
 
@@ -240,10 +256,10 @@ class transition_experience():
                     done[i] = False
 
         # Start dist.
-        St = [D[0,:4]]
+        St = [D[0,:self.state_dim]]
         for i in range(1, D.shape[0]-1):
             if done[i-1] and not done[i]:
-                St.append(D[i,:4])
+                St.append(D[i,:self.state_dim])
         St = np.array(St)
         s_start = np.mean(St, 0)
         s_std = np.std(St, 0)
@@ -272,8 +288,8 @@ class transition_experience():
         self.D = D
 
         # Bounds
-        print "Max: ", np.max(D, 0)[:4]
-        print "Min: ", np.min(D, 0)[:4]
+        print "Max: ", np.max(D, 0)[:self.state_dim]
+        print "Min: ", np.min(D, 0)[:self.state_dim]
 
         is_start = 60000
         is_end = is_start+100
@@ -288,7 +304,8 @@ class transition_experience():
 
         if plot:
             plt.figure(0)
-            plt.plot(D[:,0], D[:,1],'.-k')
+            # plt.plot(D[:,0], D[:,1],'.-k')
+            plt.plot(D[:,4],'.-k')
             # for _ in range(1000):
             #     j = np.random.randint(D.shape[0])
             #     plt.plot([D[j,0], D[j,6]], [D[j,1], D[j,7]],'o-r')
@@ -320,7 +337,7 @@ class transition_experience():
         def multiStep(D, done, stepSize): 
             Dnew = []
             done_new = []
-            ia = range(4,6)
+            ia = range(self.state_dim,self.state_dim+self.action_dim)
             for i in range(D.shape[0]-stepSize):
                 a = D[i, ia] 
                 if not np.all(a == D[i:i+stepSize, ia]):
@@ -340,10 +357,18 @@ class transition_experience():
 
         states = np.array([item[1] for item in self.memory])
         states[:,:2] *= 1000.
-        states = states[:,[0,1,11,12]]
         actions = np.array([item[2] for item in self.memory])
         done = np.array([item[4] for item in self.memory])
 
+        # Explot symmetry of object profile
+        states[:,2] = self.transform_angles(states[:,2])
+
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
+            states = states[:,[0,1,11,12,2]]
+            states[:,4] = np.sin(states[:,4])/np.cos(states[:,4])
+        else:
+            states = states[:,[0,1,11,12]]
+            
         # Remove false drops when motion is continuous
         for i in range(len(done)-1):
             if done[i]:
