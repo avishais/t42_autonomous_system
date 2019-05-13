@@ -18,7 +18,7 @@ import var
 state_dim = var.state_dim_
 stepSize = var.stepSize_
 version = var.data_version_
-Obj = 'sqr30'
+Obj = 'cyl35'
 
 gp_srv = rospy.ServiceProxy('/gp/transition', batch_transition)
 naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
@@ -42,25 +42,34 @@ def medfilter(x, W):
 if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
+    
+    action_seq = action_seq[:1]
+    test_paths = test_paths[:1]
+    Suc = Suc[:1]
+
+    action_seq[0] = action_seq[0][20:,:]
+    test_paths[0] = test_paths[0][20:,:]
 
     GP_batch = []
     GP_naive = []
-    for A, S in zip(action_seq, test_paths):
+    filtered_test_paths = []
+    for A, R in zip(action_seq, test_paths):
         if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
-            S = S[:,[0,1,11,12,2]]
+            R = R[:,[0,1,11,12,2]]
         else:
-            S = S[:,[0,1,11,12]]
-
-        state_dim = S.shape[1]
+            R = R[:,[0,1,11,12]]
+        state_dim = R.shape[1]
 
         print('Smoothing data...')
         for i in range(state_dim):
-            S[:,i] = medfilter(S[:,i], 20)
+            R[:,i] = medfilter(R[:,i], 20)
 
-        s_start = S[0,:]
+        filtered_test_paths.append(R)
+
+        s_start = R[0,:]
         sigma_start = np.ones((1,state_dim))*1e-3
 
-        Np = 100 # Number of particles
+        Np = 5 # Number of particles
 
         ######################################## GP propagation ##################################################
 
@@ -77,26 +86,26 @@ if 1:
         p_gp = 1
         print("Running (open loop) path...")
         for i in range(0, A.shape[0]):
-            print("[GP] Step " + str(i) + " of " + str(A.shape[0]))
+            # print("[GP] Step " + str(i) + " of " + str(A.shape[0]))
             Pgp.append(S)
             a = A[i,:]
 
-            st = time.time()
-            res = gp_srv(S.reshape(-1,1), a)
-            t_gp += (time.time() - st) 
+            # st = time.time()
+            # res = gp_srv(S.reshape(-1,1), a)
+            # t_gp += (time.time() - st) 
 
-            S_next = np.array(res.next_states).reshape(-1,state_dim)
-            if res.node_probability < p_gp:
-                p_gp = res.node_probability
-            s_mean_next = np.mean(S_next, 0)
-            s_std_next = np.std(S_next, 0)
-            S = S_next
+            # S_next = np.array(res.next_states).reshape(-1,state_dim)
+            # if res.node_probability < p_gp:
+            #     p_gp = res.node_probability
+            # s_mean_next = np.mean(S_next, 0)
+            # s_std_next = np.std(S_next, 0)
+            # S = S_next
 
-            if S_next.shape[0] == 0:
-                break
+            # if S_next.shape[0] == 0:
+            #     break
 
-            # s_mean_next = np.array([0,0,0,0])
-            # s_std_next = np.array([0,0,0,0])
+            s_mean_next = np.array([0,0,0,0])
+            s_std_next = np.array([0,0,0,0])
 
             Ypred_mean_gp = np.append(Ypred_mean_gp, s_mean_next.reshape(1,state_dim), axis=0)
             Ypred_std_gp = np.append(Ypred_std_gp, s_std_next.reshape(1,state_dim), axis=0)
@@ -129,7 +138,9 @@ if 1:
             if res.node_probability < p_naive:
                 p_naive = res.node_probability
             s_next = np.array(res.next_state)
-            s = s_next
+            s = np.copy(s_next)
+
+            print s
 
             Ypred_naive = np.append(Ypred_naive, s_next.reshape(1,state_dim), axis=0)
 
@@ -140,12 +151,12 @@ if 1:
     ######################################## Save ###########################################################
 
     with open(path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'w') as f: 
-        pickle.dump([action_seq, test_paths, GP_batch, GP_naive], f)
+        pickle.dump([action_seq, filtered_test_paths, GP_batch, GP_naive], f)
 
     ######################################## Plot ###########################################################
 else:
     with open(path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
-        action_seq, test_paths, GP_batch, GP_naive = pickle.load(f)  
+        action_seq, filtered_test_paths, GP_batch, GP_naive = pickle.load(f)  
 
 ix = [0, 1]
 # plt.figure(1)
@@ -171,22 +182,16 @@ ix = [0, 1]
 # ax2.plot(t, Ypred_bmean[:,1], '-m')
 
 ix = [0, 1]
-for S, Sbatch, Snaive in zip(test_paths, GP_batch, GP_naive):
+for S, Sbatch, Snaive in zip(filtered_test_paths, GP_batch, GP_naive):
+
     plt.plot(S[:,ix[0]], S[:,ix[1]], '.-k', label='rollout')
-    plt.plot(Sbatch[0][:,ix[0]], Sbatch[0][:,ix[1]], '.-r', label='BPP')
+    # plt.plot(Sbatch[0][:,ix[0]], Sbatch[0][:,ix[1]], '.-r', label='BPP')
     plt.plot(Snaive[:,ix[0]], Snaive[:,ix[1]], '.-c', label='Naive')
     plt.axis('equal')
     plt.legend()
-    plt.show()
+    # plt.show()
 
-# ax2 = plt.subplot(1,2,2)
-# try:
-#     plt.plot(R[:,ix[0]+2], R[:,ix[1]+2], '.-k', label='rollout')
-# except:
-#     pass
-# plt.plot(Ypred_mean_gp[:,ix[0]+2], Ypred_mean_gp[:,ix[1]+2], '-r', label='BPP mean')
-# plt.plot(Ypred_naive[:,2], Ypred_naive[:,3], '.-c', label='Naive')
-# plt.legend(loc='best')
+
 
 # plt.savefig('/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/results/path_' + tr + '.png', dpi=300) #str(np.random.randint(100000))
 plt.show()

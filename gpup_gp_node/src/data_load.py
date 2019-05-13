@@ -152,7 +152,7 @@ class data_load(object):
             theta_opt = []
             K_opt = []
         # [theta_opt.append([]) for _ in range(self.state_dim)] # List for each dimension
-        N = 5000
+        N = 1000
         for i in range(N):
             print('[data_load] Computing hyper-parameters for data point %d out of %d.'% (i, N))
             sa = self.Xtrain[np.random.randint(self.Xtrain.shape[0]), :]

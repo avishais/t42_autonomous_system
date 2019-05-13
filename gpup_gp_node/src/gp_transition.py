@@ -17,7 +17,7 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
-simORreal = 't42_sqr30'
+simORreal = 't42_cyl35'
 discreteORcont = 'discrete'
 useDiffusionMaps = False
 probability_threshold = 0.65
@@ -191,11 +191,11 @@ class Spin_gp(data_load, mean_shift, svm_failure):
 
     def batch_svm_check(self, S, a):
         failed_inx = []
-        for i in range(S.shape[0]):
-            p, _ = self.probability(S[i,:], a) # Probability of failure
-            prob_fail = np.random.uniform(0,1)
-            if prob_fail <= p:
-                failed_inx.append(i)
+        # for i in range(S.shape[0]):
+        #     p, _ = self.probability(S[i,:], a) # Probability of failure
+        #     prob_fail = np.random.uniform(0,1)
+        #     if prob_fail <= p:
+        #         failed_inx.append(i)
 
         return failed_inx
 
@@ -222,7 +222,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         a = np.array(req.action)
 
         if (len(S) == 1):
-            p, _ = self.probability(S[0,:],a)
+            p, _ = 0, _#self.probability(S[0,:],a)
             node_probability = 1.0 - p
             sa = np.concatenate((S[0,:],a), axis=0)
             sa = self.normz(sa)
@@ -290,8 +290,8 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         a = np.array(req.action)
 
         # Check which particles failed
-        p, _ = self.probability(s, a)
-        node_probability = 1.0 - p
+        # p, _ = self.probability(s, a)
+        node_probability = 1.0# - p
 
         # Propagate
         sa = np.concatenate((s, a), axis=0)
