@@ -1,7 +1,10 @@
 #!/usr/bin/python 
 
 '''
+----------------------------
 Author: Avishai Sintov
+        Rutgers University
+----------------------------
 '''
 
 import rospy
