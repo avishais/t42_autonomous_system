@@ -363,6 +363,10 @@ class hand_control():
         if action == 'c':
             inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1., -1., 0.]))
 
+        # Power close
+        if action == 'y':
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., 1., 1.])*6)
+
         # if action == 'q':
         #     inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., 0., 0.]))
         # if action == 'z':
