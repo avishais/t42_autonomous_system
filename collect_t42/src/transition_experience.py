@@ -327,10 +327,10 @@ class transition_experience():
                 i = j
 
             # Cancel drop if load is not critical
-            for i in range(states.shape[0]):
-                if done[i] and np.all(np.abs(states[i, 2:]) < 260) and np.all(np.abs(states[i, 2:]) > 40):
-                    # if np.random.uniform() > 0.5:
-                    done[i] = False
+            # for i in range(states.shape[0]):
+            #     if done[i] and np.all(np.abs(states[i, 2:4]) < 260) and np.all(np.abs(states[i, 2:4]) > 40):
+            #         # if np.random.uniform() > 0.5:
+            #         done[i] = False
 
             return done
 

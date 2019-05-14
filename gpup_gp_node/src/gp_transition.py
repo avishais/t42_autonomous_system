@@ -164,6 +164,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         for i in range(self.state_dim):
             gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = False, theta = Theta[i], algorithm = 'Matlab')
             mm, vv = gp_est.predict(sa[:self.state_action_dim])
+            print mm, vv
             ds_next[i] = mm
             std_next[i] = np.sqrt(vv)
 
