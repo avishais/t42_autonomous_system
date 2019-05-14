@@ -181,8 +181,9 @@ class transition_experience():
                     kf -= 1
 
                 # Apply filter to episode
+                h = [40, 40, 100, 100]
                 for i in range(self.state_dim):
-                    D[ks:kf,i] = medfilter(D[ks:kf,i], 20)
+                    D[ks:kf,i] = medfilter(D[ks:kf,i], h[i])
 
                 if fl < 0.05:
                     plt.plot(D[ks:kf+1,0], D[ks:kf+1,1],'.-r')

@@ -39,7 +39,7 @@ def medfilter(x, W):
             x_new[i] = np.mean(x[i-w:i+w])
     return x_new
 
-if 1:
+if 0:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
     
@@ -47,8 +47,8 @@ if 1:
     test_paths = test_paths[:1]
     Suc = Suc[:1]
 
-    action_seq[0] = action_seq[0][20:,:]
-    test_paths[0] = test_paths[0][20:,:]
+    action_seq[0] = action_seq[0][20:120,:]
+    test_paths[0] = test_paths[0][20:120,:]
 
     GP_batch = []
     GP_naive = []
@@ -59,12 +59,13 @@ if 1:
         else:
             R = R[:,[0,1,11,12]]
         state_dim = R.shape[1]
-        R = R[20:,:]
-        A = A[20:,:]
+        # R = R[20:,:]
+        # A = A[20:,:]
 
         print('Smoothing data...')
+        h = [40, 40, 100, 100]
         for i in range(state_dim):
-            R[:,i] = medfilter(R[:,i], 20)
+            R[:,i] = medfilter(R[:,i], h[i])
 
         filtered_test_paths.append(R)
 

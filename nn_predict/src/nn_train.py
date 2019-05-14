@@ -197,15 +197,14 @@ with tf.Session() as sess:
     print("Training cost:", training_cost)
 
     testing_cost = sess.run(cost, feed_dict={X: X_test, Y_pos: Y_test_pos, Y_load: Y_test_load, keep_prob_input: 1.0, keep_prob: 1.0})
-    print("Testing cost=", testing_cost)
+    print("Testing cost:", testing_cost)
 
-    plt.plot(X_test[:,0],X_test[:,1],'.y')
-    plt.show()
-    exit(1)
-
+    # plt.plot(X_test[:,0],X_test[:,1],'.y')
+    # plt.show()
+    # exit(1)
 
     j = 100#np.random.random_integers(1, X_train.shape[0]) %np.array([-0.1177 ,   0.0641  ,  0.9617  ,  0.9387])#
-    x_test = X_test[j, :].reshape(1, state_action_dim)
+    x_test = np.copy(X_test[j, :]).reshape(1, state_action_dim)
     y_pos, y_load = sess.run([prediction_pos, prediction_load], {X: x_test, keep_prob_input: 1.0, keep_prob: 1.0})
     y = np.concatenate((y_pos, y_load), axis=0)
     print("Testing point: ", x_test)

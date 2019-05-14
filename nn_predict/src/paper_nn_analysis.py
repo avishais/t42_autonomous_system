@@ -15,7 +15,7 @@ import time
 state_dim = 4
 stepSize = 1
 version = 0
-Obj = 'cyl35'
+Obj = 'cyl45'
 
 nn_srv = rospy.ServiceProxy('/nn/predict', StateAction2State)
 rospy.init_node('NN_t42', anonymous=True)

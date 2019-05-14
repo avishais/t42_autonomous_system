@@ -76,7 +76,7 @@ activation = 2
 
 # Training Parameters
 learning_rate =  0.001
-num_steps = int(5e4)
+num_steps = int(1e4)
 batch_size = 150
 display_step = 100
 
