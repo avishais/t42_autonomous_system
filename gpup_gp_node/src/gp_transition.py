@@ -22,23 +22,23 @@ discreteORcont = 'discrete'
 useDiffusionMaps = False
 probability_threshold = 0.65
 plotRegData = False
-diffORspec = 'diff'
+diffORspec = 'spec'
 
 class Spin_gp(data_load, mean_shift, svm_failure):
 
     def __init__(self):
         # Number of NN
         if useDiffusionMaps:
-            dim = 3
+            dim = 2
             self.K = 1000
             self.K_manifold = 100
-            sigma = 5
+            sigma = 2.0
             if diffORspec == 'diff':
                 # self.df = DiffusionMap(sigma=sigma, embedding_dim=dim)
-                self.df = DiffusionMap(sigma=10, embedding_dim=dim, k = self.K)
+                self.df = DiffusionMap(sigma=10, embedding_dim = dim, k = self.K)
                 print('[gp_transition] Using diffusion maps with dimension %d, K: (%d, %d) and sigma=%f.'%(dim, self.K_manifold, self.K, sigma))
             else:
-                self.embedding = spectralEmbed(embedding_dim=dim) 
+                self.embedding = spectralEmbed(embedding_dim = dim) 
                 print('[gp_transition] Using spectral embedding with dimension %d.'%(dim))
             data_load.__init__(self, simORreal = simORreal, discreteORcont = discreteORcont, K = self.K, K_manifold = self.K_manifold, sigma=sigma, dim = dim, dr = 'diff')
         else:
@@ -109,7 +109,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
             dS_next[:,i] = mm
             std_next[:,i] = np.sqrt(np.diag(vv))
 
-        S_next = SA[:,:self.state_dim] + dS_next#np.random.normal(dS_next, std_next)
+        S_next = SA[:,:self.state_dim] + np.random.normal(dS_next, std_next)
 
         return S_next 
 
@@ -150,7 +150,9 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         return np.array(S_next)
 
     def one_predict(self, sa):
-        Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point      
+        # Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point      
+
+        K = 500
 
         idx = self.kdt.query(sa.reshape(1,-1), k = K, return_distance=False)
         X_nn = self.Xtrain[idx,:].reshape(K, self.state_action_dim)
@@ -162,7 +164,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         ds_next = np.zeros((self.state_dim,))
         std_next = np.zeros((self.state_dim,))
         for i in range(self.state_dim):
-            gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = False, theta = Theta[i], algorithm = 'Matlab')
+            gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = True, theta = None, algorithm = 'Matlab')
             mm, vv = gp_est.predict(sa[:self.state_action_dim])
             ds_next[i] = mm
             std_next[i] = np.sqrt(vv)

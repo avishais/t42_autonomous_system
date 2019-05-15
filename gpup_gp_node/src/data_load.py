@@ -30,7 +30,7 @@ class data_load(object):
         self.K = K
         self.load()
 
-        if not extend_previous_opt and os.path.exists(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K) + '.obj'):
+        if not extend_previous_opt and os.path.exists(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K if K_manifold<0 else K_manifold) + '.obj'):
             with open(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K) + '.obj', 'rb') as f: 
                 _, self.theta_opt, self.K_opt, self.opt_kdt = pickle.load(f)
             print('[data_load] Loaded hyper-parameters data for data in ' + self.file)
@@ -152,7 +152,7 @@ class data_load(object):
             theta_opt = []
             K_opt = []
         # [theta_opt.append([]) for _ in range(self.state_dim)] # List for each dimension
-        N = 1000
+        N = 10000
         for i in range(N):
             print('[data_load] Computing hyper-parameters for data point %d out of %d.'% (i, N))
             sa = self.Xtrain[np.random.randint(self.Xtrain.shape[0]), :]

@@ -47,9 +47,6 @@ if 1:
     test_paths = test_paths[:1]
     Suc = Suc[:1]
 
-    action_seq[0] = action_seq[0][20:,:]
-    test_paths[0] = test_paths[0][20:,:]
-
     GP_batch = []
     GP_naive = []
     filtered_test_paths = []
@@ -59,17 +56,20 @@ if 1:
         else:
             R = R[:,[0,1,11,12]]
         state_dim = R.shape[1]
+        A = A[20:150,:]
+        R = R[20:150,:]
 
         print('Smoothing data...')
+        h = [20,20,100,100]
         for i in range(state_dim):
-            R[:,i] = medfilter(R[:,i], 20)
+            R[:,i] = medfilter(R[:,i], h[i])
 
         filtered_test_paths.append(R)
 
         s_start = R[0,:]
         sigma_start = np.ones((1,state_dim))*1e-3
 
-        Np = 5 # Number of particles
+        Np = 100 # Number of particles
 
         ######################################## GP propagation ##################################################
 
@@ -139,8 +139,6 @@ if 1:
                 p_naive = res.node_probability
             s_next = np.array(res.next_state)
             s = np.copy(s_next)
-
-            print s
 
             Ypred_naive = np.append(Ypred_naive, s_next.reshape(1,state_dim), axis=0)
 
