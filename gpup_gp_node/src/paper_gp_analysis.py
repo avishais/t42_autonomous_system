@@ -18,7 +18,7 @@ import var
 state_dim = var.state_dim_
 stepSize = var.stepSize_
 version = var.data_version_
-Obj = 'cyl35'
+Obj = 'cyl45'
 
 gp_srv = rospy.ServiceProxy('/gp/transition', batch_transition)
 naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
