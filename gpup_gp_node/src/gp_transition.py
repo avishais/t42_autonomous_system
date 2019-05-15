@@ -17,7 +17,7 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
-simORreal = 't42_cyl35'
+simORreal = 't42_cyl45'
 discreteORcont = 'discrete'
 useDiffusionMaps = False
 probability_threshold = 0.65
@@ -150,9 +150,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         return np.array(S_next)
 
     def one_predict(self, sa):
-        # Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point      
-
-        K = 500
+        Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point     
 
         idx = self.kdt.query(sa.reshape(1,-1), k = K, return_distance=False)
         X_nn = self.Xtrain[idx,:].reshape(K, self.state_action_dim)

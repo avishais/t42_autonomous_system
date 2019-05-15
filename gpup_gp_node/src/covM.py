@@ -69,6 +69,7 @@ class Covariance(object):
                 K = self.cov_matrix_ij(self.X, self.X, Theta)
                 self.L = np.linalg.cholesky(K)
                 self.AlphaHat = np.linalg.inv(self.L.T).dot( np.linalg.inv(self.L).dot(self.Y) )
+                # print("[covM] Got AlphaHat.")
             except:
                 # Theta = np.copy(self.theta) + (2*np.random.uniform(self.theta.shape) - 1)
                 self.optimize()
