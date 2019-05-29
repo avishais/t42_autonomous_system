@@ -245,7 +245,7 @@ class hand_control():
     
     def moveGripper(self, angles, open=False):
         if not open:
-            if angles[0] > 0.9 or angles[1] > 0.9 or angles[0] < 0.03 or angles[1] < 0.03:
+            if angles[0] > 0.9 or angles[1] > 0.9 or angles[0] < 0.02 or angles[1] < 0.02:
                 rospy.logerr('[hand] Move Failed. Desired angles out of bounds.')
                 return False
 

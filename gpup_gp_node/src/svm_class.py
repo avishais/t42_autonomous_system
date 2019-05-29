@@ -20,9 +20,9 @@ class svm_failure():
         self.simORreal = simORreal
 
         if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40'])): # Include orientation angle
-            self.dim_ = 5
+            self.dim_ = var.dim_ + 1
         else:
-            self.dim_ = 4
+            self.dim_ = var.dim_
 
         self.load_data()
 

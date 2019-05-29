@@ -2,7 +2,7 @@
 import rospy
 from std_msgs.msg import Float64MultiArray, Float32MultiArray, Int16
 from std_srvs.srv import SetBool, Empty, EmptyResponse
-from gpup_gp_node.srv import batch_transition, batch_transition_repeat, one_transition, setk
+from gpup_gp_node_exp.srv import batch_transition, batch_transition_repeat, one_transition, setk
 import math
 import numpy as np
 from gp import GaussianProcess
@@ -42,7 +42,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
                 print('[gp_transition] Using spectral embedding with dimension %d.'%(dim))
             data_load.__init__(self, simORreal = simORreal, discreteORcont = discreteORcont, K = self.K, K_manifold = self.K_manifold, sigma=sigma, dim = dim, dr = 'diff')
         else:
-            self.K = 100
+            self.K = 70
             print('[gp_transition] No diffusion maps used, K=%d.'%self.K)
             data_load.__init__(self, simORreal = simORreal, discreteORcont = discreteORcont, K = self.K, dr = 'spec')
 
@@ -162,7 +162,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         ds_next = np.zeros((self.state_dim,))
         std_next = np.zeros((self.state_dim,))
         for i in range(self.state_dim):
-            gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = True, theta = None, algorithm = 'Matlab')
+            gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = False, theta = Theta[i], algorithm = 'Matlab')
             mm, vv = gp_est.predict(sa[:self.state_action_dim])
             ds_next[i] = mm
             std_next[i] = np.sqrt(vv)
@@ -221,6 +221,8 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         S = np.array(req.states).reshape(-1, self.state_dim)
         a = np.array(req.action)
 
+        collision_probability = 0.0
+
         if (len(S) == 1):
             p, _ = 0, _#self.probability(S[0,:],a)
             node_probability = 1.0 - p
@@ -229,7 +231,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
             sa_normz = self.one_predict(sa)
             s_next = self.denormz(sa_normz)
 
-            return {'next_states': s_next, 'mean_shift': s_next, 'node_probability': node_probability}
+            return {'next_states': s_next, 'mean_shift': s_next, 'node_probability': node_probability, 'collision_probability': collision_probability}
         else:       
 
             # Check which particles failed
@@ -243,7 +245,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
                 if len(good_inx) == 0: # All particles failed
                     S_next = []
                     mean = [0,0]
-                    return {'next_states': S_next, 'mean_shift': mean, 'node_probability': node_probability, 'bad_action': np.array([0.,0.])}
+                    return {'next_states': S_next, 'mean_shift': mean, 'node_probability': node_probability, 'bad_action': np.array([0.,0.]), 'collision_probability': 1.0}
 
                 # Find main direction of fail
                 S_failed_mean = np.mean(S[failed_inx, :], axis=0)
@@ -265,8 +267,13 @@ class Spin_gp(data_load, mean_shift, svm_failure):
             S_next = self.batch_propa(S, a)
 
             mean = np.mean(S_next, 0) #self.get_mean_shift(S_next)
+
+            print "----------------"
+            print "Current state mean: ", np.mean(S, 0)
+            print "Action: ", a
+            print "Next state mean: ", mean
             
-            return {'next_states': S_next.reshape((-1,)), 'mean_shift': mean, 'node_probability': node_probability, 'bad_action': bad_action}
+            return {'next_states': S_next.reshape((-1,)), 'mean_shift': mean, 'node_probability': node_probability, 'bad_action': bad_action, 'collision_probability': collision_probability}
 
     # Predicts the next step by calling the GP class - repeats the same action 'n' times
     def GetTransitionRepeat(self, req):
@@ -280,6 +287,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
             S = S_next
         
         mean = self.get_mean_shift(S_next)
+
         
         return {'next_states': S_next.reshape((-1,)), 'mean_shift': mean}
 

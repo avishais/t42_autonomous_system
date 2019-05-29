@@ -7,7 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'cyl45'
+Obj = 'rec60'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -77,7 +77,7 @@ class transition_experience():
         failed_states = states[done]
 
         plt.figure(1)
-        ax1 = plt.subplot(121)
+        ax1 = plt.subplot(221)
         # ax1.plot(states[:,0],states[:,1],'-k')
         ax1.plot(states[:,3],states[:,4],'.b')
         ax1.plot(states[:,5],states[:,6],'.b')
@@ -90,13 +90,18 @@ class transition_experience():
         plt.ylim((-50, 140))
         plt.xlim((-60, 130))
         
-        ax2 = plt.subplot(122)
+        ax2 = plt.subplot(222)
         ax2.plot(states[:,-2],states[:,-1],'.k')
         ax2.plot(failed_states[:,-2],failed_states[:,-1],'.r')
         ax2.set(title='Actuator loads')
         ax2.axis('equal')
         plt.xlim((-10, 300))
         plt.ylim((-300, 10))
+
+        ax3 = plt.subplot(223)
+        ax3.plot(np.rad2deg(states[:,2]),'-k')
+        ax3.set(title='Object angle')
+        plt.ylim((-180., 180.))
 
         plt.show()
 
@@ -169,6 +174,10 @@ class transition_experience():
                     kf = ks + 1
                     continue
 
+                # Avoid the peaks at grasp
+                D, done = Del(D, done, range(ks, ks+6))
+                kf -= 6
+                
                 fl = np.random.uniform()+10
                 if fl < 0.05:
                     plt.plot(D[ks:kf+1,0], D[ks:kf+1,1],'.-b')
@@ -183,7 +192,10 @@ class transition_experience():
                 # Apply filter to episode
                 h = [40, 40, 100, 100]
                 for i in range(self.state_dim):
-                    D[ks:kf,i] = medfilter(D[ks:kf,i], h[i])
+                    try:
+                        D[ks:kf,i] = medfilter(D[ks:kf,i], h[i])
+                    except:
+                        D[ks:kf,i] = medfilter(D[ks:kf,i], 40)
 
                 if fl < 0.05:
                     plt.plot(D[ks:kf+1,0], D[ks:kf+1,1],'.-r')
@@ -234,11 +246,11 @@ class transition_experience():
         next_states[:,2] = self.transform_angles(next_states[:,2])
         
         if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
-            states = states[:,[0,1,11,12,2]]
-            next_states = next_states[:,[0,1,11,12,2]]
+            states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
+            next_states = next_states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
         else:
-            states = states[:,[0,1,11,12]]
-            next_states = next_states[:,[0,1,11,12]]
+            states = states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
+            next_states = next_states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
 
         # For data from recorder
         if self.postfix != 'bu':
@@ -249,6 +261,8 @@ class transition_experience():
         self.state_action_dim = self.state_dim + self.action_dim 
 
         D = np.concatenate((states, actions, next_states), axis = 1)
+
+        t = range(10000)
 
         # Remove false drops when motion is continuous
         for i in range(len(done)-1):
@@ -267,13 +281,17 @@ class transition_experience():
         print "start mean: ", s_start
         print "start std.: ", s_std
 
-        # plt.plot(D[:,0], D[:,1], '.k')
-        # plt.plot(St[:,0], St[:,1], '.r')
-        # plt.plot(s_start[0], s_start[1], 'og')
+        D, done = new_clean(D, done)
+
+        # plt.plot(t, D[:10000,2], '.-r')
+        # plt.plot(t, D[:10000,3], '.-k')
+        # ix = np.where(done[:10000])[0]
+        # for i in ix:
+        #     print i
+        #     plt.plot(t[i], D[i,2], 'om')
+        #     plt.plot(t[i], D[i,3], 'ob')
         # plt.show()
         # exit(1)
-
-        D, done = new_clean(D, done)
 
         if stepSize > 1:
             D = multiStep(D, done, stepSize)
@@ -365,10 +383,10 @@ class transition_experience():
         states[:,2] = self.transform_angles(states[:,2])
 
         if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
-            states = states[:,[0,1,11,12,2]]
+            states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
             states[:,4] = np.sin(states[:,4])/np.cos(states[:,4])
         else:
-            states = states[:,[0,1,11,12]]
+            states = states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
             
         # Remove false drops when motion is continuous
         for i in range(len(done)-1):
@@ -442,4 +460,6 @@ class transition_experience():
         print 'Success rate: ' + str(float(s)/SA_test.shape[0]*100)
         print 'Drop prediction accuracy: ' + str(float(s_fail)/c_fail*100)
         print 'Success prediction accuracy: ' + str(float(s_suc)/c_suc*100)
+
+        return np.array([float(s)/SA_test.shape[0]*100, float(s_fail)/c_fail*100, float(s_suc)/c_suc*100])
 

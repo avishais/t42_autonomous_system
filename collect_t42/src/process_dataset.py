@@ -45,14 +45,20 @@ def main():
 
     # Process raw data
     if 1:
+        download_dir = dest_path + '/summary.csv' 
+        csv = open(download_dir, "w") 
+        csv.write('name, Success rate, fail accuracy, success accuracy \n')
+            
         for obj in objs:
             # if np.any(obj == np.array(['sqr30','poly10','cyl35','poly6'])):
             #     continue
             print("\n\n[process_dataset] Processing object '%s'...\n\n"%obj)
             texp = transition_experience(Load = True, discrete=discrete, postfix='', Object = obj)
 
-            texp.process_transition_data(stepSize = 1, plot = False)
-            texp.process_svm(stepSize = 1)
+            # texp.process_transition_data(stepSize = 1, plot = False)
+            O = texp.process_svm(stepSize = 1)
+
+            csv.write(obj + ',' + str(O[0]) + ',' + str(O[1]) + ',' + str(O[2]) + '\n')
 
     # Generate kd-trees and pre-compute hyper-parameters
     if 0:

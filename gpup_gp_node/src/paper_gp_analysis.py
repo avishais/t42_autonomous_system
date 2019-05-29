@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from gpup_gp_node.srv import gpup_transition, batch_transition, one_transition
+from gpup_gp_node_exp.srv import gpup_transition, batch_transition, one_transition
 from std_srvs.srv import Empty, EmptyResponse
 import numpy as np
 import matplotlib.pyplot as plt
@@ -39,7 +39,7 @@ def medfilter(x, W):
             x_new[i] = np.mean(x[i-w:i+w])
     return x_new
 
-if 0:
+if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
     
@@ -57,7 +57,7 @@ if 0:
         if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
             R = R[:,[0,1,11,12,2]]
         else:
-            R = R[:,[0,1,11,12]]
+            R = R[:,[0,1,11,12,11,12,3,4,5,6,7,8,9,10]]
         state_dim = R.shape[1]
         # R = R[20:,:]
         # A = A[20:,:]
@@ -65,7 +65,11 @@ if 0:
         print('Smoothing data...')
         h = [40, 40, 100, 100]
         for i in range(state_dim):
-            R[:,i] = medfilter(R[:,i], h[i])
+            try:
+                R[:,i] = medfilter(R[:,i], h[i])
+            except:
+                R[:,i] = medfilter(R[:,i], 40)
+
 
         filtered_test_paths.append(R)
 
@@ -107,8 +111,8 @@ if 0:
             # if S_next.shape[0] == 0:
             #     break
 
-            s_mean_next = np.array([0,0,0,0])
-            s_std_next = np.array([0,0,0,0])
+            s_mean_next = np.zeros((1,state_dim))
+            s_std_next = np.zeros((1,state_dim))
 
             Ypred_mean_gp = np.append(Ypred_mean_gp, s_mean_next.reshape(1,state_dim), axis=0)
             Ypred_std_gp = np.append(Ypred_std_gp, s_std_next.reshape(1,state_dim), axis=0)

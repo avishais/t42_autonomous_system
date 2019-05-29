@@ -25,6 +25,7 @@ class planRoll():
     arm_status = ' '
     trigger = False # Enable collection
     radius = 12.0
+    state_dim = 12
 
     def __init__(self):
         rospy.init_node('planNroll', anonymous=True)
@@ -39,6 +40,7 @@ class planRoll():
         rospy.Subscriber('/ObjectIsReset', String, self.callbackTrigger)
         self.obs_srv = rospy.ServiceProxy('/observation', observation)
         self.open_srv = rospy.ServiceProxy('/OpenGripper', Empty) 
+        self.close_srv = rospy.ServiceProxy('/CloseGripper', close) 
 
         self.rate = rospy.Rate(10)
         print('[plan_call] Ready to plan and roll...')
@@ -52,21 +54,27 @@ class planRoll():
         #     rate.sleep()
 
     def ResetArm(self):
-        while 1:
-            if not self.trigger and self.arm_status == 'waiting':
-                print('[rollout_action_publisher] Waiting for arm to grasp object...')
-                self.arm_reset_srv()
-                rospy.sleep(1.0)
-            self.rate.sleep()
-            if self.arm_status != 'moving' and self.trigger:
-                self.rate.sleep()
-                if self.drop: # Check if really grasped
-                    self.trigger = False
-                    print('[rollout_action_publisher] Grasp failed. Restarting')
-                    continue
-                else:
-                    break
-        self.trigger = False
+        # while 1:
+        #     if not self.trigger and self.arm_status == 'waiting':
+        #         print('[rollout_action_publisher] Waiting for arm to grasp object...')
+        #         self.arm_reset_srv()
+        #         rospy.sleep(1.0)
+        #     self.rate.sleep()
+        #     if self.arm_status != 'moving' and self.trigger:
+        #         self.rate.sleep()
+        #         if self.drop: # Check if really grasped
+        #             self.trigger = False
+        #             print('[rollout_action_publisher] Grasp failed. Restarting')
+        #             continue
+        #         else:
+        #             break
+        self.open_srv()
+        print('[planNroll] Press key to insert object...')
+        raw_input()
+        rospy.sleep(3.)
+        print('[planNroll] Waiting to grasp object...')
+        self.close_srv()
+        # self.trigger = False
 
     def run(self, msg):
         goal = msg.goal
@@ -74,12 +82,13 @@ class planRoll():
         self.planning_algorithm = msg.planning_algorithm
 
         # Reset arm
-        self.trigger = False
+        # self.trigger = False
         self.ResetArm()
         rospy.sleep(2.)
 
         # Get state
         start = np.array(self.obs_srv().state)
+        start = start[[0,1,11,12,3,4,5,6,7,8,9,10]] # For cylinder
         start[:2] *= 1000
 
         print "[plan_call] Start state: " + str(start)
@@ -101,7 +110,7 @@ class planRoll():
             rospy.logerr('[plan_call] Recieved empty path.')
             return
         rospy.sleep(2.)
-        S = np.array(self.rollout_srv(A).states).reshape(-1,4)
+        S = np.array(self.rollout_srv(A).states).reshape(-1, self.state_dim)
         print('Finished, getting states...')
         
         # Save
@@ -115,7 +124,7 @@ class planRoll():
         print('[plan_call] Process ended.')
         self.open_srv()
 
-        if 0:
+        if 1:
             fig, ax = plt.subplots()
             St = np.copy(S)
             for i in range(2):
@@ -176,7 +185,7 @@ class planRoll():
         self.planning_done = True
 
         self.planning_actions = np.array(self.planning_actions).reshape((-1,2))
-        self.planned_path = np.array(self.planned_path).reshape((-1,4))
+        self.planned_path = np.array(self.planned_path).reshape((-1, self.state_dim))
 
         File = self.planning_algorithm + '_goal' + str(self.goal[0]) + '_' + str(self.goal[1]) + '_n' + self.id + '_plan.txt'
         np.savetxt(self.path + File, self.planning_actions, delimiter = ', ')
@@ -224,6 +233,7 @@ class planRoll():
                 file_name = pklfile[j+1:-4]
 
                 trajfile = pklfile[:-8] + 'traj.txt'
+                print trajfile
                 Straj = np.loadtxt(trajfile, delimiter=',', dtype=float)[:,:2]
 
                 print('Plotting file number ' + str(k+1) + ': ' + file_name)

@@ -17,9 +17,9 @@ class data_load(object):
     def __init__(self, simORreal = 'sim', discreteORcont = 'discrete', K = 100, K_manifold=-1, sigma=-1, dim=-1, Dillute = var.N_dillute_, dr = 'diff'):
         
         if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40'])): # Include orientation angle
-            dim_ = 5
+            dim_ = var.dim_ + 1
         else:
-            dim_ = 4
+            dim_ = var.dim_
 
         self.Dillute = Dillute
         self.postfix = '_v' + str(var.data_version_) + '_d' + str(dim_) + '_m' + str(var.stepSize_)
@@ -43,6 +43,9 @@ class data_load(object):
         with open(self.path + self.file, 'rb') as f: 
             D, self.state_dim, self.action_dim, is_start, is_end = pickle.load(f)
         Qtrain = D
+
+        # plt.plot(D[:10000,2], '.-r')
+        # plt.plot(D[:10000,3], '.-k')
 
         # Test data
         # is_start = 0

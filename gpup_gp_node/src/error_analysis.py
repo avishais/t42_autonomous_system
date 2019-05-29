@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from gpup_gp_node.srv import gpup_transition, batch_transition, one_transition
+from gpup_gp_node_exp.srv import gpup_transition, batch_transition, one_transition
 from std_srvs.srv import Empty, EmptyResponse
 import numpy as np
 import matplotlib.pyplot as plt
@@ -14,7 +14,7 @@ import var
 
 # np.random.seed(10)
 
-state_dim = 4
+state_dim = 12
 version = 0
 Obj = 'cyl45'
 
@@ -110,8 +110,8 @@ if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
-    if 0:
-        with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'r') as f: 
+    if 1:
+        with open(path + 'prediction_analysis_' + Obj + '_gp1.pkl', 'r') as f: 
             Ggp = pickle.load(f)
     else: 
         Ggp = []
@@ -120,11 +120,11 @@ if 1:
     while j < 10000:
         print("Run %d, number of samples %d."%(j, len(Ggp)))
         try:
-            h = np.random.randint(201)
+            h = np.random.randint(1,150)
             path_inx = np.random.randint(len(test_paths))
             R = test_paths[path_inx]
             A = action_seq[path_inx]
-            R = R[:,[0,1,11,12]]
+            R = R[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
 
             # Randomly pick a section with length h
             st_inx = np.random.randint(R.shape[0]-h-1)
@@ -132,12 +132,15 @@ if 1:
             A = A[st_inx:st_inx+h]
 
             for i in range(state_dim):
-                R[:,i] = medfilter(R[:,i], w[i])
+                try:
+                    R[:,i] = medfilter(R[:,i], w[i])
+                except:
+                    R[:,i] = medfilter(R[:,i], 40)
 
             s_start = R[0,:]
-            R_nn = predict_GP(s_start, A)
+            R_gp = predict_GP(s_start, A)
 
-            e, l = tracking_error(R, R_nn)
+            e, l = tracking_error(R, R_gp)
         except:
             continue
 
@@ -145,7 +148,7 @@ if 1:
         j += 1
 
         if j == 10000 or j % 50 == 0:
-            with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'w') as f: 
+            with open(path + 'prediction_analysis_' + Obj + '_gp1.pkl', 'w') as f: 
                 pickle.dump(Ggp, f)
 
     # Ggp = np.zeros((len(H), 2))    
@@ -178,12 +181,12 @@ if 1:
     #     Ggp[j,1] = Sum_gp / t
     #     j += 1
 
-    with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'w') as f: 
+    with open(path + 'prediction_analysis_' + Obj + '_gp1.pkl', 'w') as f: 
         pickle.dump(Ggp, f)
 
     ######################################## Plot ###########################################################
 else:
-    with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'r') as f: 
+    with open(path + 'prediction_analysis_' + Obj + '_gp1.pkl', 'r') as f: 
         Ggp = pickle.load(f) 
 
 if 0:
