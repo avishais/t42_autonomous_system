@@ -13,7 +13,7 @@ def main():
     texp = transition_experience(Load = True, discrete=True, postfix='', Object = 'cyl45')
 
     texp.process_transition_data(stepSize = 1, plot = False)
-    # texp.process_svm(stepSize = 1)
+    texp.process_svm(stepSize = 1)
 
     texp.plot_data()
 

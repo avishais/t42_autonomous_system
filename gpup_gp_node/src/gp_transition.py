@@ -22,14 +22,14 @@ discreteORcont = 'discrete'
 useDiffusionMaps = False
 probability_threshold = 0.65
 plotRegData = False
-diffORspec = 'diff'
+diffORspec = 'spec'
 
 class Spin_gp(data_load, mean_shift, svm_failure):
 
     def __init__(self):
         # Number of NN
         if useDiffusionMaps:
-            dim = 3
+            dim = 8
             self.K = 1000
             self.K_manifold = 100
             sigma = 5
@@ -42,7 +42,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
                 print('[gp_transition] Using spectral embedding with dimension %d.'%(dim))
             data_load.__init__(self, simORreal = simORreal, discreteORcont = discreteORcont, K = self.K, K_manifold = self.K_manifold, sigma=sigma, dim = dim, dr = 'diff')
         else:
-            self.K = 100
+            self.K = 70
             print('[gp_transition] No diffusion maps used, K=%d.'%self.K)
             data_load.__init__(self, simORreal = simORreal, discreteORcont = discreteORcont, K = self.K, dr = 'spec')
 
@@ -150,7 +150,9 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         return np.array(S_next)
 
     def one_predict(self, sa):
-        Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point     
+        Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point  
+
+        # K = 70 # 60 is best   
 
         idx = self.kdt.query(sa.reshape(1,-1), k = K, return_distance=False)
         X_nn = self.Xtrain[idx,:].reshape(K, self.state_action_dim)

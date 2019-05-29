@@ -183,7 +183,10 @@ class transition_experience():
                 # Apply filter to episode
                 h = [40, 40, 100, 100]
                 for i in range(self.state_dim):
-                    D[ks:kf,i] = medfilter(D[ks:kf,i], h[i])
+                    try:
+                        D[ks:kf,i] = medfilter(D[ks:kf,i], h[i])
+                    except:
+                        D[ks:kf,i] = medfilter(D[ks:kf,i], 40)
 
                 if fl < 0.05:
                     plt.plot(D[ks:kf+1,0], D[ks:kf+1,1],'.-r')
@@ -237,8 +240,8 @@ class transition_experience():
             states = states[:,[0,1,11,12,2]]
             next_states = next_states[:,[0,1,11,12,2]]
         else:
-            states = states[:,[0,1,11,12]]
-            next_states = next_states[:,[0,1,11,12]]
+            states = states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
+            next_states = next_states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
 
         # For data from recorder
         if self.postfix != 'bu':
@@ -368,7 +371,7 @@ class transition_experience():
             states = states[:,[0,1,11,12,2]]
             states[:,4] = np.sin(states[:,4])/np.cos(states[:,4])
         else:
-            states = states[:,[0,1,11,12]]
+            states = states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
             
         # Remove false drops when motion is continuous
         for i in range(len(done)-1):
