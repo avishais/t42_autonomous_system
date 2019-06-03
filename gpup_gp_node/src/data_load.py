@@ -14,12 +14,12 @@ extend_previous_opt = False
 class data_load(object):
     # Dillute = 100000
 
-    def __init__(self, simORreal = 'sim', discreteORcont = 'discrete', K = 100, K_manifold=-1, sigma=-1, dim=-1, Dillute = var.N_dillute_, dr = 'diff'):
+    def __init__(self, simORreal = 'sim', discreteORcont = 'discrete', with_fingers = False, K = 100, K_manifold=-1, sigma=-1, dim=-1, Dillute = var.N_dillute_, dr = 'diff'):
         
         if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40'])): # Include orientation angle
-            dim_ = var.dim_ + 1
+            dim_ = var.dim_ + 1 + 8 if with_fingers else var.dim_ + 1
         else:
-            dim_ = var.dim_
+            dim_ = var.dim_ + 8 if with_fingers else var.dim_
 
         self.Dillute = Dillute
         self.postfix = '_v' + str(var.data_version_) + '_d' + str(dim_) + '_m' + str(var.stepSize_)
@@ -30,8 +30,8 @@ class data_load(object):
         self.K = K
         self.load()
 
-        if not extend_previous_opt and os.path.exists(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K if K_manifold<0 else K_manifold) + '.obj'):
-            with open(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K) + '.obj', 'rb') as f: 
+        if not extend_previous_opt and os.path.exists(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K if K_manifold == -1 else K_manifold) + '.obj'):
+            with open(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K if K_manifold == -1 else K_manifold) + '.obj', 'rb') as f: 
                 _, self.theta_opt, self.K_opt, self.opt_kdt = pickle.load(f)
             print('[data_load] Loaded hyper-parameters data for data in ' + self.file)
         else:

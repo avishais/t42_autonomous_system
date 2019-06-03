@@ -42,10 +42,11 @@ def check_opt(self, obj):
 def main():
     discrete = True
     objs = get_objs(discrete)
+    objs = ['cyl35','cyl45']
 
     # Process raw data
-    if 1:
-        download_dir = dest_path + '/summary.csv' 
+    if 0:
+        download_dir = dest_path + '/summary1.csv' 
         csv = open(download_dir, "w") 
         csv.write('name, Success rate, fail accuracy, success accuracy \n')
             
@@ -53,20 +54,22 @@ def main():
             # if np.any(obj == np.array(['sqr30','poly10','cyl35','poly6'])):
             #     continue
             print("\n\n[process_dataset] Processing object '%s'...\n\n"%obj)
-            texp = transition_experience(Load = True, discrete=discrete, postfix='', Object = obj)
+            texp = transition_experience(Load = True, discrete=discrete, postfix='', Object = obj, with_fingers = False)
 
-            # texp.process_transition_data(stepSize = 1, plot = False)
+            texp.process_transition_data(stepSize = 1, plot = False)
             O = texp.process_svm(stepSize = 1)
 
             csv.write(obj + ',' + str(O[0]) + ',' + str(O[1]) + ',' + str(O[2]) + '\n')
 
     # Generate kd-trees and pre-compute hyper-parameters
-    if 0:
-        for obj in objs:
-            print("\n\n[process_dataset] Computing hyper-parameters for object '%s'...\n\n"%obj)
-            DL = data_load(simORreal = 't42_' + obj, discreteORcont = ('discrete' if discrete else 'cont'), K = 100)    
+    if 1:
+        for i in range(1):
+            # with_fingers = False if i == 0 else True
+            for obj in objs:
+                print("\n\n[process_dataset] Computing hyper-parameters for object '%s'...\n\n"%obj)
+                DL = data_load(simORreal = 't42_' + obj, discreteORcont = ('discrete' if discrete else 'cont'), K = 100, with_fingers = with_fingers)    
 
-            SVM = svm_failure(simORreal = 't42_' + obj, discrete = discrete)   
+                # SVM = svm_failure(simORreal = 't42_' + obj, discrete = discrete)   
 
     return 1
 

@@ -106,8 +106,6 @@ class rolloutRecorder():
     def get_states(self, msg):
         # S = self.medfilter(np.array(self.S), 20)
 
-        print np.array(self.S).shape
-
         return {'states': np.array(self.S).reshape((-1,)), 'actions': np.array(self.A).reshape((-1,))}
 
     def medfilter(self, x, W):

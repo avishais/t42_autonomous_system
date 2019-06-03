@@ -47,8 +47,8 @@ if 1:
     test_paths = test_paths[:1]
     Suc = Suc[:1]
 
-    action_seq[0] = action_seq[0][20:120,:]
-    test_paths[0] = test_paths[0][20:120,:]
+    # action_seq[0] = action_seq[0][:200,:]
+    # test_paths[0] = test_paths[0][:200,:]#[:,:4]
 
     GP_batch = []
     GP_naive = []
@@ -57,7 +57,8 @@ if 1:
         if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
             R = R[:,[0,1,11,12,2]]
         else:
-            R = R[:,[0,1,11,12,11,12,3,4,5,6,7,8,9,10]]
+            # R = R[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
+            R = R[:,[0,1,11,12]]
         state_dim = R.shape[1]
         # R = R[20:,:]
         # A = A[20:,:]
@@ -78,6 +79,8 @@ if 1:
 
         Np = 100 # Number of particles
 
+        print state_dim, s_start.shape
+
         ######################################## GP propagation ##################################################
 
         print "Running GP."
@@ -93,26 +96,26 @@ if 1:
         p_gp = 1
         print("Running (open loop) path...")
         for i in range(0, A.shape[0]):
-            # print("[GP] Step " + str(i) + " of " + str(A.shape[0]))
+            print("[GP] Step " + str(i) + " of " + str(A.shape[0]))
             Pgp.append(S)
             a = A[i,:]
 
-            # st = time.time()
-            # res = gp_srv(S.reshape(-1,1), a)
-            # t_gp += (time.time() - st) 
+            st = time.time()
+            res = gp_srv(S.reshape(-1,1), a)
+            t_gp += (time.time() - st) 
 
-            # S_next = np.array(res.next_states).reshape(-1,state_dim)
-            # if res.node_probability < p_gp:
-            #     p_gp = res.node_probability
-            # s_mean_next = np.mean(S_next, 0)
-            # s_std_next = np.std(S_next, 0)
-            # S = S_next
+            S_next = np.array(res.next_states).reshape(-1,state_dim)
+            if res.node_probability < p_gp:
+                p_gp = res.node_probability
+            s_mean_next = np.mean(S_next, 0)
+            s_std_next = np.std(S_next, 0)
+            S = S_next
 
-            # if S_next.shape[0] == 0:
-            #     break
+            if S_next.shape[0] == 0:
+                break
 
-            s_mean_next = np.zeros((1,state_dim))
-            s_std_next = np.zeros((1,state_dim))
+            # s_mean_next = np.zeros((state_dim,))
+            # s_std_next = np.zeros((state_dim,))
 
             Ypred_mean_gp = np.append(Ypred_mean_gp, s_mean_next.reshape(1,state_dim), axis=0)
             Ypred_std_gp = np.append(Ypred_std_gp, s_std_next.reshape(1,state_dim), axis=0)
@@ -191,7 +194,7 @@ ix = [0, 1]
 for S, Sbatch, Snaive in zip(filtered_test_paths, GP_batch, GP_naive):
 
     plt.plot(S[:,ix[0]], S[:,ix[1]], '.-k', label='rollout')
-    # plt.plot(Sbatch[0][:,ix[0]], Sbatch[0][:,ix[1]], '.-r', label='BPP')
+    plt.plot(Sbatch[0][:,ix[0]], Sbatch[0][:,ix[1]], '.-r', label='BPP')
     plt.plot(Snaive[:,ix[0]], Snaive[:,ix[1]], '.-c', label='Naive')
     plt.axis('equal')
     plt.legend()

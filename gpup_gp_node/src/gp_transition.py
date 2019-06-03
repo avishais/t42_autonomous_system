@@ -22,7 +22,7 @@ discreteORcont = 'discrete'
 useDiffusionMaps = False
 probability_threshold = 0.65
 plotRegData = False
-diffORspec = 'spec'
+diffORspec = 'diff'
 
 class Spin_gp(data_load, mean_shift, svm_failure):
 
@@ -150,7 +150,9 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         return np.array(S_next)
 
     def one_predict(self, sa):
-        Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point     
+        Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point  
+
+        # K = 70 # 60 is best   
 
         idx = self.kdt.query(sa.reshape(1,-1), k = K, return_distance=False)
         X_nn = self.Xtrain[idx,:].reshape(K, self.state_action_dim)
@@ -167,7 +169,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
             ds_next[i] = mm
             std_next[i] = np.sqrt(vv)
 
-        s_next = sa[:self.state_dim] + ds_next#np.random.normal(ds_next, std_next)
+        s_next = sa[:self.state_dim] + np.random.normal(ds_next, std_next)
 
         return s_next 
 
@@ -191,11 +193,11 @@ class Spin_gp(data_load, mean_shift, svm_failure):
 
     def batch_svm_check(self, S, a):
         failed_inx = []
-        # for i in range(S.shape[0]):
-        #     p, _ = self.probability(S[i,:], a) # Probability of failure
-        #     prob_fail = np.random.uniform(0,1)
-        #     if prob_fail <= p:
-        #         failed_inx.append(i)
+        for i in range(S.shape[0]):
+            p = self.probability(S[i,:], a) # Probability of failure
+            prob_fail = np.random.uniform(0,1)
+            if prob_fail <= p:
+                failed_inx.append(i)
 
         return failed_inx
 
@@ -206,7 +208,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
 
         failed_inx = []
         for i in range(S.shape[0]):
-            p, _ = self.probability(S[i,:], a) # Probability of failure
+            p = self.probability(S[i,:], a) # Probability of failure
             prob_fail = np.random.uniform(0,1)
             if prob_fail <= p:
                 failed_inx.append(i)
@@ -224,12 +226,17 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         collision_probability = 0.0
 
         if (len(S) == 1):
-            p, _ = 0, _#self.probability(S[0,:],a)
+            p = self.probability(S[0,:],a)
             node_probability = 1.0 - p
             sa = np.concatenate((S[0,:],a), axis=0)
             sa = self.normz(sa)
             sa_normz = self.one_predict(sa)
             s_next = self.denormz(sa_normz)
+
+            print "----------------"
+            print "Current state mean: ", S[0,:]
+            print "Action: ", a
+            print "Next state mean: ", s_next
 
             return {'next_states': s_next, 'mean_shift': s_next, 'node_probability': node_probability, 'collision_probability': collision_probability}
         else:       
@@ -298,8 +305,8 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         a = np.array(req.action)
 
         # Check which particles failed
-        # p, _ = self.probability(s, a)
-        node_probability = 1.0# - p
+        p = self.probability(s, a)
+        node_probability = 1.0 - p
 
         # Propagate
         sa = np.concatenate((s, a), axis=0)

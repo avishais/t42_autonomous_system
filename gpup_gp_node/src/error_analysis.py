@@ -30,9 +30,11 @@ def medfilter(x, W):
     x_new = np.copy(x)
     for i in range(0, x.shape[0]):
         if i < w:
-            x_new[i] = np.mean(x[:i+w])
+            continue
+            # x_new[i] = np.mean(x[:i+w])
         elif i > x.shape[0]-w:
-            x_new[i] = np.mean(x[i-w:])
+            continue
+            # x_new[i] = np.mean(x[i-w:])
         else:
             x_new[i] = np.mean(x[i-w:i+w])
     return x_new
@@ -94,19 +96,30 @@ def plato(G, n = 100):
     l = np.linspace(0, lmax, n)
 
     H = []
+    S = []
     H.append(0.0)
+    S.append(0.0)
     for i in range(1,len(l)):
         inx = np.where(np.logical_and(G[:,1] >= l[i-1],  G[:,1] <= l[i]))[0]
         H.append( np.mean(G[inx,2]) )
+        S.append( np.std(G[inx, 2]) )
 
-    return l, np.array(H)
+    H = np.array(H)
+    S = np.array(S)
+
+    inx = np.where(np.isnan(H))
+    H = np.delete(H, inx, 0)
+    S = np.delete(S, inx, 0)
+    l = np.delete(l, inx, 0)
+
+    return l, np.array(H), np.array(S)
 
 H = range(0, 301, 10)
 H[0] = 1
 w = [40, 40, 100, 100]
 
 ## GP
-if 1:
+if 0:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
@@ -147,47 +160,24 @@ if 1:
         Ggp.append(np.array([h, l, e]))
         j += 1
 
-        if j == 10000 or j % 50 == 0:
-            with open(path + 'prediction_analysis_' + Obj + '_gp1.pkl', 'w') as f: 
+        if j == 10000 or j % 20 == 0:
+            with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'w') as f: 
                 pickle.dump(Ggp, f)
 
-    # Ggp = np.zeros((len(H), 2))    
-
-    # j = 0
-    # for h in H: # Horizon
-    #     t = int(-19./10.*h) + 200 if h < 110 else 10
-    #     Sum_gp = 0.0
-    #     Sum_nn = 0.0
-    #     for _ in range(t): # Number of tests to average
-    #         path_inx = np.random.randint(len(test_paths))
-    #         R = test_paths[path_inx]
-    #         A = action_seq[path_inx]
-    #         R = R[:,[0,1,11,12]]
-
-    #         # Randomly pick a section with length h
-    #         st_inx = np.random.randint(R.shape[0]-h-1)
-    #         R = R[st_inx:st_inx+h]
-    #         A = A[st_inx:st_inx+h]
-
-    #         for i in range(state_dim):
-    #             R[:,i] = medfilter(R[:,i], w[i])
-
-    #         s_start = R[0,:]
-    #         R_gp = predict_GP(s_start, A)
-
-    #         Sum_gp += tracking_error(R, R_gp)
-
-    #     Ggp[j,0] = h
-    #     Ggp[j,1] = Sum_gp / t
-    #     j += 1
+    Ggp = np.array(Ggp)
 
     with open(path + 'prediction_analysis_' + Obj + '_gp1.pkl', 'w') as f: 
         pickle.dump(Ggp, f)
 
-    ######################################## Plot ###########################################################
+    Ggp = np.array(Ggp)
+
 else:
-    with open(path + 'prediction_analysis_' + Obj + '_gp1.pkl', 'r') as f: 
-        Ggp = pickle.load(f) 
+    with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'r') as f: 
+        Ggp = np.array(pickle.load(f))
+    # with open(path + 'prediction_analysis_' + Obj + '_gp1.pkl', 'r') as f: 
+    #     Ggp1 = np.array(pickle.load(f))
+
+    # Ggp = np.concatenate((Ggp, Ggp1), axis=0)
 
 if 0:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
@@ -203,7 +193,7 @@ if 0:
     while j < 5000:
         print("Run %d, number of samples %d."%(j, len(Gnn)))
         try:
-            h = np.random.randint(150,250)
+            h = np.random.randint(1,200)
             path_inx = np.random.randint(len(test_paths))
             R = test_paths[path_inx]
             A = action_seq[path_inx]
@@ -231,53 +221,34 @@ if 0:
             with open(path + 'prediction_analysis_' + Obj + '_nn.pkl', 'w') as f: 
                 pickle.dump(Gnn, f)
 
-    # j = 0
-    # for h in H: # Horizon
-    #     t = 500
-    #     Sum_gp = 0.0
-    #     Sum_nn = 0.0
-    #     for k in range(t): # Number of tests to average
-    #         print("Test number %d."%k)
-    #         path_inx = np.random.randint(len(test_paths))
-    #         R = test_paths[path_inx]
-    #         A = action_seq[path_inx]
-    #         R = R[:,[0,1,11,12]]
+    Gnn = np.array(Gnn)
 
-    #         # Randomly pick a section with length h
-    #         st_inx = np.random.randint(R.shape[0]-h-1)
-    #         R = R[st_inx:st_inx+h]
-    #         A = A[st_inx:st_inx+h]
-
-    #         for i in range(state_dim):
-    #             R[:,i] = medfilter(R[:,i], w[i])
-
-    #         s_start = R[0,:]
-    #         R_nn = predict_NN(s_start, A)
-
-    #         Sum_nn += tracking_error(R, R_nn)
-
-    #     Gnn[j,0] = h
-    #     Gnn[j,1] = Sum_nn / t
-    #     j += 1
-
-    ######################################## Plot ###########################################################
 else:
     with open(path + 'prediction_analysis_' + Obj + '_nn.pkl', 'r') as f: 
-        Gnn = pickle.load(f) 
+        Gnn = np.array(pickle.load(f))
  
-Ggp = np.array(Ggp)
-lgp, Egp = plato(Ggp, 20)
 
-Gnn = np.array(Gnn)
-lnn, Enn = plato(Gnn, 20)
+lgp, Egp, Sgp = plato(Ggp, 50)
+lnn, Enn, Snn = plato(Gnn, 30)
 
-plt.plot(Ggp[:,1], Ggp[:,2], '.m', label = 'GP raw')
-plt.plot(lgp, Egp, '.-b', label = 'GP')
-plt.plot(Gnn[:,1], Gnn[:,2], '.r', label = 'NN raw')
-plt.plot(lnn, Enn, '.-k', label = 'NN')
+Egp = medfilter(Egp, 10)
 
-plt.xlabel('Horizon (number of steps)')
-plt.ylabel('RMSE [mm]')
-plt.legend()
+# plt.figure(figsize=(10,4))
+
+# plt.fill_between(lgp, Egp+Sgp, Egp-Sgp, facecolor='cyan', alpha=0.5, label='GP std.')
+# plt.fill_between(lnn, Enn+Snn, Enn-Snn, facecolor='red', alpha=0.5, label='NN std.')
+
+# plt.plot(Gnn[:,1], Gnn[:,2], '.y', label = 'NN raw')
+# plt.plot(lnn, Enn, '-k', label = 'NN')
+
+# plt.plot(Ggp[:,1], Ggp[:,2], '.m', label = 'GP raw')
+plt.plot(lgp, Egp, '-b', label = 'GP')
+
+plt.xlabel('Horizon (mm)', fontsize=16)
+plt.ylabel('RMSE (mm)', fontsize=16)
+plt.title('GP Prediction error')
+# plt.legend()
+plt.xlim([0,32])
+plt.ylim([0,3])
 plt.show()
 

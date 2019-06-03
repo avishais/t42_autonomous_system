@@ -67,5 +67,5 @@ class svm_failure():
 
         p = self.clf.predict_proba(sa)[0][1]
 
-        return p, self.clf.predict(sa)
+        return p#, self.clf.predict(sa)
 

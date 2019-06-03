@@ -4,7 +4,7 @@ import rospy
 import numpy as np
 from hand_control.msg import plan_for_goal_request, plan_for_goal_response
 from rollout_t42.srv import rolloutReq
-from hand_control.srv import RegraspObject, close, observation, planroll
+from hand_control.srv import RegraspObject, close, observation, planroll, TargetAngles
 from std_msgs.msg import String, Float32MultiArray, Bool
 from std_srvs.srv import Empty, EmptyResponse
 import pickle
@@ -24,8 +24,8 @@ class planRoll():
     drop = True
     arm_status = ' '
     trigger = False # Enable collection
-    radius = 12.0
-    state_dim = 12
+    radius = 8.0
+    state_dim = 4
 
     def __init__(self):
         rospy.init_node('planNroll', anonymous=True)
@@ -41,6 +41,9 @@ class planRoll():
         self.obs_srv = rospy.ServiceProxy('/observation', observation)
         self.open_srv = rospy.ServiceProxy('/OpenGripper', Empty) 
         self.close_srv = rospy.ServiceProxy('/CloseGripper', close) 
+        self.move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
+
+        self.results_path = self.path + 'results/'
 
         self.rate = rospy.Rate(10)
         print('[plan_call] Ready to plan and roll...')
@@ -83,13 +86,19 @@ class planRoll():
 
         # Reset arm
         # self.trigger = False
-        self.ResetArm()
-        rospy.sleep(2.)
+        # self.ResetArm()
+        # rospy.sleep(2.)
 
         # Get state
-        start = np.array(self.obs_srv().state)
-        start = start[[0,1,11,12,3,4,5,6,7,8,9,10]] # For cylinder
-        start[:2] *= 1000
+        # for _ in range(100):
+        #     start = np.array(self.obs_srv().state)
+        #     self.rate.sleep()
+        # start = start[[0,1,11,12,3,4,5,6,7,8,9,10]] # For cylinder
+        # start[:2] *= 1000
+        start = np.array([  2.03328312e+01,   1.11295141e+02,   9.91000000e+01,  -9.86000000e+01,
+            -1.81094348e-02,   7.92978175e-02,   5.88817716e-02,   8.14538330e-02,
+            -1.90590799e-02,   9.94075567e-02,   5.67422092e-02,   1.03955227e-01])
+        start = start[:self.state_dim]
 
         print "[plan_call] Start state: " + str(start)
         print "[plan_call] Goal state: " + str(goal)
@@ -104,27 +113,33 @@ class planRoll():
             self.rate.sleep()
 
         # Rollout
-        print('[plan_call] Got path. Rolling out...')
-        A = self.planning_actions.reshape((-1,))
-        if A.size == 0:
-            rospy.logerr('[plan_call] Recieved empty path.')
-            return
-        rospy.sleep(2.)
-        S = np.array(self.rollout_srv(A).states).reshape(-1, self.state_dim)
+        # print('[plan_call] Got path. Ready to roll out. Press key...')
+        # raw_input()
+        # print('[plan_call] Got path. Rolling out...')
+        # A = self.planning_actions.reshape((-1,2))
+        # if A.size == 0:
+        #     rospy.logerr('[plan_call] Recieved empty path.')
+        #     return
+        # rospy.sleep(2.)
+        # S = np.array(self.rollout_srv(A).states).reshape(-1, self.state_dim)
+        # while not self.drop:
+        #     self.move_srv(np.array([-3.,-3.]))
+        #     self.rate.sleep()
+
         print('Finished, getting states...')
         
         # Save
-        print('[plan_call] Saving rollout...')
+        # print('[plan_call] Saving rollout...')
         pklfile = self.path + self.planning_algorithm + '_goal' + str(goal[0]) + '_' + str(goal[1]) + '_n' + self.id + '_plan.pkl'
-        with open(pklfile, 'w') as f: 
-            pickle.dump(S, f)
-        File = self.path + self.planning_algorithm + '_goal' + str(goal[0]) + '_' + str(goal[1]) + '_n' + self.id + '_rollout.txt'
-        np.savetxt(File, S, delimiter = ', ')
+        # with open(pklfile, 'w') as f: 
+        #     pickle.dump(S, f)
+        # File = self.path + self.planning_algorithm + '_goal' + str(goal[0]) + '_' + str(goal[1]) + '_n' + self.id + '_rollout.txt'
+        # np.savetxt(File, S, delimiter = ', ')
 
         print('[plan_call] Process ended.')
-        self.open_srv()
+        # self.open_srv()
 
-        if 1:
+        if 0:
             fig, ax = plt.subplots()
             St = np.copy(S)
             for i in range(2):
@@ -135,6 +150,7 @@ class planRoll():
             g = plt.Circle((self.goal[0], self.goal[1]), self.radius, color='m', label='goal region')
             ax.add_artist(g)
             plt.legend()
+            plt.savefig(self.results_path + '/' + self.planning_algorithm + '_goal' + str(goal[0]) + '_' + str(goal[1]) + '_n' + self.id + '_init.png')
             plt.show()
 
         return {'suc': self.planning_succeeded, 'file': pklfile[:-3]}
@@ -167,7 +183,7 @@ class planRoll():
         msg.start_state = start
         msg.goal_state = goal
         msg.goal_radius = self.radius
-        msg.time_limit = 800 #seconds
+        msg.time_limit = 60*20 #seconds
         msg.probability_success_threshold = 0.5 #affects SVM validity check 
         msg.planning_algorithm = self.planning_algorithm
 
@@ -178,6 +194,8 @@ class planRoll():
 
 
     def planningResponseCallback(self, msg):
+
+        print "Something returned..."
         self.planning_actions = msg.planned_actions
         self.planned_path = msg.planned_path
         self.planning_succeeded = msg.reached_goal
@@ -201,12 +219,12 @@ class planRoll():
     def process(self, msg):
         import glob
 
-        results_path = self.path + 'results/'
-        set_modes = ['robust', 'naive']
+        
+        set_modes = ['robust']#, 'naive']
 
         for set_mode in set_modes:
 
-            fo  = open(results_path + set_mode + '.txt', 'wt') 
+            fo  = open(self.results_path + set_mode + '.txt', 'wt') 
 
             files = glob.glob(self.path + "*.pkl")
 
@@ -239,30 +257,38 @@ class planRoll():
                 print('Plotting file number ' + str(k+1) + ': ' + file_name)
                 
                 with open(files[k]) as f:  
-                    S = pickle.load(f)
+                    Pu = pickle.load(f)
 
                 # Apply filter to episode
-                for i in range(4):
-                    S[:,i] = self.medfilter(S[:,i], 20)
+                P = []
+                Ss = []
+                for S in Pu:
+                    Ss.append(S[0,:])
+                    for i in range(4):
+                        S[:,i] = self.medfilter(S[:,i], 20)
+                    P.append(S)
+
+                print np.mean(np.array(Ss), 0)
 
                 A = np.loadtxt(pklfile[:-3] + 'txt', delimiter=',', dtype=float)[:,:2]
                 maxR = A.shape[0]-1
                 
-                Smean = S
+                # Smean = S
                 
                 # fig = plt.figure(k)
                 fig, ax = plt.subplots()
                 p = 0
-                plt.plot(S[:,0], S[:,1], 'r')
-                if S.shape[0] < maxR:
-                    plt.plot(S[-1,0], S[-1,1], 'oc')
+                su = 0
+                for S in P:
+                    plt.plot(S[:,0], S[:,1], 'r')
+                    if S.shape[0] < maxR:
+                        plt.plot(S[-1,0], S[-1,1], 'oc')
+                    else:
+                        p += 1
 
-                if np.linalg.norm(S[-1,:2]-ctr) <= 1.2*self.radius:
-                    print("Reached goal.")
-                    reached = True
-                else:
-                    reached = False
-
+                    if np.linalg.norm(S[-1,:2]-ctr) <= 1.2*self.radius:
+                        su += 1
+                        
                 plt.plot(ctr[0], ctr[1], 'om')
                 goal = plt.Circle((ctr[0], ctr[1]), 1.2*self.radius, color='m')
                 ax.add_artist(goal)
@@ -276,7 +302,7 @@ class planRoll():
 
                 plt.plot(Straj[:,0], Straj[:,1], '-k', linewidth=3.5, label='Planned path')
 
-                plt.plot(Smean[:,0], Smean[:,1], '-b', label='rollout mean')
+                # plt.plot(Smean[:,0], Smean[:,1], '-b', label='rollout mean')
                 # X = np.concatenate((Smean[:,0]+Sstd[:,0], np.flip(Smean[:,0]-Sstd[:,0])), axis=0)
                 # Y = np.concatenate((Smean[:,1]+Sstd[:,1], np.flip(Smean[:,1]-Sstd[:,1])), axis=0)
                 # plt.fill( X, Y , alpha = 0.5 , color = 'b')
@@ -289,8 +315,8 @@ class planRoll():
                     if pklfile[i] == '/':
                         break
 
-                fo.write(pklfile[i+1:-4] + ': ' + str(reached*1) + '\n')
-                plt.savefig(results_path + '/' + pklfile[i+1:-4] + '.png')
+                fo.write(pklfile[i+1:-4] + ': ' + str(su) + '/' + str(len(P)) + '\n')
+                plt.savefig(self.results_path + '/' + pklfile[i+1:-4] + '.png')
 
             fo.close()
         

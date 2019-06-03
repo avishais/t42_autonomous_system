@@ -19,7 +19,7 @@ version = var.data_version_
 
 action_seq = []
 # 0
-A = np.tile(np.array([-1.,1.]), (800*1./stepSize,1))
+A = np.tile(np.array([-1.,1.]), (800*1/stepSize,1))
 action_seq.append(A)
 # 1
 A = np.concatenate(  (np.array([[1.,  -1.] for _ in range(int(700*1./stepSize))]), 

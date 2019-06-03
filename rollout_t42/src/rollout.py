@@ -105,6 +105,7 @@ class rolloutPublisher():
             msg.data = action
             self.action_pub.publish(msg)
             n -= 1
+            print i, action, A.shape[0]
 
             if self.fail: # not suc or fail:
                 success = False
@@ -121,7 +122,7 @@ class rolloutPublisher():
             self.rate.sleep()
 
         rospy.sleep(1)
-        self.open_srv()
+        # self.open_srv()
 
         return success
 

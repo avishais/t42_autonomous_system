@@ -13,7 +13,7 @@ class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
     dest_path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/' 
 
-    def __init__(self, Load=True, discrete = True, postfix='', Object = Obj):
+    def __init__(self, Load=True, discrete = True, postfix='', Object = Obj, with_fingers = False):
 
         if discrete:
             self.mode = 'd' # Discrete actions
@@ -21,6 +21,7 @@ class transition_experience():
             self.mode = 'c' # Continuous actions
 
         self.Object = Object
+        self.with_fingers = with_fingers
         
         self.postfix = postfix
         if postfix == 'bu':
@@ -175,8 +176,13 @@ class transition_experience():
                     continue
 
                 # Avoid the peaks at grasp
-                D, done = Del(D, done, range(ks, ks+6))
-                kf -= 6
+                ic = 0
+                for i in range(ks+20, ks+1, -1):
+                    ic += 1
+                    if np.any(np.abs(D[i, 2:4]-D[i-1,2:4]) > 40.):
+                        D, done = Del(D, done, range(ks, ks+21-ic))
+                        kf -= 21-ic
+                        break
                 
                 fl = np.random.uniform()+10
                 if fl < 0.05:
@@ -246,11 +252,23 @@ class transition_experience():
         next_states[:,2] = self.transform_angles(next_states[:,2])
         
         if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
-            states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
-            next_states = next_states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
+            if self.with_fingers:
+                states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
+                next_states = next_states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
+                states[:,5:] *= 1000.
+                next_states[:,5:] *= 1000.
+            else:
+                states = states[:,[0,1,11,12,2]]
+                next_states = next_states[:,[0,1,11,12,2]]
         else:
-            states = states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
-            next_states = next_states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
+            if self.with_fingers:
+                states = states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
+                next_states = next_states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
+                states[:,4:] *= 1000.
+                next_states[:,4:] *= 1000.
+            else:
+                states = states[:,[0, 1, 11, 12]]
+                next_states = next_states[:,[0, 1, 11, 12]]
 
         # For data from recorder
         if self.postfix != 'bu':
@@ -261,8 +279,6 @@ class transition_experience():
         self.state_action_dim = self.state_dim + self.action_dim 
 
         D = np.concatenate((states, actions, next_states), axis = 1)
-
-        t = range(10000)
 
         # Remove false drops when motion is continuous
         for i in range(len(done)-1):
@@ -283,6 +299,7 @@ class transition_experience():
 
         D, done = new_clean(D, done)
 
+        # t = range(10000)
         # plt.plot(t, D[:10000,2], '.-r')
         # plt.plot(t, D[:10000,3], '.-k')
         # ix = np.where(done[:10000])[0]
@@ -383,10 +400,18 @@ class transition_experience():
         states[:,2] = self.transform_angles(states[:,2])
 
         if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
-            states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
+            if self.with_fingers:
+                states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
+                states[:,5:] *= 1000.
+            else:
+                states = states[:,[0,1,11,12,2]]
             states[:,4] = np.sin(states[:,4])/np.cos(states[:,4])
         else:
-            states = states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
+            if self.with_fingers:
+                states = states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
+                states[:,4:] *= 1000.
+            else:
+                states = states[:,[0, 1, 11, 12]]
             
         # Remove false drops when motion is continuous
         for i in range(len(done)-1):
