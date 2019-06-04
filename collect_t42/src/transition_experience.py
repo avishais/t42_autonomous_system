@@ -158,6 +158,13 @@ class transition_experience():
 
             return D, done
 
+        def validate_drops(states, done):
+            for i in range(states.shape[0]-1):
+                if np.linalg.norm(states[i,:2]-states[i+1,:2]) > 8. and not done[i]:
+                    done[i] = True
+
+            return done
+
         def new_clean(D, done):
 
             ks = 0
@@ -278,6 +285,30 @@ class transition_experience():
         self.action_dim = actions.shape[1]
         self.state_action_dim = self.state_dim + self.action_dim 
 
+        # Save test paths #########################################
+        done = validate_drops(states, done)
+        Pro = []
+        Aro = []
+        inx = np.where(done)[0]
+        S = states[0:inx[0]+1]
+        A = actions[0:inx[0]+1]
+        Pro.append(S)
+        Aro.append(A)
+        S = states[inx[11]+1:inx[12]+1]
+        A = actions[inx[11]+1:inx[12]+1]
+        Pro.append(S)
+        Aro.append(A)
+        with open(self.dest_path + 't42_' + self.Object + '_test_paths.obj', 'wb') as f: 
+            pickle.dump([Pro, Aro], f)
+        f1 = np.array(range(0,inx[0]+1))
+        f2 = np.array(range(inx[11]+1,inx[12]+1))
+        inx = np.concatenate((f1, f2), axis=0)
+        states = np.delete(states, inx, 0) # Remove drop transitions
+        actions = np.delete(actions, inx, 0) # Remove drop transitions
+        next_states = np.delete(next_states, inx, 0) # Remove drop transitions
+        done = np.delete(done, inx, 0)
+        ############################################################
+
         D = np.concatenate((states, actions, next_states), axis = 1)
 
         # Remove false drops when motion is continuous
@@ -320,7 +351,10 @@ class transition_experience():
         inx = np.where(done)[0]
         D = np.delete(D, inx, 0) # Remove drop transitions
         done = np.delete(done, inx, 0)
-              
+
+        D = np.append(D, np.array([20.76686783,  109.05961134,   99.09090909, -106.31818182,1.,1.,20.76686783,  109.05961134,   99.09090909, -106.31818182]).reshape(1,-1), axis=0) ########################
+        D = np.append(D, np.array([20.76686783,  109.05961134,   99.09090909, -106.31818182,-1.,-1.,20.76686783,  109.05961134,   99.09090909, -106.31818182]).reshape(1,-1), axis=0) ########################
+
         self.D = D
 
         # Bounds
