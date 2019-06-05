@@ -150,9 +150,9 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         return np.array(S_next)
 
     def one_predict(self, sa):
-        Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point  
+        # Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point  
 
-        # K = 70 # 60 is best   
+        K = 100 # 60 is best   
 
         idx = self.kdt.query(sa.reshape(1,-1), k = K, return_distance=False)
         X_nn = self.Xtrain[idx,:].reshape(K, self.state_action_dim)
@@ -164,12 +164,12 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         ds_next = np.zeros((self.state_dim,))
         std_next = np.zeros((self.state_dim,))
         for i in range(self.state_dim):
-            gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = False, theta = Theta[i], algorithm = 'Matlab')
+            gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = True, theta = None, algorithm = 'Matlab')
             mm, vv = gp_est.predict(sa[:self.state_action_dim])
             ds_next[i] = mm
             std_next[i] = np.sqrt(vv)
 
-        s_next = sa[:self.state_dim] + np.random.normal(ds_next, std_next)
+        s_next = sa[:self.state_dim] + ds_next#np.random.normal(ds_next, std_next)
 
         return s_next 
 
@@ -194,7 +194,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
     def batch_svm_check(self, S, a):
         failed_inx = []
         for i in range(S.shape[0]):
-            p = self.probability(S[i,:], a) # Probability of failure
+            p = self.probability(S[i,:], a[:2]) # Probability of failure
             prob_fail = np.random.uniform(0,1)
             if prob_fail <= p:
                 failed_inx.append(i)
@@ -226,7 +226,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         collision_probability = 0.0
 
         if (len(S) == 1):
-            p = self.probability(S[0,:],a)
+            p = self.probability(S[0,:], a[:2])
             node_probability = 1.0 - p
             sa = np.concatenate((S[0,:],a), axis=0)
             sa = self.normz(sa)
@@ -242,7 +242,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         else:       
 
             # Check which particles failed
-            failed_inx = self.batch_svm_check(S, a)
+            failed_inx = self.batch_svm_check(S, a[:2])
             node_probability = 1.0 - float(len(failed_inx))/float(S.shape[0])
 
             # Remove failed particles by duplicating good ones
@@ -305,7 +305,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         a = np.array(req.action)
 
         # Check which particles failed
-        p = self.probability(s, a)
+        p = self.probability(s, a[:2])
         node_probability = 1.0 - p
 
         # Propagate

@@ -183,20 +183,13 @@ class transition_experience():
                     continue
 
                 # Avoid the peaks at grasp
-                ic = 0
-                for i in range(ks+20, ks+1, -1):
-                    ic += 1
-                    if np.any(np.abs(D[i, 2:4]-D[i-1,2:4]) > 40.):
-                        D, done = Del(D, done, range(ks, ks+21-ic))
-                        kf -= 21-ic
-                        break
-                
-                fl = np.random.uniform()+10
-                if fl < 0.05:
-                    plt.plot(D[ks:kf+1,0], D[ks:kf+1,1],'.-b')
-                    plt.plot(D[ks,0], D[ks,1],'oy', markersize=15)
-                    # d = done[ks:kf+1]*1
-                    # plt.plot(d)
+                # ic = 0
+                # for i in range(ks+20, ks+1, -1):
+                #     ic += 1
+                #     if np.any(np.abs(D[i, 2:4]-D[i-1,2:4]) > 40.):
+                #         D, done = Del(D, done, range(ks, ks+21-ic))
+                #         kf -= 21-ic
+                #         break
 
                 while np.linalg.norm(D[kf,:2]-D[kf-1,:2]) > 1.2 or np.linalg.norm(D[kf,:2]-D[kf,self.state_action_dim:self.state_action_dim+2]) > 1.2:
                     D, done = Del(D, done, kf)
@@ -210,10 +203,6 @@ class transition_experience():
                     except:
                         D[ks:kf,i] = medfilter(D[ks:kf,i], 40)
 
-                if fl < 0.05:
-                    plt.plot(D[ks:kf+1,0], D[ks:kf+1,1],'.-r')
-                    plt.show()
-                            
                 # Update next state columns
                 D[ks:kf, self.state_action_dim:] = D[ks+1:kf+1, :self.state_dim]
                 D, done = Del(D, done, kf)
@@ -282,11 +271,25 @@ class transition_experience():
             next_states = np.roll(states, -1, axis=0) 
 
         self.state_dim = states.shape[1]
-        self.action_dim = actions.shape[1]
+        self.action_dim = actions.shape[1] + self.state_dim
         self.state_action_dim = self.state_dim + self.action_dim 
 
-        # Save test paths #########################################
         done = validate_drops(states, done)
+
+        print states.shape, actions.shape
+
+        # Add grasp state to action
+        inx = np.where(done)[0]
+        inx = np.insert(inx, 0, -1)
+        AF = np.array([[0,0,0,0,0,0]])
+        for i in range(1,len(inx)):
+            grasp_state = states[inx[i-1]+1,:]
+            As = np.tile(grasp_state, (inx[i]-inx[i-1], 1))
+            af = np.concatenate((actions[inx[i-1]+1:inx[i]+1], As), axis=1)
+            AF = np.append(AF, af, axis=0)
+        actions = AF[1:,:]
+
+        # Save test paths #########################################
         Pro = []
         Aro = []
         inx = np.where(done)[0]
@@ -352,8 +355,8 @@ class transition_experience():
         D = np.delete(D, inx, 0) # Remove drop transitions
         done = np.delete(done, inx, 0)
 
-        D = np.append(D, np.array([20.76686783,  109.05961134,   99.09090909, -106.31818182,1.,1.,20.76686783,  109.05961134,   99.09090909, -106.31818182]).reshape(1,-1), axis=0) ########################
-        D = np.append(D, np.array([20.76686783,  109.05961134,   99.09090909, -106.31818182,-1.,-1.,20.76686783,  109.05961134,   99.09090909, -106.31818182]).reshape(1,-1), axis=0) ########################
+        D = np.append(D, np.array([20.76686783,  109.05961134,   99.09090909, -106.31818182,1.,1.,20.76686783,  109.05961134,   99.09090909, -106.31818182,20.76686783,  109.05961134,   99.09090909, -106.31818182]).reshape(1,-1), axis=0) ########################
+        D = np.append(D, np.array([20.76686783,  109.05961134,   99.09090909, -106.31818182,-1.,-1.,20.76686783,  109.05961134,   99.09090909, -106.31818182,20.76686783,  109.05961134,   99.09090909, -106.31818182]).reshape(1,-1), axis=0) ########################
 
         self.D = D
 
