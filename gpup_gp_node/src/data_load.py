@@ -30,10 +30,10 @@ class data_load(object):
         self.K = K
         self.load()
 
-        if not extend_previous_opt and os.path.exists(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K if K_manifold == -1 else K_manifold) + '.obj'):
-            with open(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K if K_manifold == -1 else K_manifold) + '.obj', 'rb') as f: 
+        if not extend_previous_opt and os.path.exists(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K) + '.obj'):
+            with open(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K) + '.obj', 'rb') as f: 
                 _, self.theta_opt, self.K_opt, self.opt_kdt = pickle.load(f)
-            print('[data_load] Loaded hyper-parameters data for data in ' + self.file)
+            print('[data_load] Loaded hyper-parameters data for data from ' + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K) + '.obj')
         else:
             self.precompute_hyperp(K, K_manifold, sigma, dim, simORreal, discreteORcont)
 

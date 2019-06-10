@@ -276,8 +276,6 @@ class transition_experience():
 
         done = validate_drops(states, done)
 
-        print states.shape, actions.shape
-
         # Add grasp state to action
         inx = np.where(done)[0]
         inx = np.insert(inx, 0, -1)
@@ -290,26 +288,26 @@ class transition_experience():
         actions = AF[1:,:]
 
         # Save test paths #########################################
-        Pro = []
-        Aro = []
-        inx = np.where(done)[0]
-        S = states[0:inx[0]+1]
-        A = actions[0:inx[0]+1]
-        Pro.append(S)
-        Aro.append(A)
-        S = states[inx[11]+1:inx[12]+1]
-        A = actions[inx[11]+1:inx[12]+1]
-        Pro.append(S)
-        Aro.append(A)
-        with open(self.dest_path + 't42_' + self.Object + '_test_paths.obj', 'wb') as f: 
-            pickle.dump([Pro, Aro], f)
-        f1 = np.array(range(0,inx[0]+1))
-        f2 = np.array(range(inx[11]+1,inx[12]+1))
-        inx = np.concatenate((f1, f2), axis=0)
-        states = np.delete(states, inx, 0) # Remove drop transitions
-        actions = np.delete(actions, inx, 0) # Remove drop transitions
-        next_states = np.delete(next_states, inx, 0) # Remove drop transitions
-        done = np.delete(done, inx, 0)
+        # Pro = []
+        # Aro = []
+        # inx = np.where(done)[0]
+        # S = states[0:inx[0]+1]
+        # A = actions[0:inx[0]+1]
+        # Pro.append(S)
+        # Aro.append(A)
+        # S = states[inx[11]+1:inx[12]+1]
+        # A = actions[inx[11]+1:inx[12]+1]
+        # Pro.append(S)
+        # Aro.append(A)
+        # with open(self.dest_path + 't42_' + self.Object + '_test_paths.obj', 'wb') as f: 
+        #     pickle.dump([Pro, Aro], f)
+        # f1 = np.array(range(0,inx[0]+1))
+        # f2 = np.array(range(inx[11]+1,inx[12]+1))
+        # inx = np.concatenate((f1, f2), axis=0)
+        # states = np.delete(states, inx, 0)
+        # actions = np.delete(actions, inx, 0)
+        # next_states = np.delete(next_states, inx, 0) 
+        # done = np.delete(done, inx, 0)
         ############################################################
 
         D = np.concatenate((states, actions, next_states), axis = 1)

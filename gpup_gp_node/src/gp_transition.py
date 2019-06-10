@@ -17,9 +17,9 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
-simORreal = 't42_cyl45_right'
+simORreal = 't42_cyl45'
 discreteORcont = 'discrete'
-useDiffusionMaps = False
+useDiffusionMaps = True
 probability_threshold = 0.65
 plotRegData = False
 diffORspec = 'diff'
@@ -29,7 +29,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
     def __init__(self):
         # Number of NN
         if useDiffusionMaps:
-            dim = 2
+            dim = 3
             self.K = 1000
             self.K_manifold = 100
             sigma = 2.0
@@ -92,7 +92,9 @@ class Spin_gp(data_load, mean_shift, svm_failure):
     # Particles prediction
     def batch_predict(self, SA):
         sa = np.mean(SA, 0)
-        Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point
+        # Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point
+
+        K = 1
 
         idx = self.kdt.query(sa.reshape(1,-1), k = K, return_distance=False)
         X_nn = self.Xtrain[idx,:].reshape(K, self.state_action_dim)
@@ -104,12 +106,12 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         dS_next = np.zeros((SA.shape[0], self.state_dim))
         std_next = np.zeros((SA.shape[0], self.state_dim))
         for i in range(self.state_dim):
-            gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = False, theta = Theta[i], algorithm = 'Matlab')
+            gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = True, theta = None, algorithm = 'Matlab')
             mm, vv = gp_est.batch_predict(SA[:,:self.state_action_dim])
             dS_next[:,i] = mm
             std_next[:,i] = np.sqrt(np.diag(vv))
 
-        S_next = SA[:,:self.state_dim] + np.random.normal(dS_next, std_next)
+        S_next = SA[:,:self.state_dim] + dS_next#np.random.normal(dS_next, std_next)
 
         return S_next 
 
@@ -150,9 +152,10 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         return np.array(S_next)
 
     def one_predict(self, sa):
-        # Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point  
+        Theta, _ = self.get_theta(sa) # Get hyper-parameters for this query point  
 
-        K = 100 # 60 is best   
+        # K = 50 # 60 is best  
+        K = self.K 
 
         idx = self.kdt.query(sa.reshape(1,-1), k = K, return_distance=False)
         X_nn = self.Xtrain[idx,:].reshape(K, self.state_action_dim)
@@ -164,7 +167,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         ds_next = np.zeros((self.state_dim,))
         std_next = np.zeros((self.state_dim,))
         for i in range(self.state_dim):
-            gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = True, theta = None, algorithm = 'Matlab')
+            gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = False, theta = Theta[i], algorithm = 'Matlab')
             mm, vv = gp_est.predict(sa[:self.state_action_dim])
             ds_next[i] = mm
             std_next[i] = np.sqrt(vv)
@@ -233,11 +236,6 @@ class Spin_gp(data_load, mean_shift, svm_failure):
             sa_normz = self.one_predict(sa)
             s_next = self.denormz(sa_normz)
 
-            print "----------------"
-            print "Current state mean: ", S[0,:]
-            print "Action: ", a
-            print "Next state mean: ", s_next
-
             return {'next_states': s_next, 'mean_shift': s_next, 'node_probability': node_probability, 'collision_probability': collision_probability}
         else:       
 
@@ -274,11 +272,6 @@ class Spin_gp(data_load, mean_shift, svm_failure):
             S_next = self.batch_propa(S, a)
 
             mean = np.mean(S_next, 0) #self.get_mean_shift(S_next)
-
-            print "----------------"
-            print "Current state mean: ", np.mean(S, 0)
-            print "Action: ", a
-            print "Next state mean: ", mean
             
             return {'next_states': S_next.reshape((-1,)), 'mean_shift': mean, 'node_probability': node_probability, 'bad_action': bad_action, 'collision_probability': collision_probability}
 
@@ -310,8 +303,8 @@ class Spin_gp(data_load, mean_shift, svm_failure):
 
         # Propagate
         sa = np.concatenate((s, a), axis=0)
-        sa = self.normz( sa )    
-        sa_normz = self.one_predict(sa)
+        # sa = self.normz( sa )    
+        sa_normz = self.one_predict(self.normz( sa ) )
         s_next = self.denormz( sa_normz )
 
         return {'next_state': s_next, 'node_probability': node_probability}
