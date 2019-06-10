@@ -15,7 +15,7 @@ import var
 # np.random.seed(10)
 
 version = 0
-Obj = 'cyl45'
+Obj = 'cyl30'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
     state_dim = 5
 else:
@@ -27,8 +27,8 @@ naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 nn_srv = rospy.ServiceProxy('/nn/predict', StateAction2State)
 rospy.init_node('error_analysis_t42', anonymous=True)
 
-path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/results/'
-test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/src/results/'
+test_path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 def medfilter(x, W):
     w = int(W/2)
@@ -129,7 +129,7 @@ if 1:
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
     if 0:
-        with open(path + 'prediction_analysis_' + Obj + '_gp1.pkl', 'r') as f: 
+        with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'r') as f: 
             Ggp = pickle.load(f)
     else: 
         Ggp = []
@@ -176,7 +176,7 @@ if 1:
 
     Ggp = np.array(Ggp)
 
-    with open(path + 'prediction_analysis_' + Obj + '_gp1.pkl', 'w') as f: 
+    with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'w') as f: 
         pickle.dump(Ggp, f)
 
     Ggp = np.array(Ggp)
@@ -254,7 +254,8 @@ plt.xlabel('Horizon (mm)', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
 plt.title('GP Prediction error')
 # plt.legend()
-plt.xlim([0,32])
-plt.ylim([0,3])
+# plt.xlim([0,32])
+# plt.ylim([0,3])
+plt.savefig(path + 'pred_' + Obj + '.png', dpi=300) #str(np.random.randint(100000))
 plt.show()
 

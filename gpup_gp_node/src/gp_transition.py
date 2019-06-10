@@ -17,7 +17,7 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
-simORreal = 't42_cyl45'
+simORreal = 't42_cyl30'
 discreteORcont = 'discrete'
 useDiffusionMaps = True
 probability_threshold = 0.65
@@ -152,16 +152,9 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         return np.array(S_next)
 
     def one_predict(self, sa):
-<<<<<<< HEAD
-        # Theta, _ = self.get_theta(sa) # Get hyper-parameters for this query point  
-
-        K = self.K
-=======
         Theta, _ = self.get_theta(sa) # Get hyper-parameters for this query point  
 
-        # K = 50 # 60 is best  
         K = self.K 
->>>>>>> 0d91a82494d1d7ba5c31a99d257340235dcb877e
 
         idx = self.kdt.query(sa.reshape(1,-1), k = K, return_distance=False)
         X_nn = self.Xtrain[idx,:].reshape(K, self.state_action_dim)
@@ -304,7 +297,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         a = np.array(req.action)
 
         # Check which particles failed
-        p = self.probability(s, a[:2])
+        p = 0#self.probability(s, a[:2])
         node_probability = 1.0 - p
 
         # Propagate
