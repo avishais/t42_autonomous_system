@@ -1,5 +1,5 @@
-float32[] state
-float32[] action
+float64[] state
+float64[] action
 ---
-float32[] next_state
-float32 node_probability
+float64[] next_state
+float64 node_probability

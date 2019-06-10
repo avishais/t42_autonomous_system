@@ -19,7 +19,7 @@ naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 rospy.init_node('test', anonymous=True)
 
 
-pklfile = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/t42_cyl45_right_test_paths.obj'
+pklfile = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/t42_cyl45_right_test_paths.obj'
 
 with open(pklfile) as f:  
     Pro, Aro = pickle.load(f)

@@ -25,15 +25,15 @@ class data_load(object):
         self.postfix = '_v' + str(var.data_version_) + '_d' + str(dim_) + '_m' + str(var.stepSize_)
         self.prefix =  simORreal + '_'
         self.file = simORreal + '_data_' + discreteORcont + self.postfix + '.obj'
-        self.path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
+        self.path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
         self.dr = dr
         self.K = K
         self.load()
 
-        if not extend_previous_opt and os.path.exists(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K if K_manifold == -1 else K_manifold) + '.obj'):
-            with open(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K if K_manifold == -1 else K_manifold) + '.obj', 'rb') as f: 
+        if not extend_previous_opt and os.path.exists(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K) + '.obj'):
+            with open(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K) + '.obj', 'rb') as f: 
                 _, self.theta_opt, self.K_opt, self.opt_kdt = pickle.load(f)
-            print('[data_load] Loaded hyper-parameters data for data in ' + self.file)
+            print('[data_load] Loaded hyper-parameters data for data from ' + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K) + '.obj')
         else:
             self.precompute_hyperp(K, K_manifold, sigma, dim, simORreal, discreteORcont)
 
@@ -143,10 +143,10 @@ class data_load(object):
 
         from gp import GaussianProcess
         import pickle
-
         if extend_previous_opt and os.path.exists(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K) + '.obj'):
             with open(self.path + self.prefix + 'opt_data_' + discreteORcont + self.postfix + '_k' + str(K) + '.obj', 'rb') as f: 
                 SA_opt, theta_opt, K_opt, _ = pickle.load(f)
+            print('[data_load] Loaded precious optimized data with size %d...'%SA_opt.shape[0])
             SA_opt = list(SA_opt)
             theta_opt = list(theta_opt)
             K_opt = list(K_opt)

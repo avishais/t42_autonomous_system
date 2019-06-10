@@ -17,9 +17,9 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
-simORreal = 't42_cyl45_right'
+simORreal = 't42_cyl45'
 discreteORcont = 'discrete'
-useDiffusionMaps = False
+useDiffusionMaps = True
 probability_threshold = 0.65
 plotRegData = False
 diffORspec = 'diff'
@@ -29,7 +29,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
     def __init__(self):
         # Number of NN
         if useDiffusionMaps:
-            dim = 2
+            dim = 3 
             self.K = 1000
             self.K_manifold = 100
             sigma = 2.0
@@ -42,7 +42,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
                 print('[gp_transition] Using spectral embedding with dimension %d.'%(dim))
             data_load.__init__(self, simORreal = simORreal, discreteORcont = discreteORcont, K = self.K, K_manifold = self.K_manifold, sigma=sigma, dim = dim, dr = 'diff')
         else:
-            self.K = 50
+            self.K = 100
             print('[gp_transition] No diffusion maps used, K=%d.'%self.K)
             data_load.__init__(self, simORreal = simORreal, discreteORcont = discreteORcont, K = self.K, dr = 'spec')
 
@@ -150,9 +150,9 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         return np.array(S_next)
 
     def one_predict(self, sa):
-        # Theta, K = self.get_theta(sa) # Get hyper-parameters for this query point  
+        # Theta, _ = self.get_theta(sa) # Get hyper-parameters for this query point  
 
-        K = 100 # 60 is best   
+        K = self.K
 
         idx = self.kdt.query(sa.reshape(1,-1), k = K, return_distance=False)
         X_nn = self.Xtrain[idx,:].reshape(K, self.state_action_dim)

@@ -10,8 +10,8 @@ version = '0'
 Obj = 'rec60'
 
 class transition_experience():
-    path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
-    dest_path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/' 
+    path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
+    dest_path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/' 
 
     def __init__(self, Load=True, discrete = True, postfix='', Object = Obj, with_fingers = False):
 
@@ -125,8 +125,6 @@ class transition_experience():
         np.savetxt(filen, M, delimiter=' ')
 
     def transform_angles(self, angles):
-        if np.any(self.Object == np.array(['cyl35','cyl45'])):
-            return angles
         if self.Object == 'sqr30':
              return angles % (np.pi/2.)
         if self.Object == 'poly6':
@@ -135,7 +133,16 @@ class transition_experience():
              return angles % (np.pi/5.)
         if self.Object == 'elp40':
              return angles % (np.pi)
+        if self.Object == 'str40':
+             return angles % (np.pi/6.)
         return angles
+
+    def validate_drops(self, states, done):
+        for i in range(states.shape[0]-1):
+            if np.linalg.norm(states[i,:2]-states[i+1,:2]) > 8. and not done[i]:
+                done[i] = True
+
+        return done
 
     
     def process_transition_data(self, stepSize = 1, plot = False):
@@ -157,13 +164,6 @@ class transition_experience():
             done = np.delete(done, inx, 0)
 
             return D, done
-
-        def validate_drops(states, done):
-            for i in range(states.shape[0]-1):
-                if np.linalg.norm(states[i,:2]-states[i+1,:2]) > 8. and not done[i]:
-                    done[i] = True
-
-            return done
 
         def new_clean(D, done):
 
@@ -247,7 +247,7 @@ class transition_experience():
         states[:,2] = self.transform_angles(states[:,2])
         next_states[:,2] = self.transform_angles(next_states[:,2])
         
-        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40'])): # Include orientation angle
             if self.with_fingers:
                 states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
                 next_states = next_states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
@@ -274,42 +274,44 @@ class transition_experience():
         self.action_dim = actions.shape[1] + self.state_dim
         self.state_action_dim = self.state_dim + self.action_dim 
 
-        done = validate_drops(states, done)
-
-        print states.shape, actions.shape
+        done = self.validate_drops(states, done)
+        if self.Object == 'poly6':
+            done[-1] = True
 
         # Add grasp state to action
         inx = np.where(done)[0]
         inx = np.insert(inx, 0, -1)
-        AF = np.array([[0,0,0,0,0,0]])
+        AF = np.zeros((1,self.action_dim))
+        j = 0
         for i in range(1,len(inx)):
             grasp_state = states[inx[i-1]+1,:]
             As = np.tile(grasp_state, (inx[i]-inx[i-1], 1))
             af = np.concatenate((actions[inx[i-1]+1:inx[i]+1], As), axis=1)
+            j += af.shape[0]
             AF = np.append(AF, af, axis=0)
         actions = AF[1:,:]
 
         # Save test paths #########################################
-        Pro = []
-        Aro = []
-        inx = np.where(done)[0]
-        S = states[0:inx[0]+1]
-        A = actions[0:inx[0]+1]
-        Pro.append(S)
-        Aro.append(A)
-        S = states[inx[11]+1:inx[12]+1]
-        A = actions[inx[11]+1:inx[12]+1]
-        Pro.append(S)
-        Aro.append(A)
-        with open(self.dest_path + 't42_' + self.Object + '_test_paths.obj', 'wb') as f: 
-            pickle.dump([Pro, Aro], f)
-        f1 = np.array(range(0,inx[0]+1))
-        f2 = np.array(range(inx[11]+1,inx[12]+1))
-        inx = np.concatenate((f1, f2), axis=0)
-        states = np.delete(states, inx, 0) # Remove drop transitions
-        actions = np.delete(actions, inx, 0) # Remove drop transitions
-        next_states = np.delete(next_states, inx, 0) # Remove drop transitions
-        done = np.delete(done, inx, 0)
+        # Pro = []
+        # Aro = []
+        # inx = np.where(done)[0]
+        # S = states[0:inx[0]+1]
+        # A = actions[0:inx[0]+1]
+        # Pro.append(S)
+        # Aro.append(A)
+        # S = states[inx[11]+1:inx[12]+1]
+        # A = actions[inx[11]+1:inx[12]+1]
+        # Pro.append(S)
+        # Aro.append(A)
+        # with open(self.dest_path + 't42_' + self.Object + '_test_paths.obj', 'wb') as f: 
+        #     pickle.dump([Pro, Aro], f)
+        # f1 = np.array(range(0,inx[0]+1))
+        # f2 = np.array(range(inx[11]+1,inx[12]+1))
+        # inx = np.concatenate((f1, f2), axis=0)
+        # states = np.delete(states, inx, 0) # Remove drop transitions
+        # actions = np.delete(actions, inx, 0) # Remove drop transitions
+        # next_states = np.delete(next_states, inx, 0) # Remove drop transitions
+        # done = np.delete(done, inx, 0)
         ############################################################
 
         D = np.concatenate((states, actions, next_states), axis = 1)
@@ -355,8 +357,8 @@ class transition_experience():
         D = np.delete(D, inx, 0) # Remove drop transitions
         done = np.delete(done, inx, 0)
 
-        D = np.append(D, np.array([20.76686783,  109.05961134,   99.09090909, -106.31818182,1.,1.,20.76686783,  109.05961134,   99.09090909, -106.31818182,20.76686783,  109.05961134,   99.09090909, -106.31818182]).reshape(1,-1), axis=0) ########################
-        D = np.append(D, np.array([20.76686783,  109.05961134,   99.09090909, -106.31818182,-1.,-1.,20.76686783,  109.05961134,   99.09090909, -106.31818182,20.76686783,  109.05961134,   99.09090909, -106.31818182]).reshape(1,-1), axis=0) ########################
+        # D = np.append(D, np.array([20.76686783,  109.05961134,   99.09090909, -106.31818182,1.,1.,20.76686783,  109.05961134,   99.09090909, -106.31818182,20.76686783,  109.05961134,   99.09090909, -106.31818182]).reshape(1,-1), axis=0) ########################
+        # D = np.append(D, np.array([20.76686783,  109.05961134,   99.09090909, -106.31818182,-1.,-1.,20.76686783,  109.05961134,   99.09090909, -106.31818182,20.76686783,  109.05961134,   99.09090909, -106.31818182]).reshape(1,-1), axis=0) ########################
 
         self.D = D
 
@@ -436,19 +438,34 @@ class transition_experience():
         # Explot symmetry of object profile
         states[:,2] = self.transform_angles(states[:,2])
 
-        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40'])): # Include orientation angle
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40'])): # Include orientation angle
             if self.with_fingers:
                 states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
                 states[:,5:] *= 1000.
             else:
-                states = states[:,[0,1,11,12,2]]
-            states[:,4] = np.sin(states[:,4])/np.cos(states[:,4])
+                states = states[:,[0, 1, 11, 12, 2]]
+            # states[:,4] = np.sin(states[:,4])/np.cos(states[:,4])
         else:
             if self.with_fingers:
                 states = states[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
                 states[:,4:] *= 1000.
             else:
                 states = states[:,[0, 1, 11, 12]]
+
+        done = self.validate_drops(states, done)
+        if self.Object == 'poly6':
+            done[-1] = True
+
+        # Add grasp state to action
+        inx = np.where(done)[0]
+        inx = np.insert(inx, 0, -1)
+        AF = np.zeros((1,states.shape[1]+2))
+        for i in range(1,len(inx)):
+            grasp_state = states[inx[i-1]+1,:]
+            As = np.tile(grasp_state, (inx[i]-inx[i-1], 1))
+            af = np.concatenate((actions[inx[i-1]+1:inx[i]+1], As), axis=1)
+            AF = np.append(AF, af, axis=0)
+        actions = AF[1:,:]
             
         # Remove false drops when motion is continuous
         for i in range(len(done)-1):

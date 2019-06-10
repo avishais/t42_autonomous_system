@@ -14,9 +14,14 @@ import var
 
 # np.random.seed(10)
 
-state_dim = 12
 version = 0
 Obj = 'cyl45'
+if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
+    state_dim = 5
+else:
+    state_dim = 4
+
+
 
 naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 nn_srv = rospy.ServiceProxy('/nn/predict', StateAction2State)
@@ -119,11 +124,11 @@ H[0] = 1
 w = [40, 40, 100, 100]
 
 ## GP
-if 0:
+if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
-    if 1:
+    if 0:
         with open(path + 'prediction_analysis_' + Obj + '_gp1.pkl', 'r') as f: 
             Ggp = pickle.load(f)
     else: 
@@ -133,11 +138,16 @@ if 0:
     while j < 10000:
         print("Run %d, number of samples %d."%(j, len(Ggp)))
         try:
-            h = np.random.randint(1,150)
+            h = np.random.randint(1,300)
             path_inx = np.random.randint(len(test_paths))
             R = test_paths[path_inx]
             A = action_seq[path_inx]
-            R = R[:,[0,1,11,12,3,4,5,6,7,8,9,10]]
+            if state_dim == 5:
+                R = R[:,[0,1,11,12,2]]
+            else:
+                R = R[:,[0,1,11,12]]
+
+            A = np.concatenate((A, np.tile(R[0,:], (A.shape[0], 1))), axis=1)
 
             # Randomly pick a section with length h
             st_inx = np.random.randint(R.shape[0]-h-1)
@@ -174,10 +184,6 @@ if 0:
 else:
     with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'r') as f: 
         Ggp = np.array(pickle.load(f))
-    # with open(path + 'prediction_analysis_' + Obj + '_gp1.pkl', 'r') as f: 
-    #     Ggp1 = np.array(pickle.load(f))
-
-    # Ggp = np.concatenate((Ggp, Ggp1), axis=0)
 
 if 0:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
@@ -222,14 +228,14 @@ if 0:
                 pickle.dump(Gnn, f)
 
     Gnn = np.array(Gnn)
-
 else:
-    with open(path + 'prediction_analysis_' + Obj + '_nn.pkl', 'r') as f: 
-        Gnn = np.array(pickle.load(f))
+    pass
+    # with open(path + 'prediction_analysis_' + Obj + '_nn.pkl', 'r') as f: 
+    #     Gnn = np.array(pickle.load(f))
  
 
 lgp, Egp, Sgp = plato(Ggp, 50)
-lnn, Enn, Snn = plato(Gnn, 30)
+# lnn, Enn, Snn = plato(Gnn, 30)
 
 Egp = medfilter(Egp, 10)
 
