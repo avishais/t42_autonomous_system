@@ -24,8 +24,8 @@ pklfile = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_proc
 with open(pklfile) as f:  
     Pro, Aro = pickle.load(f)
 
-Straj = Pro[0]
-A = Aro[0]
+Straj = Pro[1]#[0:200,:]
+A = Aro[1]#[0:200,:]
 
 s_start = Straj[0,:]
 state_dim = 4#S.shape[1]
@@ -41,11 +41,17 @@ p_naive = 1
 for i in range(0, A.shape[0]):
     print("[] Step " + str(i) + " of " + str(A.shape[0]))
     a = A[i,:]
-    print s, a
+
+    print "-----"
+    print "s: ", s
+    print "a", a
+    
 
     res = naive_srv(s.reshape(-1,1), a)
     s_next = np.array(res.next_state)
     s = np.copy(s_next)
+
+    print "s_next: ", s_next
 
     # res = gp_srv(Sp.reshape(-1,1), a)
     # S_next = np.array(res.next_states).reshape(-1, state_dim)

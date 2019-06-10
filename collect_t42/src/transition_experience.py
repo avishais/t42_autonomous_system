@@ -308,9 +308,9 @@ class transition_experience():
         # f1 = np.array(range(0,inx[0]+1))
         # f2 = np.array(range(inx[11]+1,inx[12]+1))
         # inx = np.concatenate((f1, f2), axis=0)
-        # states = np.delete(states, inx, 0) # Remove drop transitions
-        # actions = np.delete(actions, inx, 0) # Remove drop transitions
-        # next_states = np.delete(next_states, inx, 0) # Remove drop transitions
+        # states = np.delete(states, inx, 0)
+        # actions = np.delete(actions, inx, 0)
+        # next_states = np.delete(next_states, inx, 0) 
         # done = np.delete(done, inx, 0)
         ############################################################
 

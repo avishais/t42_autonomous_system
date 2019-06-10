@@ -2,4 +2,8 @@ float64[] state
 float64[] action
 ---
 float64[] next_state
+<<<<<<< HEAD
 float64 node_probability
+=======
+float32 node_probability
+>>>>>>> 0d91a82494d1d7ba5c31a99d257340235dcb877e

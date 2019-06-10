@@ -63,6 +63,7 @@ if 0:
         # R = R[20:,:]
         # A = A[20:,:]
 
+        A = np.concatenate((A, np.tile(R[0,:], (A.shape[0],1))), axis=1)
 
         print('Smoothing data...')
         h = [40, 40, 100, 100]
