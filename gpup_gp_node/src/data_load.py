@@ -25,7 +25,7 @@ class data_load(object):
         self.postfix = '_v' + str(var.data_version_) + '_d' + str(dim_) + '_m' + str(var.stepSize_)
         self.prefix =  simORreal + '_'
         self.file = simORreal + '_data_' + discreteORcont + self.postfix + '.obj'
-        self.path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
+        self.path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
         self.dr = dr
         self.K = K
         self.load()
@@ -96,6 +96,10 @@ class data_load(object):
             with open(self.path + self.prefix + 'kdtree' + self.postfix + '.obj', 'wb') as f:
                 pickle.dump(self.kdt, f)
         print('[data_load] kd-tree ready.')
+
+    def set_new_kdtree(self, N):
+        self.kdt = KDTree(self.Xtrain[:N, :], leaf_size=100, metric='euclidean')
+
 
     def normz(self, x):
         d = len(x)

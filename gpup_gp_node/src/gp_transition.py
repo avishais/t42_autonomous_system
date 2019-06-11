@@ -17,7 +17,7 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
-simORreal = 't42_cyl30'
+simORreal = 't42_cyl35'
 discreteORcont = 'discrete'
 useDiffusionMaps = True
 probability_threshold = 0.65
@@ -54,6 +54,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         rospy.Service('/gp/transitionRepeat', batch_transition_repeat, self.GetTransitionRepeat)
         rospy.Service('/gp/batchSVMcheck', batch_transition, self.batch_svm_check_service)
         rospy.Service('/gp/set_K', setk, self.setK)
+        rospy.Service('/gp/set_new_kdtree', setk, self.setKDtree)
         rospy.init_node('gp_transition', anonymous=True)
         print('[gp_transition] Ready.')            
 
@@ -88,6 +89,11 @@ class Spin_gp(data_load, mean_shift, svm_failure):
             print('[gp_transition] No diffusion maps used, K=%d.'%self.K)
 
         # return EmptyResponse()
+
+    def setKDtree(self, msg):
+        N = np.array(msg.data)[0]
+        self.set_new_kdtree(N)
+
 
     # Particles prediction
     def batch_predict(self, SA):

@@ -10,25 +10,22 @@ from matplotlib.patches import Ellipse, Polygon
 import pickle
 from nn_predict.srv import StateAction2State
 import time
-import var
 
 # np.random.seed(10)
 
 version = 0
-Obj = 'cyl30'
+Obj = 'cyl35'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
     state_dim = 5
 else:
     state_dim = 4
 
-
-
 naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 nn_srv = rospy.ServiceProxy('/nn/predict', StateAction2State)
 rospy.init_node('error_analysis_t42', anonymous=True)
 
-path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/src/results/'
-test_path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
+path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
+test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 def medfilter(x, W):
     w = int(W/2)
@@ -128,7 +125,7 @@ if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
-    if 0:
+    if 1:
         with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'r') as f: 
             Ggp = pickle.load(f)
     else: 
@@ -138,7 +135,7 @@ if 1:
     while j < 10000:
         print("Run %d, number of samples %d."%(j, len(Ggp)))
         try:
-            h = np.random.randint(1,300)
+            h = np.random.randint(1,1000)
             path_inx = np.random.randint(len(test_paths))
             R = test_paths[path_inx]
             A = action_seq[path_inx]
@@ -247,7 +244,7 @@ Egp = medfilter(Egp, 10)
 # plt.plot(Gnn[:,1], Gnn[:,2], '.y', label = 'NN raw')
 # plt.plot(lnn, Enn, '-k', label = 'NN')
 
-# plt.plot(Ggp[:,1], Ggp[:,2], '.m', label = 'GP raw')
+plt.plot(Ggp[:,1], Ggp[:,2], '.m', label = 'GP raw')
 plt.plot(lgp, Egp, '-b', label = 'GP')
 
 plt.xlabel('Horizon (mm)', fontsize=16)

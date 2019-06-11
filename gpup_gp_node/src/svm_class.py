@@ -12,7 +12,7 @@ import var
 class svm_failure():
 
     r = 0.1
-    path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
+    path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
 
     def __init__(self, simORreal = 'sim', discrete = True):
 
