@@ -10,12 +10,11 @@ from matplotlib.patches import Ellipse, Polygon
 import pickle
 from nn_predict.srv import StateAction2State
 import time
-import var
 
 # np.random.seed(10)
 
 version = 0
-Obj = 'cyl30'
+Obj = 'cyl35'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
     state_dim = 5
 else:
@@ -25,8 +24,8 @@ naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 nn_srv = rospy.ServiceProxy('/nn/predict', StateAction2State)
 rospy.init_node('error_analysis_t42', anonymous=True)
 
-path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/src/results/'
-test_path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
+path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
+test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 def medfilter(x, W):
     w = int(W/2)
