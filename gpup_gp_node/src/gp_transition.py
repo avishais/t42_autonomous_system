@@ -2,7 +2,7 @@
 import rospy
 from std_msgs.msg import Float64MultiArray, Float32MultiArray, Int16
 from std_srvs.srv import SetBool, Empty, EmptyResponse
-from gpup_gp_node_exp.srv import batch_transition, batch_transition_repeat, one_transition, setk
+from gpup_gp_node_exp.srv import batch_transition, batch_transition_repeat, one_transition, setk, setKD
 import math
 import numpy as np
 from gp import GaussianProcess
@@ -17,7 +17,7 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
-simORreal = 't42_cyl35'
+simORreal = 't42_sqr30'
 discreteORcont = 'discrete'
 useDiffusionMaps = True
 probability_threshold = 0.65
@@ -54,7 +54,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         rospy.Service('/gp/transitionRepeat', batch_transition_repeat, self.GetTransitionRepeat)
         rospy.Service('/gp/batchSVMcheck', batch_transition, self.batch_svm_check_service)
         rospy.Service('/gp/set_K', setk, self.setK)
-        rospy.Service('/gp/set_new_kdtree', setk, self.setKDtree)
+        rospy.Service('/gp/set_new_kdtree', setKD, self.setKDtree)
         rospy.init_node('gp_transition', anonymous=True)
         print('[gp_transition] Ready.')            
 
@@ -91,8 +91,12 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         # return EmptyResponse()
 
     def setKDtree(self, msg):
-        N = np.array(msg.data)[0]
+        N = msg.data
         self.set_new_kdtree(N)
+
+        print('[gp_transition] Change kd-tree to have %d points.'%N)
+
+        return True
 
 
     # Particles prediction

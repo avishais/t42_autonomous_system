@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 import rospy
-from gpup_gp_node_exp.srv import gpup_transition, batch_transition, one_transition, setk
+from gpup_gp_node_exp.srv import gpup_transition, batch_transition, one_transition, setKD
 from std_srvs.srv import Empty, EmptyResponse
 import numpy as np
 import matplotlib.pyplot as plt
@@ -22,11 +22,11 @@ else:
 
 naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 nn_srv = rospy.ServiceProxy('/nn/predict', StateAction2State)
-setKD_srv = rospy.ServiceProxy('/gp/set_new_kdtree', setk)
+setKD_srv = rospy.ServiceProxy('/gp/set_new_kdtree', setKD)
 rospy.init_node('error_analysis_t42', anonymous=True)
 
-path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
-test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
+test_path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 def medfilter(x, W):
     w = int(W/2)
@@ -51,13 +51,13 @@ if 1:
 
     Ggp = []
 
-    Ld = range(1000, 250000,2500)
+    Ld = range(1000, 250000,30000)#2500)
     n = 100
     for l in Ld:
-        print("Run %d, number of samples %d."%(l, len(Ggp)))
-        setKD_srv(np.array([l]))
+        g = setKD_srv(l)
         e = 0.0
         for k in range(n):
+            print("Run data %d points, and trial %d."%(l, k))
             path_inx = np.random.randint(len(test_paths))
             R = test_paths[path_inx]
             A = action_seq[path_inx]

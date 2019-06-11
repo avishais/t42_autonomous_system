@@ -9,7 +9,7 @@ import var
 
 # np.random.seed(1)
 
-extend_previous_opt = False
+extend_previous_opt = True
 
 class data_load(object):
     # Dillute = 100000
@@ -25,7 +25,7 @@ class data_load(object):
         self.postfix = '_v' + str(var.data_version_) + '_d' + str(dim_) + '_m' + str(var.stepSize_)
         self.prefix =  simORreal + '_'
         self.file = simORreal + '_data_' + discreteORcont + self.postfix + '.obj'
-        self.path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
+        self.path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
         self.dr = dr
         self.K = K
         self.load()
@@ -100,7 +100,6 @@ class data_load(object):
     def set_new_kdtree(self, N):
         self.kdt = KDTree(self.Xtrain[:N, :], leaf_size=100, metric='euclidean')
 
-
     def normz(self, x):
         d = len(x)
         return (x-self.x_min_X[:d])/(self.x_max_X[:d] - self.x_min_X[:d])
@@ -159,7 +158,7 @@ class data_load(object):
             theta_opt = []
             K_opt = []
         # [theta_opt.append([]) for _ in range(self.state_dim)] # List for each dimension
-        N = 5000
+        N = 1500
         for i in range(N):
             print('[data_load] Computing hyper-parameters for data point %d out of %d.'% (i, N))
             sa = self.Xtrain[np.random.randint(self.Xtrain.shape[0]), :]

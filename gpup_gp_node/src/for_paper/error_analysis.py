@@ -24,8 +24,8 @@ naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 nn_srv = rospy.ServiceProxy('/nn/predict', StateAction2State)
 rospy.init_node('error_analysis_t42', anonymous=True)
 
-path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
-test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
+test_path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 def medfilter(x, W):
     w = int(W/2)
