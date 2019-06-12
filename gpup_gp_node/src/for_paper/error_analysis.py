@@ -121,11 +121,11 @@ H[0] = 1
 w = [40, 40, 100, 100]
 
 ## GP
-if 0:
+if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
-    if 1:
+    if 0:
         with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'r') as f: 
             Ggp = pickle.load(f)
     else: 
@@ -133,36 +133,36 @@ if 0:
 
     j = 1
     while j < 10000:
-        print("Run %d, number of samples %d."%(j, len(Ggp)))
-        try:
-            h = np.random.randint(1,1000)
-            path_inx = np.random.randint(len(test_paths))
-            R = test_paths[path_inx]
-            A = action_seq[path_inx]
-            if state_dim == 5:
-                R = R[:,[0,1,11,12,2]]
-            else:
-                R = R[:,[0,1,11,12]]
+        print("Run %d for %s, number of samples %d."%(j, Obj, len(Ggp)))
+        h = np.random.randint(1,200)
+        path_inx = np.random.randint(len(test_paths))
+        R = test_paths[path_inx]
+        A = action_seq[path_inx]
+        if state_dim == 5:
+            R = R[:,[0,1,11,12,2]]
+        else:
+            R = R[:,[0,1,11,12]]
 
-            A = np.concatenate((A, np.tile(R[0,:], (A.shape[0], 1))), axis=1)
+        A = np.concatenate((A, np.tile(R[0,:], (A.shape[0], 1))), axis=1)
 
-            # Randomly pick a section with length h
-            st_inx = np.random.randint(R.shape[0]-h-1)
-            R = R[st_inx:st_inx+h]
-            A = A[st_inx:st_inx+h]
+        # Randomly pick a section with length h
+        st_inx = np.random.randint(R.shape[0]-h-1)
+        R = R[st_inx:st_inx+h]
+        A = A[st_inx:st_inx+h]
 
-            for i in range(state_dim):
-                try:
-                    R[:,i] = medfilter(R[:,i], w[i])
-                except:
-                    R[:,i] = medfilter(R[:,i], 40)
+        for i in range(state_dim):
+            if i == 4:
+                continue
+            try:
+                R[:,i] = medfilter(R[:,i], w[i])
+            except:
+                R[:,i] = medfilter(R[:,i], 40)
 
-            s_start = R[0,:]
-            R_gp = predict_GP(s_start, A)
+        s_start = R[0,:]
+        R_gp = predict_GP(s_start, A)
 
-            e, l = tracking_error(R, R_gp)
-        except:
-            continue
+        e, l = tracking_error(R, R_gp)
+        
 
         Ggp.append(np.array([h, l, e]))
         j += 1

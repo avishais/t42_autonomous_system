@@ -85,7 +85,19 @@ class data_load(object):
         for i in range(self.state_dim):
             self.Ytrain[:,i] = (self.Ytrain[:,i]-self.x_min_Y[i])/(self.x_max_Y[i]-self.x_min_Y[i])
 
-        self.Ytrain -= self.Xtrain[:,:self.state_dim] # The target set is the state change
+        if self.state_dim == 5:
+            for i in range(self.Ytrain.shape[0]):
+                for j in range(self.state_dim):
+                    if j == 4 and np.abs(self.Ytrain[i,j] - self.Xtrain[i,j]) > 0.5:
+                        if self.Xtrain[i,j] > 0.6:
+                            a = (self.Ytrain[i,j] + 1) - self.Xtrain[i,j]
+                        elif self.Xtrain[i,j] < 0.4:
+                            a = (self.Ytrain[i,j] - 1) - self.Xtrain[i,j]
+                        self.Ytrain[i,j] = a
+                    else:
+                        self.Ytrain[i,j] -= self.Xtrain[i,j] 
+        else:
+            self.Ytrain -= self.Xtrain[:,:self.state_dim] # The target set is the state change
 
         print('[data_load] Loading data to kd-tree...')
         if os.path.exists(self.path + self.prefix + 'kdtree' + self.postfix + '.obj'):
@@ -99,7 +111,6 @@ class data_load(object):
 
     def set_new_kdtree(self, N):
         self.kdt = KDTree(self.Xtrain[:N, :], leaf_size=100, metric='euclidean')
-
 
     def normz(self, x):
         d = len(x)
@@ -159,7 +170,7 @@ class data_load(object):
             theta_opt = []
             K_opt = []
         # [theta_opt.append([]) for _ in range(self.state_dim)] # List for each dimension
-        N = 5000
+        N = 1500
         for i in range(N):
             print('[data_load] Computing hyper-parameters for data point %d out of %d.'% (i, N))
             sa = self.Xtrain[np.random.randint(self.Xtrain.shape[0]), :]

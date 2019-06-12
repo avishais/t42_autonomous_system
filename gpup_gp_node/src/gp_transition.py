@@ -2,7 +2,7 @@
 import rospy
 from std_msgs.msg import Float64MultiArray, Float32MultiArray, Int16
 from std_srvs.srv import SetBool, Empty, EmptyResponse
-from gpup_gp_node_exp.srv import batch_transition, batch_transition_repeat, one_transition, setk
+from gpup_gp_node_exp.srv import batch_transition, batch_transition_repeat, one_transition, setk, setKD
 import math
 import numpy as np
 from gp import GaussianProcess
@@ -54,7 +54,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         rospy.Service('/gp/transitionRepeat', batch_transition_repeat, self.GetTransitionRepeat)
         rospy.Service('/gp/batchSVMcheck', batch_transition, self.batch_svm_check_service)
         rospy.Service('/gp/set_K', setk, self.setK)
-        rospy.Service('/gp/set_new_kdtree', setk, self.setKDtree)
+        rospy.Service('/gp/set_new_kdtree', setKD, self.setKDtree)
         rospy.init_node('gp_transition', anonymous=True)
         print('[gp_transition] Ready.')            
 
@@ -91,8 +91,12 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         # return EmptyResponse()
 
     def setKDtree(self, msg):
-        N = np.array(msg.data)[0]
+        N = msg.data
         self.set_new_kdtree(N)
+
+        print('[gp_transition] Change kd-tree to have %d points.'%N)
+
+        return True
 
 
     # Particles prediction
@@ -158,7 +162,7 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         return np.array(S_next)
 
     def one_predict(self, sa):
-        Theta, _ = self.get_theta(sa) # Get hyper-parameters for this query point  
+        # Theta, _ = self.get_theta(sa) # Get hyper-parameters for this query point  
 
         K = self.K 
 
@@ -172,12 +176,15 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         ds_next = np.zeros((self.state_dim,))
         std_next = np.zeros((self.state_dim,))
         for i in range(self.state_dim):
-            gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = False, theta = Theta[i], algorithm = 'Matlab')
+            gp_est = GaussianProcess(X_nn[:,:self.state_action_dim], Y_nn[:,i], optimize = True, theta = None, algorithm = 'Matlab')
             mm, vv = gp_est.predict(sa[:self.state_action_dim])
             ds_next[i] = mm
             std_next[i] = np.sqrt(vv)
 
         s_next = sa[:self.state_dim] + ds_next#np.random.normal(ds_next, std_next)
+        if self.state_dim == 5:
+            s_next[4] += 1.0 if s_next[4] < 0.0 else 0.0
+            s_next[4] -= 1.0 if s_next[4] > 1.0 else 0.0    
 
         return s_next 
 

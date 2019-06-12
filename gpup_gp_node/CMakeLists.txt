@@ -63,6 +63,7 @@ add_service_files(
   one_transition.srv
   batchSVM.srv
   setk.srv
+  setKD.srv
 )
 
 ## Generate actions in the 'action' folder

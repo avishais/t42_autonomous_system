@@ -7,7 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'rec60'
+Obj = 'tri50'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -198,6 +198,8 @@ class transition_experience():
                 # Apply filter to episode
                 h = [40, 40, 100, 100]
                 for i in range(self.state_dim):
+                    if i == 4:
+                        continue
                     try:
                         D[ks:kf,i] = medfilter(D[ks:kf,i], h[i])
                     except:
@@ -246,8 +248,8 @@ class transition_experience():
         # Explot symmetry of object profile
         states[:,2] = self.transform_angles(states[:,2])
         next_states[:,2] = self.transform_angles(next_states[:,2])
-        
-        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40'])): # Include orientation angle
+
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50'])): # Include orientation angle
             if self.with_fingers:
                 states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
                 next_states = next_states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
@@ -438,7 +440,7 @@ class transition_experience():
         # Explot symmetry of object profile
         states[:,2] = self.transform_angles(states[:,2])
 
-        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40'])): # Include orientation angle
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50'])): # Include orientation angle
             if self.with_fingers:
                 states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
                 states[:,5:] *= 1000.
