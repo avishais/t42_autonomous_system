@@ -14,8 +14,8 @@ import time
 # np.random.seed(10)
 
 version = 0
-Obj = 'cyl35'
-if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
+Obj = 'poly6'
+if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','tri50'])):
     state_dim = 5
 else:
     state_dim = 4
@@ -121,7 +121,7 @@ H[0] = 1
 w = [40, 40, 100, 100]
 
 ## GP
-if 1:
+if 0:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
