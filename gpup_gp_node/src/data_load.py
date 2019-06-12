@@ -9,7 +9,7 @@ import var
 
 # np.random.seed(1)
 
-extend_previous_opt = True
+extend_previous_opt = False
 
 class data_load(object):
     # Dillute = 100000
