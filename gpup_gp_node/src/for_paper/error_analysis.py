@@ -14,7 +14,7 @@ import time
 # np.random.seed(10)
 
 version = 0
-Obj = 'cyl35'
+Obj = 'sqr30'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
     state_dim = 5
 else:
@@ -133,9 +133,9 @@ if 0:
 
     j = 1
     while j < 10000:
-        print("Run %d, number of samples %d."%(j, len(Ggp)))
+        print("Run %d for %s, number of samples %d."%(j, Obj, len(Ggp)))
         try:
-            h = np.random.randint(1,1000)
+            h = np.random.randint(600,900)
             path_inx = np.random.randint(len(test_paths))
             R = test_paths[path_inx]
             A = action_seq[path_inx]
