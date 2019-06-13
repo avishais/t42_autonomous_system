@@ -64,6 +64,7 @@ class rollout():
 
     def callbackTrigger(self, msg):
         self.running = msg.data
+        print "-------------------------------------"
         if self.running:
             self.suc = True
 

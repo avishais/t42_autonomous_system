@@ -10,10 +10,10 @@ from transition_experience import *
 
 
 def main():
-    texp = transition_experience(Load = True, discrete=True, postfix='', Object = 'cyl45')
+    texp = transition_experience(Load = True, discrete=True, postfix='')#, Object = 'cyl35_red')
 
-    texp.process_transition_data(stepSize = 10, plot = False)
-    texp.process_svm(stepSize = 10)
+    # texp.process_transition_data(stepSize = 1, plot = True)
+    # texp.process_svm(stepSize = 1)
 
     texp.plot_data()
 

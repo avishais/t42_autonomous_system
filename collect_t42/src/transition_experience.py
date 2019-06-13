@@ -7,7 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'rec60'
+Obj = 'cyl20'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -340,8 +340,8 @@ class transition_experience():
 
         if plot:
             plt.figure(0)
-            # plt.plot(D[:,0], D[:,1],'.-k')
-            plt.plot(D[:,4],'.-k')
+            plt.plot(D[:,0], D[:,1],'.-k')
+            # plt.plot(D[:,4],'.-k')
             # for _ in range(1000):
             #     j = np.random.randint(D.shape[0])
             #     plt.plot([D[j,0], D[j,6]], [D[j,1], D[j,7]],'o-r')
