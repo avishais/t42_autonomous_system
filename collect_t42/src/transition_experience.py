@@ -277,7 +277,7 @@ class transition_experience():
         self.state_action_dim = self.state_dim + self.action_dim 
 
         done = self.validate_drops(states, done)
-        if self.Object == 'poly6':
+        if np.any(self.Object == np.array(['poly6', 'cyl35_red'])): # When the actions length is not at the same size as the states
             done[-1] = True
 
         # Add grasp state to action
@@ -381,8 +381,8 @@ class transition_experience():
 
         if plot:
             plt.figure(0)
-            # plt.plot(D[:,0], D[:,1],'.-k')
-            plt.plot(D[:,4],'.-k')
+            plt.plot(D[:,0], D[:,1],'.-k')
+            # plt.plot(D[:,4],'.-k')
             # for _ in range(1000):
             #     j = np.random.randint(D.shape[0])
             #     plt.plot([D[j,0], D[j,6]], [D[j,1], D[j,7]],'o-r')

@@ -112,7 +112,7 @@ def plato(G, n = 100):
 # Error-horizon plot
 files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
 
-plt.figure(figsize=(10,4))
+plt.figure(figsize=(12, 3.5))
 for F in files_pkl:
 
     with open(F, 'r') as f: 
@@ -128,16 +128,17 @@ for F in files_pkl:
 
 plt.xlabel('Horizon (mm)', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
-plt.title('GP Prediction error')
+# plt.title('GP Prediction error')
 plt.legend()
 # plt.xlim([0,32])
 # plt.ylim([0,3])
-# plt.savefig(path + 'pred_' + Obj + '.png', dpi=300) #str(np.random.randint(100000))
+plt.gcf().subplots_adjust(bottom=0.15)
+plt.savefig(path + 'pred_all_modeling.png', dpi=300) #str(np.random.randint(100000))
 
 # Error-datasize plot
 files_pkl = glob.glob(path + 'datasize_analysis_' + "*_gp.pkl")
 
-plt.figure(figsize=(10,4))
+plt.figure(figsize=(10,4.5))
 for F in files_pkl:
 
     with open(F, 'r') as f: 
@@ -153,13 +154,10 @@ for F in files_pkl:
 
 plt.xlabel('Datasize', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
-plt.title('GP Prediction error')
+# plt.title('GP Prediction error')
 plt.legend()
 # plt.xlim([0,32])
 # plt.ylim([0,3])
-# plt.savefig(path + 'pred_' + Obj + '.png', dpi=300) #str(np.random.randint(100000))
-
-
-
+# plt.savefig(path + 'datasize_all.png', dpi=300) #str(np.random.randint(100000))
 plt.show()
 
