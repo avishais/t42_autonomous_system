@@ -17,7 +17,7 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
-simORreal = 't42_cyl30'
+simORreal = 't42_sqr30'
 discreteORcont = 'discrete'
 useDiffusionMaps = True
 probability_threshold = 0.65
@@ -182,6 +182,9 @@ class Spin_gp(data_load, mean_shift, svm_failure):
             std_next[i] = np.sqrt(vv)
 
         s_next = sa[:self.state_dim] + ds_next#np.random.normal(ds_next, std_next)
+        if self.state_dim == 5:
+            s_next[4] += 1.0 if s_next[4] < 0.0 else 0.0
+            s_next[4] -= 1.0 if s_next[4] > 1.0 else 0.0    
 
         return s_next 
 

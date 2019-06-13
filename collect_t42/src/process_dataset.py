@@ -86,7 +86,6 @@ def main():
                 DL = data_load(simORreal = 't42_' + obj, discreteORcont = ('discrete' if discrete else 'cont'), K = 1000, K_manifold = 100, sigma=2.0, dim = 3, dr = 'diff', with_fingers = False)    
 
                 # SVM = svm_failure(simORreal = 't42_' + obj, discrete = discrete)   
-
     return 1
 
 

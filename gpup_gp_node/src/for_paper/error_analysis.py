@@ -14,7 +14,7 @@ import time
 # np.random.seed(10)
 
 version = 0
-Obj = 'cyl30'
+Obj = 'sqr30'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
     state_dim = 5
 else:
@@ -23,6 +23,9 @@ else:
 naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 nn_srv = rospy.ServiceProxy('/nn/predict', StateAction2State)
 rospy.init_node('error_analysis_t42', anonymous=True)
+
+# print "Waiting for /gp/transitionOneParticle service..."
+# rospy.wait_for_service('/gp/transitionOneParticle')
 
 path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
 test_path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -134,35 +137,35 @@ if 0:
     j = 1
     while j < 10000:
         print("Run %d for %s, number of samples %d."%(j, Obj, len(Ggp)))
-        try:
-            h = np.random.randint(600,900)
-            path_inx = np.random.randint(len(test_paths))
-            R = test_paths[path_inx]
-            A = action_seq[path_inx]
-            if state_dim == 5:
-                R = R[:,[0,1,11,12,2]]
-            else:
-                R = R[:,[0,1,11,12]]
+        h = np.random.randint(1,200)
+        path_inx = np.random.randint(len(test_paths))
+        R = test_paths[path_inx]
+        A = action_seq[path_inx]
+        if state_dim == 5:
+            R = R[:,[0,1,11,12,2]]
+        else:
+            R = R[:,[0,1,11,12]]
 
-            A = np.concatenate((A, np.tile(R[0,:], (A.shape[0], 1))), axis=1)
+        A = np.concatenate((A, np.tile(R[0,:], (A.shape[0], 1))), axis=1)
 
-            # Randomly pick a section with length h
-            st_inx = np.random.randint(R.shape[0]-h-1)
-            R = R[st_inx:st_inx+h]
-            A = A[st_inx:st_inx+h]
+        # Randomly pick a section with length h
+        st_inx = np.random.randint(R.shape[0]-h-1)
+        R = R[st_inx:st_inx+h]
+        A = A[st_inx:st_inx+h]
 
-            for i in range(state_dim):
-                try:
-                    R[:,i] = medfilter(R[:,i], w[i])
-                except:
-                    R[:,i] = medfilter(R[:,i], 40)
+        for i in range(state_dim):
+            if i == 4:
+                continue
+            try:
+                R[:,i] = medfilter(R[:,i], w[i])
+            except:
+                R[:,i] = medfilter(R[:,i], 40)
 
-            s_start = R[0,:]
-            R_gp = predict_GP(s_start, A)
+        s_start = R[0,:]
+        R_gp = predict_GP(s_start, A)
 
-            e, l = tracking_error(R, R_gp)
-        except:
-            continue
+        e, l = tracking_error(R, R_gp)
+        
 
         Ggp.append(np.array([h, l, e]))
         j += 1
