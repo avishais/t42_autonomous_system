@@ -11,13 +11,13 @@ import glob
 
 version = 0
 Obj = 'cyl35'
-if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
+if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','str40','egg50'])):
     state_dim = 5
 else:
     state_dim = 4
 
 
-path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
+path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
 
 def medfilter(x, W):
     w = int(W/2)
@@ -112,7 +112,7 @@ def plato(G, n = 100):
 # Error-horizon plot
 files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
 
-plt.figure(figsize=(10,4))
+plt.figure(figsize=(12, 3.5))
 for F in files_pkl:
 
     with open(F, 'r') as f: 
@@ -128,38 +128,38 @@ for F in files_pkl:
 
 plt.xlabel('Horizon (mm)', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
-plt.title('GP Prediction error')
+# plt.title('GP Prediction error')
 plt.legend()
-# plt.xlim([0,32])
-# plt.ylim([0,3])
-# plt.savefig(path + 'pred_' + Obj + '.png', dpi=300) #str(np.random.randint(100000))
-
-# Error-datasize plot
-files_pkl = glob.glob(path + 'datasize_analysis_' + "*_gp.pkl")
-
-plt.figure(figsize=(10,4))
-for F in files_pkl:
-
-    with open(F, 'r') as f: 
-        Ld, Ggp = np.array(pickle.load(f))
-    Ld = Ld[:len(Ggp)]
-
-    ix = F.find('analysis_') + 9
-    obj = F[ix:ix+5]
- 
-    # Ggp = medfilter(Ggp, 10)
-
-    plt.plot(Ld, Ggp, '-', label = obj)
-
-plt.xlabel('Datasize', fontsize=16)
-plt.ylabel('RMSE (mm)', fontsize=16)
-plt.title('GP Prediction error')
-plt.legend()
-# plt.xlim([0,32])
-# plt.ylim([0,3])
-# plt.savefig(path + 'pred_' + Obj + '.png', dpi=300) #str(np.random.randint(100000))
-
-
-
+plt.xlim([0,100])
+# plt.ylim([0,12])
+plt.gcf().subplots_adjust(bottom=0.15)
+plt.savefig(path + 'pred_all_modeling.png', dpi=300) #str(np.random.randint(100000))
 plt.show()
+
+
+# # Error-datasize plot
+# files_pkl = glob.glob(path + 'datasize_analysis_' + "*_gp.pkl")
+
+# plt.figure(figsize=(10,4.5))
+# for F in files_pkl:
+
+#     with open(F, 'r') as f: 
+#         Ld, Ggp = np.array(pickle.load(f))
+#     Ld = Ld[:len(Ggp)]
+
+#     ix = F.find('analysis_') + 9
+#     obj = F[ix:ix+5]
+ 
+#     # Ggp = medfilter(Ggp, 10)
+
+#     plt.plot(Ld, Ggp, '-', label = obj)
+
+# plt.xlabel('Datasize', fontsize=16)
+# plt.ylabel('RMSE (mm)', fontsize=16)
+# # plt.title('GP Prediction error')
+# plt.legend()
+# # plt.xlim([0,32])
+# # plt.ylim([0,3])
+# # plt.savefig(path + 'datasize_all.png', dpi=300) #str(np.random.randint(100000))
+# plt.show()
 

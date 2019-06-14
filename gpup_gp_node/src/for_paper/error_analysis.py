@@ -14,6 +14,7 @@ import time
 # np.random.seed(10)
 
 version = 0
+
 Obj = 'cyl35_red'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
     state_dim = 5
@@ -24,7 +25,7 @@ naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 nn_srv = rospy.ServiceProxy('/nn/predict', StateAction2State)
 rospy.init_node('error_analysis_t42', anonymous=True)
 
-# print "Waiting for /gp/transitionOneParticle service..."
+# print "Waiting for service /gp/transitionOneParticle ..."
 # rospy.wait_for_service('/gp/transitionOneParticle')
 
 path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
@@ -174,8 +175,6 @@ if 0:
             with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'w') as f: 
                 pickle.dump(Ggp, f)
 
-    Ggp = np.array(Ggp)
-
     with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'w') as f: 
         pickle.dump(Ggp, f)
 
@@ -237,7 +236,7 @@ else:
 lgp, Egp, Sgp = plato(Ggp, 50)
 # lnn, Enn, Snn = plato(Gnn, 30)
 
-Egp = medfilter(Egp, 10)
+Egp = medfilter(Egp, 15)
 
 # plt.figure(figsize=(10,4))
 
