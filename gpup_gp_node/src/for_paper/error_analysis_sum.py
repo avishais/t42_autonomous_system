@@ -7,6 +7,7 @@ from matplotlib.patches import Ellipse, Polygon
 import pickle
 import time
 import glob
+import random
 
 
 version = 0
@@ -109,11 +110,15 @@ def plato(G, n = 100):
     return l, np.array(H), np.array(S)
 
 
-# Error-horizon plot
+###### Error-horizon plot ######
 files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
 
 plt.figure(figsize=(12, 3.5))
+# plt.yscale('log',basey=10) 
 for F in files_pkl:
+
+    if F.find('_red') > 0:
+        continue
 
     with open(F, 'r') as f: 
         Ggp = np.array(pickle.load(f))
@@ -134,8 +139,47 @@ plt.xlim([0,100])
 # plt.ylim([0,12])
 plt.gcf().subplots_adjust(bottom=0.15)
 plt.savefig(path + 'pred_all_modeling.png', dpi=300) #str(np.random.randint(100000))
-plt.show()
 
+
+###### Hands comparison ######
+plt.figure(figsize=(12, 3.5))
+plt.yscale('log',basey=10) 
+files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
+for F in files_pkl:
+    if F.find('_red') < 0:
+        continue
+
+    j = F.find('_red')-5
+    obj = F[j:j+5]
+    for Fb in files_pkl:
+        if Fb.find(obj) > 0 and Fb.find('_red') < 0:
+            Fblue = Fb
+            break
+
+    c = 'k'#(random.random(), random.random(), random.random())
+
+    with open(F, 'r') as f: 
+        Gred = np.array(pickle.load(f))
+    lred, Ered, Sred = plato(Gred, 50)
+    Ered = medfilter(Ered, 10)
+    plt.plot(lred, Ered, '-', color = c, label = 'red hand')
+
+    with open(Fblue, 'r') as f: 
+        Gblue = np.array(pickle.load(f))
+    lblue, Eblue, Sblue = plato(Gblue, 50)
+    Eblue = medfilter(Eblue, 15)
+    plt.plot(lblue, Eblue, '--', color = c, label = 'blue hand')
+
+plt.xlabel('Horizon (mm)', fontsize=16)
+plt.ylabel('RMSE (mm)', fontsize=16)
+# plt.title('GP Prediction error')
+plt.legend()
+plt.xlim([0,100])
+plt.gcf().subplots_adjust(bottom=0.15)
+plt.savefig(path + 'pred_blue_red_modeling.png', dpi=300) #str(np.random.randint(100000))
+    
+
+plt.show()
 
 # # Error-datasize plot
 # files_pkl = glob.glob(path + 'datasize_analysis_' + "*_gp.pkl")
