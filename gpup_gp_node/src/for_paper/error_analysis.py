@@ -14,7 +14,7 @@ import time
 # np.random.seed(10)
 
 version = 0
-Obj = 'sqr30'
+Obj = 'cyl35_red'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
     state_dim = 5
 else:
@@ -27,8 +27,8 @@ rospy.init_node('error_analysis_t42', anonymous=True)
 # print "Waiting for /gp/transitionOneParticle service..."
 # rospy.wait_for_service('/gp/transitionOneParticle')
 
-path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
-test_path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
+path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
+test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 def medfilter(x, W):
     w = int(W/2)
@@ -137,9 +137,9 @@ if 0:
     j = 1
     while j < 10000:
         print("Run %d for %s, number of samples %d."%(j, Obj, len(Ggp)))
-        h = np.random.randint(1,200)
         path_inx = np.random.randint(len(test_paths))
         R = test_paths[path_inx]
+        h = np.random.randint(1,np.min([1000,R.shape[0]-1]))
         A = action_seq[path_inx]
         if state_dim == 5:
             R = R[:,[0,1,11,12,2]]
@@ -170,7 +170,7 @@ if 0:
         Ggp.append(np.array([h, l, e]))
         j += 1
 
-        if j == 10000 or j % 20 == 0:
+        if j == 10000 or j % 5 == 0:
             with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'w') as f: 
                 pickle.dump(Ggp, f)
 

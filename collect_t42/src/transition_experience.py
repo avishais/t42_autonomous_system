@@ -7,7 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'sqr30'
+Obj = 'poly6_red'
 
 class transition_experience():
     path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
