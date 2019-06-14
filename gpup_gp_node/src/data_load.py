@@ -16,7 +16,7 @@ class data_load(object):
 
     def __init__(self, simORreal = 'sim', discreteORcont = 'discrete', with_fingers = False, K = 100, K_manifold=-1, sigma=-1, dim=-1, Dillute = var.N_dillute_, dr = 'diff'):
         
-        if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40'])): # Include orientation angle
+        if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40','t42_tri50','t42_egg50','t42_str40','t42_rec60','t42_rec10'])): # Include orientation angle
             dim_ = var.dim_ + 1 + 8 if with_fingers else var.dim_ + 1
         else:
             dim_ = var.dim_ + 8 if with_fingers else var.dim_
@@ -170,7 +170,7 @@ class data_load(object):
             theta_opt = []
             K_opt = []
         # [theta_opt.append([]) for _ in range(self.state_dim)] # List for each dimension
-        N = 4300
+        N = 5000
         for i in range(N):
             print('[data_load] Computing hyper-parameters for data point %d out of %d.'% (i, N))
             sa = self.Xtrain[np.random.randint(self.Xtrain.shape[0]), :]
@@ -227,7 +227,7 @@ class data_load(object):
     def get_theta(self, sa):
         try:
             idx = self.opt_kdt.query(sa.reshape(1,-1), k = 1, return_distance=False)[0][0]    
-            return self.theta_opt[idx], self.K_opt[idx]#[0][0]
+            return self.theta_opt[idx], self.K_opt[idx]
         except:
             idx = self.opt_kdt.query(sa.reshape(1,-1), k = 1, return_distance=False)    
             return self.theta_opt[idx,:][0][0], self.K_opt[idx][0][0]

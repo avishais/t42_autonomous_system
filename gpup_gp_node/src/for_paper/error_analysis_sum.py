@@ -11,7 +11,7 @@ import glob
 
 version = 0
 Obj = 'cyl35'
-if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
+if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','str40','egg50'])):
     state_dim = 5
 else:
     state_dim = 4
@@ -130,8 +130,8 @@ plt.xlabel('Horizon (mm)', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
 # plt.title('GP Prediction error')
 plt.legend()
-# plt.xlim([0,32])
-# plt.ylim([0,3])
+plt.xlim([0,100])
+plt.ylim([0,12])
 plt.gcf().subplots_adjust(bottom=0.15)
 plt.savefig(path + 'pred_all_modeling.png', dpi=300) #str(np.random.randint(100000))
 

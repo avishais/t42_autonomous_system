@@ -7,7 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'tri50'
+Obj = 'sqr30'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -249,7 +249,7 @@ class transition_experience():
         states[:,2] = self.transform_angles(states[:,2])
         next_states[:,2] = self.transform_angles(next_states[:,2])
 
-        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50'])): # Include orientation angle
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10'])): # Include orientation angle
             if self.with_fingers:
                 states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
                 next_states = next_states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]

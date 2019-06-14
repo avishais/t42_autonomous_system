@@ -15,7 +15,7 @@ import time
 
 version = 0
 Obj = 'poly6'
-if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','tri50'])):
+if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','str40','egg50'])):
     state_dim = 5
 else:
     state_dim = 4
@@ -137,9 +137,9 @@ if 0:
     j = 1
     while j < 10000:
         print("Run %d for %s, number of samples %d."%(j, Obj, len(Ggp)))
-        h = np.random.randint(1,200)
         path_inx = np.random.randint(len(test_paths))
         R = test_paths[path_inx]
+        h = np.random.randint(600,np.min([1000,R.shape[0]-1]))
         A = action_seq[path_inx]
         if state_dim == 5:
             R = R[:,[0,1,11,12,2]]
@@ -170,11 +170,9 @@ if 0:
         Ggp.append(np.array([h, l, e]))
         j += 1
 
-        if j == 10000 or j % 20 == 0:
+        if j == 10000 or j % 5 == 0:
             with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'w') as f: 
                 pickle.dump(Ggp, f)
-
-    Ggp = np.array(Ggp)
 
     with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'w') as f: 
         pickle.dump(Ggp, f)
@@ -237,7 +235,7 @@ else:
 lgp, Egp, Sgp = plato(Ggp, 50)
 # lnn, Enn, Snn = plato(Gnn, 30)
 
-Egp = medfilter(Egp, 10)
+Egp = medfilter(Egp, 15)
 
 # plt.figure(figsize=(10,4))
 
