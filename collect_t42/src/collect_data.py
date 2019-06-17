@@ -27,7 +27,7 @@ class collect_data():
 
     A = np.array([[1.0,1.0],[-1.,-1.],[-1.,1.],[1.,-1.],[1.5,0.],[-1.5,0.],[0.,-1.5],[0.,1.5]])
 
-    texp = transition_experience(Load = True, discrete = discrete_actions, postfix = 'bu')
+    texp = transition_experience(Load = False, discrete = discrete_actions, postfix = 'bu')
 
     def __init__(self):
         rospy.init_node('collect_data', anonymous=True)
@@ -72,13 +72,15 @@ class collect_data():
 
         rate = rospy.Rate(2.5) # 15hz
         count_fail = 0
+        self.first = False
         while not rospy.is_shutdown():
 
             if self.global_trigger:
 
                 if self.collect_mode != 'manual':
-                    if np.random.uniform() > 0.7:
+                    if np.random.uniform() > 0.5:
                         self.collect_mode = 'plan'
+                        self.first = True
                         # files = glob.glob('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/*.txt')
                         # if len(files)==0:
                         #     self.collect_mode = 'auto'
@@ -122,9 +124,9 @@ class collect_data():
                         # print('[collect_data] Rolling out file: ' + files[ia])
                         # Af = np.loadtxt(files[ia], delimiter = ',', dtype=float)[:,:2]
                         if np.random.uniform() > 0.5:
-                            Af = np.tile(np.array([-1.,1.]), (np.random.randint(20,100), 1))
+                            Af = np.tile(np.array([-1.,1.]), (np.random.randint(100,500), 1))
                         else:
-                            Af = np.tile(np.array([1.,-1.]), (np.random.randint(20,100), 1))
+                            Af = np.tile(np.array([1.,-1.]), (np.random.randint(100,500), 1))
                         print('[collect_data] Rolling out shooting with %d steps.'%Af.shape[0])
                     
                     # Start episode
@@ -135,8 +137,9 @@ class collect_data():
                     T = rospy.get_time()
                     for ep_step in range(self.episode_length):
 
-                        if self.collect_mode == 'plan' and Af.shape[0] == ep_step: # Finished planned path and now applying random actions
-                            self.collect_mode = 'auto'
+                        if self.collect_mode == 'plan' and Af.shape[0] == ep_step and self.first: # Finished planned path and now applying random actions
+                            # self.collect_mode = 'auto'
+                            self.first = False
                             n = 0
                             print('[collect_data] Running random actions...')
                         
@@ -147,8 +150,11 @@ class collect_data():
                                 action = self.desired_action
                                 n = 1
                             else: # 'plan'
-                                n = 1
-                                action = Af[ep_step, :]                            
+                                if self.first:
+                                    n = 1
+                                    action = Af[ep_step, :] 
+                                else:
+                                    action, n = self.choose_action()                           
                         print action, ep_step
                         
                         msg.data = action
@@ -191,9 +197,9 @@ class collect_data():
                     print('[collect_data] Waiting for next episode initialization...')
                     rospy.sleep(5.0)
 
-                    if self.num_episodes > 0 and not (self.num_episodes % 10):
+                    if self.num_episodes > 0 and not (self.num_episodes % 5):
                         open_srv()
-                        self.texp.save()
+                        # self.texp.save()
                         self.recorderSave_srv()
                         if (self.num_episodes % 50 == 0):
                             print('[collect_data] Cooling down.')
@@ -230,10 +236,15 @@ class collect_data():
 
             n = np.random.randint(60)
             if self.collect_mode == 'plan':
-                n = np.random.randint(50)
+                if self.first:
+                    n = np.random.randint(200)
+                else:
+                    n = np.random.randint(12, 50)
+                    a = self.A[np.random.randint(self.A.shape[0])]
+                    print "Running " + str(n) + " times action " + str(a) + " ..."
             else:
                 if np.all(a == self.A[0]) or np.all(a == self.A[1]):
-                    n = np.random.randint(70)
+                    n = np.random.randint(50)
                 elif np.random.uniform() > 0.7:
                     n = np.random.randint(300)
                 else:
@@ -255,7 +266,7 @@ class collect_data():
         self.desired_action = msg.data
 
     def callbackSave(self, msg):
-        self.texp.save()
+        # self.texp.save()
         self.recorderSave_srv()
 
 if __name__ == '__main__':

@@ -16,7 +16,7 @@ class data_load(object):
 
     def __init__(self, simORreal = 'sim', discreteORcont = 'discrete', with_fingers = False, K = 100, K_manifold=-1, sigma=-1, dim=-1, Dillute = var.N_dillute_, dr = 'diff'):
         
-        if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40'])): # Include orientation angle
+        if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40','t42_tri50','t42_egg50','t42_str40','t42_rec60','t42_rec10'])): # Include orientation angle
             dim_ = var.dim_ + 1 + 8 if with_fingers else var.dim_ + 1
         else:
             dim_ = var.dim_ + 8 if with_fingers else var.dim_
@@ -25,7 +25,7 @@ class data_load(object):
         self.postfix = '_v' + str(var.data_version_) + '_d' + str(dim_) + '_m' + str(var.stepSize_)
         self.prefix =  simORreal + '_'
         self.file = simORreal + '_data_' + discreteORcont + self.postfix + '.obj'
-        self.path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
+        self.path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
         self.dr = dr
         self.K = K
         self.load()
@@ -225,9 +225,13 @@ class data_load(object):
                 print('[data_load] Saved hyper-parameters data.')
 
     def get_theta(self, sa):
-        idx = self.opt_kdt.query(sa.reshape(1,-1), k = 1, return_distance=False)[0][0]    
+        try:
+            idx = self.opt_kdt.query(sa.reshape(1,-1), k = 1, return_distance=False)[0][0]    
+            return self.theta_opt[idx], self.K_opt[idx]
+        except:
+            idx = self.opt_kdt.query(sa.reshape(1,-1), k = 1, return_distance=False)    
+            return self.theta_opt[idx,:][0][0], self.K_opt[idx][0][0]
 
-        return self.theta_opt[idx], self.K_opt[idx]#[0][0]
 
 
 

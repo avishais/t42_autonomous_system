@@ -7,11 +7,11 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'sqr30'
+Obj = 'poly6_red'
 
 class transition_experience():
-    path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
-    dest_path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/' 
+    path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+    dest_path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/' 
 
     def __init__(self, Load=True, discrete = True, postfix='', Object = Obj, with_fingers = False):
 
@@ -249,7 +249,7 @@ class transition_experience():
         states[:,2] = self.transform_angles(states[:,2])
         next_states[:,2] = self.transform_angles(next_states[:,2])
 
-        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50'])): # Include orientation angle
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10'])): # Include orientation angle
             if self.with_fingers:
                 states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
                 next_states = next_states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
@@ -277,7 +277,7 @@ class transition_experience():
         self.state_action_dim = self.state_dim + self.action_dim 
 
         done = self.validate_drops(states, done)
-        if self.Object == 'poly6':
+        if np.any(self.Object == np.array(['poly6', 'cyl35_red'])): # When the actions length is not at the same size as the states
             done[-1] = True
 
         # Add grasp state to action
@@ -381,8 +381,8 @@ class transition_experience():
 
         if plot:
             plt.figure(0)
-            # plt.plot(D[:,0], D[:,1],'.-k')
-            plt.plot(D[:,4],'.-k')
+            plt.plot(D[:,0], D[:,1],'.-k')
+            # plt.plot(D[:,4],'.-k')
             # for _ in range(1000):
             #     j = np.random.randint(D.shape[0])
             #     plt.plot([D[j,0], D[j,6]], [D[j,1], D[j,7]],'o-r')

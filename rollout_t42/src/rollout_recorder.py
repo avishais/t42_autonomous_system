@@ -49,8 +49,8 @@ class rolloutRecorder():
         while not rospy.is_shutdown():
 
             if self.running:
-                # self.state = np.concatenate((self.obj_pos, self.angle, self.marker0, self.marker1, self.marker2, self.marker3, self.gripper_load), axis=0)
-                self.state = np.concatenate((self.obj_pos, self.gripper_load, self.marker0, self.marker1, self.marker2, self.marker3,), axis=0)
+                self.state = np.concatenate((self.obj_pos, self.angle, self.marker0, self.marker1, self.marker2, self.marker3, self.gripper_load), axis=0)
+                # self.state = np.concatenate((self.obj_pos, self.gripper_load, self.marker0, self.marker1, self.marker2, self.marker3,), axis=0)
                     
                 self.S.append(self.state)
                 self.A.append(self.action)

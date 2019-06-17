@@ -72,7 +72,7 @@ class rolloutPublisher():
     def run_rollout(self, A):
         self.rollout_transition = []
         self.trigger = False
-        # self.ResetArm()  
+        self.ResetArm()  
         self.fail = False  
 
         # self.close_srv()

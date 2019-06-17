@@ -49,7 +49,8 @@ class actorPubRec():
                 #count += 1
 
                 self.state = np.concatenate((self.obj_pos, self.angle, self.marker0, self.marker1, self.marker2, self.marker3, self.gripper_load), axis=0)
-                self.texp.add(rospy.get_time()-self.T, self.state, self.action, self.state, self.drop)
+                D = self.drop
+                self.texp.add(rospy.get_time()-self.T, self.state, self.action, self.state, D)
 
                 if self.drop:
                     c = 0
@@ -57,6 +58,8 @@ class actorPubRec():
                         if c == 10:
                             print('[actor_record] Episode ended (%d points so far).' % self.texp.getSize())
                             self.running = False
+                            if not D:
+                                self.texp.add(rospy.get_time()-self.T, self.state, self.action, self.state, self.drop)
                             break
                         c += 1
                         rate.sleep()
