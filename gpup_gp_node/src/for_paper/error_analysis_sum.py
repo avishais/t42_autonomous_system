@@ -135,7 +135,7 @@ plt.xlabel('Horizon (mm)', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
 # plt.title('GP Prediction error')
 plt.legend()
-plt.xlim([0,100])
+plt.xlim([0,80])
 # plt.ylim([0,12])
 plt.gcf().subplots_adjust(bottom=0.15)
 plt.savefig(path + 'pred_all_modeling.png', dpi=300) #str(np.random.randint(100000))
@@ -167,8 +167,10 @@ for F in files_pkl:
     with open(Fblue, 'r') as f: 
         Gblue = np.array(pickle.load(f))
     lblue, Eblue, Sblue = plato(Gblue, 50)
-    Eblue = medfilter(Eblue, 15)
+    Eblue = medfilter(Eblue, 10)
     plt.plot(lblue, Eblue, '--', color = c, label = 'blue hand')
+
+    # plt.plot(lblue, (Ered-Eblue)/Eblue*100)
 
 plt.xlabel('Horizon (mm)', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
@@ -178,7 +180,6 @@ plt.xlim([0,100])
 plt.gcf().subplots_adjust(bottom=0.15)
 plt.savefig(path + 'pred_blue_red_modeling.png', dpi=300) #str(np.random.randint(100000))
     
-
 plt.show()
 
 # # Error-datasize plot

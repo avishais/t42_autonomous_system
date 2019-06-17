@@ -15,7 +15,7 @@ import time
 
 version = 0
 
-Obj = 'cyl35_red'
+Obj = 'elp40'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
     state_dim = 5
 else:
@@ -140,7 +140,7 @@ if 0:
         print("Run %d for %s, number of samples %d."%(j, Obj, len(Ggp)))
         path_inx = np.random.randint(len(test_paths))
         R = test_paths[path_inx]
-        h = np.random.randint(1,np.min([1000,R.shape[0]-1]))
+        h = np.random.randint(700,np.min([1000,R.shape[0]-1]))
         A = action_seq[path_inx]
         if state_dim == 5:
             R = R[:,[0,1,11,12,2]]
