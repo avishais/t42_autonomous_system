@@ -8,7 +8,6 @@ import pickle
 
 Obj = 'cyl35'
 version = 0
-test_path = '/home/pracsys/catkin_ws/src/t42_control/rollout_t42/manual_rolls/'
 w = 23.4
 
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','tri50','egg50','str40','rec60','rec10'])): # Include orientation angle
@@ -90,47 +89,54 @@ H[:,0] -= w
 pgon = plt.Polygon(H, color='y', alpha=1, zorder=0)
 ax.add_patch(pgon)
 
-Pro = []
-Aro = []
-for i in range(11):
-    try:
-        with open(test_path + 'manual_path_' + Obj + '_' + str(i) + '.pkl', 'r') as f: 
-            S, A = pickle.load(f)
-    except:
-        continue
+# test_path = '/home/pracsys/catkin_ws/src/t42_control/rollout_t42/manual_rolls/'
+# Pro = []
+# Aro = []
+# for i in range(11):
+#     try:
+#         with open(test_path + 'manual_path_' + Obj + '_' + str(i) + '.pkl', 'r') as f: 
+#             S, A = pickle.load(f)
+#     except:
+#         continue
 
-    if i == 0:
-        S = S[:-30,:]
-        A = A[:-30,:]
-    if i == 7:
-        S = S[:-34,:]
-        A = A[:-34,:]
+#     if i == 0:
+#         S = S[:-30,:]
+#         A = A[:-30,:]
+#     if i == 7:
+#         S = S[:-34,:]
+#         A = A[:-34,:]
 
-    Pro.append(S)
-    Aro.append(A)
+#     Pro.append(S)
+#     Aro.append(A)
 
+#     for i in range(2):
+#         S[:,i] = medfilter(S[:,i], 15)
+#     plt.plot(S[:,0]-w, S[:,1])
+# Suc = 0
+# with open(test_path + 'testpaths_' + Obj + '_d_v' + str(1) + '.pkl', 'w') as f: 
+#     pickle.dump([Aro, Pro, Obj, Suc], f)
+
+# plt.axis('equal')
+# plt.xlim([-86,86])
+# plt.ylim([37,122])
+# plt.xlabel('x', fontsize=16)
+# plt.ylabel('y', fontsize=16)
+# plt.savefig(test_path + 'ws_' + Obj + '.png', dpi=300) #str(np.random.randint(100000))
+# # plt.show()
+
+
+test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+with open(test_path + 'testpaths_' + Obj + '_d_v' + str(1) + '.pkl', 'r') as f: 
+    action_seq, test_paths, Obj, _ = pickle.load(f)
+
+for S in test_paths:
     for i in range(2):
         S[:,i] = medfilter(S[:,i], 15)
     plt.plot(S[:,0]-w, S[:,1])
-Suc = 0
-with open(test_path + 'testpaths_' + Obj + '_d_v' + str(1) + '.pkl', 'w') as f: 
-    pickle.dump([Aro, Pro, Obj, Suc], f)
-
 plt.axis('equal')
 plt.xlim([-86,86])
 plt.ylim([37,122])
 plt.xlabel('x', fontsize=16)
 plt.ylabel('y', fontsize=16)
-plt.savefig(test_path + 'ws_' + Obj + '.png', dpi=300) #str(np.random.randint(100000))
-# plt.show()
-
-
-
-# with open(test_path + 'manual_path_' + Obj + '_' + str(num) + '.pkl', 'r') as f: 
-#     action_seq, test_paths, Obj, Suc = pickle.load(f)
-
-# for S in test_paths:
-#     for i in range(2):
-#         S[:,i] = medfilter(S[:,i], 15)
-#     plt.plot(S[:,0], S[:,1])
-# plt.show()
+# plt.savefig(test_path + 'ws_' + Obj + '.png', dpi=300) #str(np.random.randint(100000))
+plt.show()
