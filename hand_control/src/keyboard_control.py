@@ -20,6 +20,7 @@ from std_srvs.srv import Empty, EmptyResponse
 from hand_control.srv import observation, IsDropped, TargetAngles, RegraspObject, close
 from rollout_t42.srv import gets
 import curses, time
+import pickle
 
 def key_listener(stdscr):
     """checking for keypress"""
@@ -30,6 +31,7 @@ class keyboard_control():
 
     A = np.array([[1.0,1.0],[-1.,-1.],[-1.,1.],[1.,-1.],[1.5,0.],[-1.5,0.],[0.,-1.5],[0.,1.5],[0.,0.]])
     num = 0
+    Obj = 'cyl35'
 
     def __init__(self):
         rospy.init_node('keyboard_control', anonymous=True)
@@ -80,6 +82,8 @@ class keyboard_control():
                 msg.data = k
                 pub_action.publish(msg)
                 actor_pub_action.publish(msg)
+                if np.all(k == self.A[8]):
+                    self.ch = ord('s')
 
             rate.sleep()
 
@@ -129,7 +133,7 @@ class keyboard_control():
             return self.A[8]
         if chr(ch) == 'o': # Record
             self.record_srv(True)
-            print "Waiting for regrasp...."
+            print "Recording...."
             self.rollout_actor_srv(True)
             return self.A[8]
         if chr(ch) == 'i': # Start actor
@@ -150,10 +154,12 @@ class keyboard_control():
         states = np.array(SA.states).reshape(-1,13)
         actions = np.array(SA.actions).reshape(-1,2)
 
-        path_file = '/home/pracsys/catkin_ws/src/t42_control/rollout_t42/manual_rolls/manual_path_' + str(self.num) + '.pkl' 
+        path_file = '/home/pracsys/catkin_ws/src/t42_control/rollout_t42/manual_rolls/manual_path_' + self.Obj + '_' + str(self.num) + '.pkl' 
         with open(path_file, 'w') as f: 
             pickle.dump([states, actions], f)
         self.num += 1
+
+        print "Saved."
 
 
 if __name__ == '__main__':

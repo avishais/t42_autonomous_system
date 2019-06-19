@@ -55,7 +55,7 @@ action_seq.append(A)
 rollout_srv = rospy.ServiceProxy('/rollout/rollout', rolloutReq)
 rospy.init_node('collect_test_paths', anonymous=True)
 
-Obj = 'cre50'
+Obj = 'sem60'
 path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 if 1:

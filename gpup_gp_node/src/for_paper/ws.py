@@ -6,9 +6,9 @@ import matplotlib.animation as animation
 from matplotlib.patches import Ellipse, Polygon
 import pickle
 
-Obj = 'elp40'
+Obj = 'cyl35'
 version = 0
-test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+test_path = '/home/pracsys/catkin_ws/src/t42_control/rollout_t42/manual_rolls/'
 
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','tri50','egg50','str40','rec60','rec10'])): # Include orientation angle
     dim_ = '5'
@@ -32,16 +32,27 @@ def medfilter(x, W):
     return x_new
 
 
-with open(data, 'rb') as f: 
-    D, _, _, _, _ = pickle.load(f)
+# with open(data, 'rb') as f: 
+#     D, _, _, _, _ = pickle.load(f)
 
-plt.plot(D[:,0], D[:,1], '.y')
+# plt.plot(D[:,0], D[:,1], '.y')
 
 
-with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
-        action_seq, test_paths, Obj, Suc = pickle.load(f)
+# with open(test_path + 'manual_path_' + Obj + '_' + str(num) + '.pkl', 'r') as f: 
+#     action_seq, test_paths, Obj, Suc = pickle.load(f)
 
-for S in test_paths:
+# for S in test_paths:
+#     for i in range(2):
+#         S[:,i] = medfilter(S[:,i], 15)
+#     plt.plot(S[:,0], S[:,1])
+# plt.show()
+
+for i in range(10):
+    try:
+        with open(test_path + 'manual_path_' + Obj + '_' + str(i) + '.pkl', 'r') as f: 
+            S, A = pickle.load(f)
+    except:
+        continue
     for i in range(2):
         S[:,i] = medfilter(S[:,i], 15)
     plt.plot(S[:,0], S[:,1])
