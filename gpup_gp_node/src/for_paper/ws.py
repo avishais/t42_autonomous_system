@@ -47,7 +47,7 @@ def medfilter(x, W):
 #     plt.plot(S[:,0], S[:,1])
 # plt.show()
 
-for i in range(10):
+for i in range(12):
     try:
         with open(test_path + 'manual_path_' + Obj + '_' + str(i) + '.pkl', 'r') as f: 
             S, A = pickle.load(f)

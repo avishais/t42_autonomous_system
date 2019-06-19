@@ -30,7 +30,7 @@ def key_listener(stdscr):
 class keyboard_control():
 
     A = np.array([[1.0,1.0],[-1.,-1.],[-1.,1.],[1.,-1.],[1.5,0.],[-1.5,0.],[0.,-1.5],[0.,1.5],[0.,0.]])
-    num = 0
+    num = 8
     Obj = 'cyl35'
 
     def __init__(self):
