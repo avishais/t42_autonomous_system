@@ -15,8 +15,13 @@ import time
 
 version = 0
 
+<<<<<<< HEAD
 Obj = 'cre55'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','tri50','cre55'])):
+=======
+Obj = 'poly10'
+if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
+>>>>>>> ca3faf2af00b3cf67f94f8f2e0714105e715b228
     state_dim = 5
 else:
     state_dim = 4
@@ -125,12 +130,21 @@ H[0] = 1
 w = [40, 40, 100, 100]
 
 ## GP
+<<<<<<< HEAD
+=======
+pr = ''
+>>>>>>> ca3faf2af00b3cf67f94f8f2e0714105e715b228
 if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
+<<<<<<< HEAD
     if 0:
         with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'r') as f: 
+=======
+    if 1:
+        with open(path + 'prediction_analysis_' + Obj + pr +  '_gp.pkl', 'r') as f: 
+>>>>>>> ca3faf2af00b3cf67f94f8f2e0714105e715b228
             Ggp = pickle.load(f)
     else: 
         Ggp = []
@@ -140,7 +154,7 @@ if 1:
         print("Run %d for %s, number of samples %d."%(j, Obj, len(Ggp)))
         path_inx = np.random.randint(len(test_paths))
         R = test_paths[path_inx]
-        h = np.random.randint(1,np.min([1000,R.shape[0]-1]))
+        h = np.random.randint(700,np.min([1100,R.shape[0]-1]))
         A = action_seq[path_inx]
         if state_dim == 5:
             R = R[:,[0,1,11,12,2]]
@@ -167,21 +181,20 @@ if 1:
 
         e, l = tracking_error(R, R_gp)
         
-
         Ggp.append(np.array([h, l, e]))
         j += 1
 
         if j == 10000 or j % 5 == 0:
-            with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'w') as f: 
+            with open(path + 'prediction_analysis_' + Obj + pr + '_gp.pkl', 'w') as f: 
                 pickle.dump(Ggp, f)
 
-    with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'w') as f: 
+    with open(path + 'prediction_analysis_' + Obj + pr + '_gp.pkl', 'w') as f: 
         pickle.dump(Ggp, f)
 
     Ggp = np.array(Ggp)
 
 else:
-    with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'r') as f: 
+    with open(path + 'prediction_analysis_' + Obj + pr + '_gp.pkl', 'r') as f: 
         Ggp = np.array(pickle.load(f))
 
 if 0:

@@ -55,7 +55,7 @@ action_seq.append(A)
 rollout_srv = rospy.ServiceProxy('/rollout/rollout', rolloutReq)
 rospy.init_node('collect_test_paths', anonymous=True)
 
-Obj = 'poly6_red'
+Obj = 'cre50'
 path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 if 1:
@@ -68,7 +68,6 @@ if 1:
         i += 1
         
         roll = rollout_srv(Af)
-        print len(roll.states)
         S = np.array(roll.states).reshape(-1,state_dim)
         suc = roll.success
         print("Got %d points with a %s trial."%(S.shape[0], 'successful' if suc else 'failed'))

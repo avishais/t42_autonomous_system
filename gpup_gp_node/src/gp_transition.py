@@ -17,7 +17,11 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
+<<<<<<< HEAD
 simORreal = 't42_cre55'
+=======
+simORreal = 't42_poly10'
+>>>>>>> ca3faf2af00b3cf67f94f8f2e0714105e715b228
 discreteORcont = 'discrete'
 useDiffusionMaps = True
 probability_threshold = 0.65
