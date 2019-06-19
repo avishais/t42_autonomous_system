@@ -131,10 +131,12 @@ class transition_experience():
              return angles % (np.pi/3.)
         if self.Object == 'poly10':
              return angles % (np.pi/5.)
-        if self.Object == 'elp40':
+        if self.Object == 'elp40' or self.Object == 'rec60' or self.Object == 'rec10' or self.Object == 'cre55':
              return angles % (np.pi)
         if self.Object == 'str40':
-             return angles % (np.pi/6.)
+             return angles % (2*np.pi/6.) #!!!!!!!!!!!
+        if self.Object == 'tri50':
+             return angles % (2*np.pi/3.)
         return angles
 
     def validate_drops(self, states, done):
@@ -166,6 +168,8 @@ class transition_experience():
             return D, done
 
         def new_clean(D, done):
+            
+            episodes = []
 
             ks = 0
             kf = 1
@@ -207,6 +211,7 @@ class transition_experience():
 
                 # Update next state columns
                 D[ks:kf, self.state_action_dim:] = D[ks+1:kf+1, :self.state_dim]
+                episodes.append(D[ks:kf,:])
                 D, done = Del(D, done, kf)
 
                 ks = kf
@@ -219,7 +224,7 @@ class transition_experience():
                 else:
                     i += 1
 
-            return D, done
+            return D, done, episodes
 
         def multiStep(D, done, stepSize): 
             Dnew = []
@@ -249,7 +254,7 @@ class transition_experience():
         states[:,2] = self.transform_angles(states[:,2])
         next_states[:,2] = self.transform_angles(next_states[:,2])
 
-        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10'])): # Include orientation angle
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10','cre55'])): # Include orientation angle
             if self.with_fingers:
                 states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
                 next_states = next_states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
@@ -335,7 +340,10 @@ class transition_experience():
         print "start mean: ", s_start
         print "start std.: ", s_std
 
-        D, done = new_clean(D, done)
+        D, done, episodes = new_clean(D, done)
+
+        # with open(self.dest_path + 't42_' + self.Object + '_data_discrete_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '_episodes.obj', 'wb') as f: 
+        #     pickle.dump(episodes, f)
 
         # t = range(10000)
         # plt.plot(t, D[:10000,2], '.-r')
@@ -440,7 +448,7 @@ class transition_experience():
         # Explot symmetry of object profile
         states[:,2] = self.transform_angles(states[:,2])
 
-        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50'])): # Include orientation angle
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10','cre55'])): # Include orientation angle
             if self.with_fingers:
                 states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
                 states[:,5:] *= 1000.
