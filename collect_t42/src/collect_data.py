@@ -124,9 +124,9 @@ class collect_data():
                         # print('[collect_data] Rolling out file: ' + files[ia])
                         # Af = np.loadtxt(files[ia], delimiter = ',', dtype=float)[:,:2]
                         if np.random.uniform() > 0.5:
-                            Af = np.tile(np.array([-1.,1.]), (np.random.randint(100,500), 1))
+                            Af = np.tile(np.array([-1.,1.]), (np.random.randint(50,200), 1))
                         else:
-                            Af = np.tile(np.array([1.,-1.]), (np.random.randint(100,500), 1))
+                            Af = np.tile(np.array([1.,-1.]), (np.random.randint(50,200), 1))
                         print('[collect_data] Rolling out shooting with %d steps.'%Af.shape[0])
                     
                     # Start episode
@@ -246,13 +246,13 @@ class collect_data():
                 if np.all(a == self.A[0]) or np.all(a == self.A[1]):
                     n = np.random.randint(50)
                 elif np.random.uniform() > 0.7:
-                    n = np.random.randint(300)
+                    n = np.random.randint(150)
                 else:
-                    n = np.random.randint(100)
+                    n = np.random.randint(85)
             return a, n
         else:
             a = np.random.uniform(-1.,1.,2)
-            if np.random.uniform(0,1,1) > 0.35:
+            if np.random.uniform(0,1,1) > 0.6:
                 if np.random.uniform(0,1,1) > 0.5:
                     a[0] = np.random.uniform(-1.,-0.8,1)
                     a[1] = np.random.uniform(-1.,-0.8,1)
@@ -260,7 +260,23 @@ class collect_data():
                     a[0] = np.random.uniform(0.8,1.,1)
                     a[1] = np.random.uniform(0.8,1.,1)
 
-            return a
+            n = np.random.randint(60)
+            if self.collect_mode == 'plan':
+                if self.first:
+                    n = np.random.randint(200)
+                else:
+                    n = np.random.randint(12, 50)
+                    a = np.random.uniform(-1.,1.,2)
+                    print "Running " + str(n) + " times action " + str(a) + " ..."
+            else:
+                if np.all(a == self.A[0]) or np.all(a == self.A[1]):
+                    n = np.random.randint(50)
+                elif np.random.uniform() > 0.7:
+                    n = np.random.randint(250)
+                else:
+                    n = np.random.randint(100)
+
+            return a, n
 
     def callbackDesiredAction(self, msg):
         self.desired_action = msg.data
