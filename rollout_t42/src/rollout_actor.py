@@ -39,6 +39,7 @@ class rollout():
             # suc_pub.publish(self.suc)
 
             if self.running:
+                print self.action
                 self.suc = self.move_srv(self.action).success
 
                 fail_pub.publish(not self.suc or self.drop)

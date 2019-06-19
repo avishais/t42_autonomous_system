@@ -19,7 +19,7 @@ class svm_failure():
         self.mode = 'd' if 'discrete' else 'c'
         self.simORreal = simORreal
 
-        if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40','t42_tri50','t42_egg50','t42_str40','t42_rec60','t42_rec10'])): # Include orientation angle
+        if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40','t42_tri50','t42_egg50','t42_str40','t42_rec60','t42_rec10','t42_cre55'])): # Include orientation angle
             self.dim_ = var.dim_ + 1
         else:
             self.dim_ = var.dim_

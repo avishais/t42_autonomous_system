@@ -264,14 +264,17 @@ class hand_control():
             verbose = '[hand] Object dropped.'
             return True, verbose
 
-        if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.03 or self.gripper_pos[1] < 0.03:
-            verbose = '[hand] Desired angles out of bounds.'
-            return True, verbose
+        try:
+            if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.03 or self.gripper_pos[1] < 0.03:
+                verbose = '[hand] Desired angles out of bounds.'
+                return True, verbose
 
-        # Check load
-        if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
-            verbose = '[hand] Pre-overload.'
-            return True, verbose
+            # Check load
+            if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:
+                verbose = '[hand] Pre-overload.'
+                return True, verbose
+        except:
+            pass
 
         # If object marker not visible, loop to verify and declare dropped.
         if self.obj_height == -1000:
