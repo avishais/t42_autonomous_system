@@ -15,13 +15,8 @@ import time
 
 version = 0
 
-<<<<<<< HEAD
 Obj = 'cre55'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','tri50','cre55'])):
-=======
-Obj = 'poly10'
-if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40'])):
->>>>>>> ca3faf2af00b3cf67f94f8f2e0714105e715b228
     state_dim = 5
 else:
     state_dim = 4
@@ -130,21 +125,13 @@ H[0] = 1
 w = [40, 40, 100, 100]
 
 ## GP
-<<<<<<< HEAD
-=======
 pr = ''
->>>>>>> ca3faf2af00b3cf67f94f8f2e0714105e715b228
 if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
-<<<<<<< HEAD
     if 0:
-        with open(path + 'prediction_analysis_' + Obj + '_gp.pkl', 'r') as f: 
-=======
-    if 1:
         with open(path + 'prediction_analysis_' + Obj + pr +  '_gp.pkl', 'r') as f: 
->>>>>>> ca3faf2af00b3cf67f94f8f2e0714105e715b228
             Ggp = pickle.load(f)
     else: 
         Ggp = []
