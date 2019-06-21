@@ -7,11 +7,11 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'sem60'
+Obj = 'cyl35'
 
 class transition_experience():
-    path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
-    dest_path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/' 
+    path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+    dest_path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/' 
 
     def __init__(self, Load=True, discrete = True, postfix='', Object = Obj, with_fingers = False):
 
@@ -448,11 +448,7 @@ class transition_experience():
         # Explot symmetry of object profile
         states[:,2] = self.transform_angles(states[:,2])
 
-<<<<<<< HEAD
-        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10','egg50'])): # Include orientation angle
-=======
         if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10','cre55'])): # Include orientation angle
->>>>>>> 18b0a07bea923f4bf684fa5fc4450cc097a068b9
             if self.with_fingers:
                 states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
                 states[:,5:] *= 1000.

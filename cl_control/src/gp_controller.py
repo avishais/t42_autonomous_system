@@ -6,22 +6,23 @@ from std_msgs.msg import Bool, String, Float32MultiArray
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
-from gpup_gp_node.srv import one_transition
-from control.srv import pathTrackReq
+from gpup_gp_node_exp.srv import one_transition
+from cl_control.srv import pathTrackReq
 
 import sys
-sys.path.insert(0, '/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/src/')
+sys.path.insert(0, '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/')
 import var
 
 class gp_controller():
 
     drop = True
     obj_pos = np.array([0., 0.])
+    grasp_state = np.array([0.,0.,0.,0.])
     gripper_load = np.array([0., 0.])
     action = np.array([0.,0.])
     exclude_action = np.array([0.,0.])
     goal = np.array([0.,0.,0.,0.])
-    A = np.array([[1.,1.],[-1.,-1.],[-1.,1.],[1.,-1.],[1.,0.],[-1.,0.],[0.,-1.],[0.,1.]])
+    A = np.array([[1.,1.],[-1.,-1.],[-1.,1.],[1.,-1.],[1.5,0.],[-1.5,0.],[0.,-1.5],[0.,1.5]])
 
     def __init__(self):
         rospy.init_node('gp_controller', anonymous=True)
@@ -35,6 +36,7 @@ class gp_controller():
         # pub_2record = rospy.Publisher('/rollout/gripper_action', Float32MultiArray, queue_size=10)
         rospy.Subscriber('/control/goal', Float32MultiArray, self.callbackGoal)
         rospy.Subscriber('/control/exclude', Float32MultiArray, self.callbackExclude)
+        rospy.Subscriber('/control/grasp_state', Float32MultiArray, self.callbackGraspState)
 
         msg = Float32MultiArray()
 
@@ -59,15 +61,16 @@ class gp_controller():
                 D.append(1000)
                 print "Action " + str(a) + " excluded."
                 continue
+            ac = np.concatenate((a, self.grasp_state), axis=0)                
             # print "Checking state ", s, " with action ", a, " size ", len(D)
-            horizon = 15 if np.all(a == self.A[0]) or np.all(a == self.A[0]) else 1
+            horizon = 10 if np.all(a == self.A[0]) or np.all(a == self.A[0]) else 1
             cur_s = np.copy(s)
             for i in range(horizon):
-                res = self.gp(cur_s.reshape(-1,1), a)
+                res = self.gp(cur_s.reshape(-1,1), ac)
                 s_next = np.array(res.next_state)
                 cur_s = np.copy(s_next)
                 
-            D.append(np.linalg.norm(goal-s_next))
+            D.append(np.linalg.norm(goal[:2]-s_next[:2]))
         D = np.array(D)
         
         action = np.copy(self.A[np.argmin(D)])
@@ -89,6 +92,9 @@ class gp_controller():
 
     def callbackExclude(self, msg):
         self.exclude_action = np.array(msg.data)
+
+    def callbackGraspState(self, msg):
+        self.grasp_state = np.array(msg.data)
 
 if __name__ == '__main__':
     try:

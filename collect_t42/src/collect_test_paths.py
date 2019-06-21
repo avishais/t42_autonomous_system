@@ -15,47 +15,53 @@ import var
 
 state_dim = 13
 stepSize = var.stepSize_
-version = var.data_version_
+version = 1#var.data_version_
 
-action_seq = []
-# 0
-A = np.tile(np.array([-1.,1.]), (800*1/stepSize,1))
-action_seq.append(A)
-# 1
-A = np.concatenate(  (np.array([[1.,  -1.] for _ in range(int(700*1./stepSize))]), 
-        np.array([[ -1., 1.] for _ in range(int(200*1./stepSize))]),
-        np.array([[ 1., 1.] for _ in range(int(150*1./stepSize))]),
-        np.array([[ 0, -1.5] for _ in range(int(200*1./stepSize))]),
-        ), axis=0 )
-action_seq.append(A)
-# 2
-A = np.concatenate( (np.array([[-1.,  1.] for _ in range(int(400*1./stepSize))]), 
-        np.array([[ 1., -1.] for _ in range(int(400*1./stepSize))]),
-        np.array([[-1., 1.] for _ in range(int(400*1./stepSize))]) ), axis=0 )
-action_seq.append(A)
-# 3
-A = np.concatenate( (np.array([[1.,  -1.] for _ in range(int(200*1./stepSize))]), 
-        np.array([[1.,  1.] for _ in range(int(200*1./stepSize))]), 
-        np.array([[ -1., 1.] for _ in range(int(500*1./stepSize))])), axis=0 )
-action_seq.append(A)
-# 4
-A = np.concatenate( (np.array([[-1.,  1.] for _ in range(int(200*1./stepSize))]), 
-        np.array([[1.,  1.] for _ in range(int(170*1./stepSize))]), 
-        np.array([[ 1., -1.] for _ in range(int(250*1./stepSize))]),
-        np.array([[ -1., -1.] for _ in range(int(250*1./stepSize))])), axis=0 )
-action_seq.append(A)
-# 5
-A = np.concatenate(  (np.array([[-1.,  1.] for _ in range(int(600*1./stepSize))]), 
-        np.array([[1.5,  0.] for _ in range(int(300*1./stepSize))]), 
-        np.array([[-1.,  -1.] for _ in range(int(120*1./stepSize))]), 
-        np.array([[0.0,  1.5] for _ in range(int(300*1./stepSize))]), 
-        np.array([[ 0., -1.5] for _ in range(int(200*1./stepSize))])), axis=0 )
-action_seq.append(A)
+#v0
+# action_seq = []
+# # 0
+# A = np.tile(np.array([-1.,1.]), (800*1/stepSize,1))
+# action_seq.append(A)
+# # 1
+# A = np.concatenate(  (np.array([[1.,  -1.] for _ in range(int(700*1./stepSize))]), 
+#         np.array([[ -1., 1.] for _ in range(int(200*1./stepSize))]),
+#         np.array([[ 1., 1.] for _ in range(int(150*1./stepSize))]),
+#         np.array([[ 0, -1.5] for _ in range(int(200*1./stepSize))]),
+#         ), axis=0 )
+# action_seq.append(A)
+# # 2
+# A = np.concatenate( (np.array([[-1.,  1.] for _ in range(int(400*1./stepSize))]), 
+#         np.array([[ 1., -1.] for _ in range(int(400*1./stepSize))]),
+#         np.array([[-1., 1.] for _ in range(int(400*1./stepSize))]) ), axis=0 )
+# action_seq.append(A)
+# # 3
+# A = np.concatenate( (np.array([[1.,  -1.] for _ in range(int(200*1./stepSize))]), 
+#         np.array([[1.,  1.] for _ in range(int(200*1./stepSize))]), 
+#         np.array([[ -1., 1.] for _ in range(int(500*1./stepSize))])), axis=0 )
+# action_seq.append(A)
+# # 4
+# A = np.concatenate( (np.array([[-1.,  1.] for _ in range(int(200*1./stepSize))]), 
+#         np.array([[1.,  1.] for _ in range(int(170*1./stepSize))]), 
+#         np.array([[ 1., -1.] for _ in range(int(250*1./stepSize))]),
+#         np.array([[ -1., -1.] for _ in range(int(250*1./stepSize))])), axis=0 )
+# action_seq.append(A)
+# # 5
+# A = np.concatenate(  (np.array([[-1.,  1.] for _ in range(int(600*1./stepSize))]), 
+#         np.array([[1.5,  0.] for _ in range(int(300*1./stepSize))]), 
+#         np.array([[-1.,  -1.] for _ in range(int(120*1./stepSize))]), 
+#         np.array([[0.0,  1.5] for _ in range(int(300*1./stepSize))]), 
+#         np.array([[ 0., -1.5] for _ in range(int(200*1./stepSize))])), axis=0 )
+# action_seq.append(A)
+
+#v1
+test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+with open(test_path + 'testpaths_' + 'cyl35' + '_d_v' + str(1) + '.pkl', 'r') as f: 
+    action_seq, _, _, _ = pickle.load(f)
 
 rollout_srv = rospy.ServiceProxy('/rollout/rollout', rolloutReq)
 rospy.init_node('collect_test_paths', anonymous=True)
 
-Obj = 'sem60'
+Obj = 'poly6'
 path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 if 1:

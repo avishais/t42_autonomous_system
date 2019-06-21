@@ -6,10 +6,10 @@ from std_msgs.msg import Bool, String, Float32MultiArray
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
-from control.srv import pathTrackReq
+from cl_control.srv import pathTrackReq
 
 import sys
-sys.path.insert(0, '/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/src/')
+sys.path.insert(0, '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/')
 import var
 
 class vs_controller():
@@ -52,8 +52,8 @@ class vs_controller():
         v *= self.vel_magnitude
         v[1] *= -1
 
-        Kp = 2.8
-        Kd = 6.5
+        # Kp = 2.8
+        # Kd = 6.5
         # v *= Kp * np.linalg.norm(goal - self.obj_pos) - Kd * np.linalg.norm(self.obj_pos - self.obj_pos_prev)
 
         action = np.dot( self.J, v)

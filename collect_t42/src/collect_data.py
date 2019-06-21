@@ -16,7 +16,7 @@ class collect_data():
 
     gripper_closed = False
     trigger = True # Enable collection
-    discrete_actions = True # Discrete or continuous actions
+    discrete_actions = False # Discrete or continuous actions
     arm_status = ' '
     global_trigger = True
 

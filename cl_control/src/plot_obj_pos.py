@@ -56,7 +56,7 @@ class Plot():
             # plt.plot(self.start_pos[0], self.start_pos[1],'*b')
             plt.plot(self.goal[0], self.goal[1],'*g')
             plt.axis("equal")
-            plt.axis([-60, 60, 60, 177])
+            # plt.axis([-60, 60, 60, 177])
             plt.xlabel('x')
             plt.ylabel('y')
             plt.title('Real-time object position:' + str(self.obj_pos))
