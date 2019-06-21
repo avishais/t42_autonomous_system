@@ -125,7 +125,7 @@ class transition_experience():
         np.savetxt(filen, M, delimiter=' ')
 
     def transform_angles(self, angles):
-        if self.Object == 'sqr30':
+        if self.Object == 'sqr30' or self.Object == 'rec60':
              return angles % (np.pi/2.)
         if self.Object == 'poly6':
              return angles % (np.pi/3.)
