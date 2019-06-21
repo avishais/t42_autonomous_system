@@ -114,7 +114,7 @@ def plato(G, n = 100):
 files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
 
 plt.figure(figsize=(12, 3.5))
-# plt.yscale('log',basey=10) 
+plt.yscale('log',basey=10) 
 for F in files_pkl:
 
     if F.find('_red') > 0:
@@ -175,7 +175,38 @@ plt.ylim([0,20])
 plt.gcf().subplots_adjust(bottom=0.15)
 plt.savefig(path + 'pred_all_modeling.png', dpi=300) #str(np.random.randint(100000))
 # plt.show()
+
+# Error-datasize plot
+files_pkl = glob.glob(path + 'datasize_analysis_' + "*_gp.pkl")
+
+plt.figure(figsize=(12,3.5))
+for F in files_pkl:
+
+    with open(F, 'r') as f: 
+        Ld, Ggp = np.array(pickle.load(f))
+    Ld = Ld[:len(Ggp)]
+
+    ix = F.find('analysis_') + 9
+    obj = F[ix:ix+5]
+
+    if obj == 'sqr30':
+        continue
+ 
+    Ggp = medfilter(Ggp, 5)
+
+    plt.plot(Ld, Ggp, '-', label = obj)
+
+plt.xlabel('Datasize', fontsize=16)
+plt.ylabel('RMSE (mm)', fontsize=16)
+# plt.title('GP Prediction error')
+plt.legend()
+# plt.xlim([0,32])
+# plt.ylim([0,3])
+plt.savefig(path + 'datasize_all.png', dpi=300) #str(np.random.randint(100000))
+
+plt.show()
 exit(1)
+
 ###### Hands comparison ######
 plt.figure(figsize=(12, 3.5))
 plt.yscale('log',basey=10) 
@@ -217,29 +248,5 @@ plt.savefig(path + 'pred_blue_red_modeling.png', dpi=300) #str(np.random.randint
     
 plt.show()
 
-# # Error-datasize plot
-# files_pkl = glob.glob(path + 'datasize_analysis_' + "*_gp.pkl")
 
-# plt.figure(figsize=(10,4.5))
-# for F in files_pkl:
-
-#     with open(F, 'r') as f: 
-#         Ld, Ggp = np.array(pickle.load(f))
-#     Ld = Ld[:len(Ggp)]
-
-#     ix = F.find('analysis_') + 9
-#     obj = F[ix:ix+5]
- 
-#     # Ggp = medfilter(Ggp, 10)
-
-#     plt.plot(Ld, Ggp, '-', label = obj)
-
-# plt.xlabel('Datasize', fontsize=16)
-# plt.ylabel('RMSE (mm)', fontsize=16)
-# # plt.title('GP Prediction error')
-# plt.legend()
-# # plt.xlim([0,32])
-# # plt.ylim([0,3])
-# # plt.savefig(path + 'datasize_all.png', dpi=300) #str(np.random.randint(100000))
-# plt.show()
 

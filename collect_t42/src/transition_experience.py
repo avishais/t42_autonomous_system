@@ -125,7 +125,7 @@ class transition_experience():
         np.savetxt(filen, M, delimiter=' ')
 
     def transform_angles(self, angles):
-        if self.Object == 'sqr30':
+        if self.Object == 'sqr30' or self.Object == 'rec60':
              return angles % (np.pi/2.)
         if self.Object == 'poly6':
              return angles % (np.pi/3.)
@@ -448,7 +448,15 @@ class transition_experience():
         # Explot symmetry of object profile
         states[:,2] = self.transform_angles(states[:,2])
 
+<<<<<<< HEAD
         if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10','cre55','sem60'])): # Include orientation angle
+=======
+<<<<<<< HEAD
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10','egg50'])): # Include orientation angle
+=======
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10','cre55'])): # Include orientation angle
+>>>>>>> 18b0a07bea923f4bf684fa5fc4450cc097a068b9
+>>>>>>> 27d10921625a9ee72a14e48110de2c7d93acdf4d
             if self.with_fingers:
                 states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
                 states[:,5:] *= 1000.

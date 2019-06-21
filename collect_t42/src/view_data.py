@@ -10,10 +10,11 @@ from transition_experience import *
 
 
 def main():
+
     texp = transition_experience(Load = True, discrete=True, postfix='', Object = 'sem60', with_fingers = False)
 
-    texp.process_transition_data(stepSize = 1, plot = True)
-    texp.process_svm(stepSize = 1)
+    # texp.process_transition_data(stepSize = 1, plot = True)
+    # texp.process_svm(stepSize = 1)
 
     # texp.plot_data()
 
