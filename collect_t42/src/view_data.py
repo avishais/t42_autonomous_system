@@ -10,14 +10,10 @@ from transition_experience import *
 
 
 def main():
-<<<<<<< HEAD
-    texp = transition_experience(Load = True, discrete=True, postfix='', Object = 'cre55', with_fingers = False)
-=======
     texp = transition_experience(Load = True, discrete=True, postfix='')#, Object = 'poly10', with_fingers = False)
->>>>>>> ca3faf2af00b3cf67f94f8f2e0714105e715b228
 
-    texp.process_transition_data(stepSize = 1, plot = True)
-    texp.process_svm(stepSize = 1)
+    # texp.process_transition_data(stepSize = 1, plot = True)
+    # texp.process_svm(stepSize = 1)
 
     texp.plot_data()
 
