@@ -126,7 +126,7 @@ w = [40, 40, 100, 100]
 
 ## GP
 pr = ''
-if 1:
+if 0:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, _, Suc = pickle.load(f)
 
@@ -141,7 +141,7 @@ if 1:
         print("Run %d for %s, number of samples %d."%(j, Obj, len(Ggp)))
         path_inx = np.random.randint(len(test_paths))
         R = test_paths[path_inx]
-        h = np.random.randint(500,np.min([1300,R.shape[0]-1]))
+        h = np.random.randint(400,np.min([1100,R.shape[0]-1]))
         A = action_seq[path_inx]
         if state_dim == 5:
             R = R[:,[0,1,11,12,2]]

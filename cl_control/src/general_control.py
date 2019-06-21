@@ -6,14 +6,14 @@ from std_msgs.msg import Bool, String, Float32MultiArray
 import numpy as np
 import matplotlib.pyplot as plt
 import pickle
-from rollout_node.srv import observation, IsDropped, TargetAngles
-from hand_control.srv import RegraspObject, close, observation, planroll
+from hand_control.srv import observation, IsDropped, TargetAngles
+from hand_control.srv import RegraspObject, close, planroll
 from rollout_t42.srv import gets
-from gpup_gp_node.srv import one_transition
+from gpup_gp_node_exp.srv import one_transition
 from cl_control.srv import pathTrackReq
 
 import sys
-sys.path.insert(0, '/home/pracsys/catkin_ws/src/beliefspaceplanning/gpup_gp_node/src/')
+sys.path.insert(0, '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/')
 import var
 
 class general_control():
@@ -23,8 +23,8 @@ class general_control():
     gripper_load = np.array([0., 0.])
     actionGP = np.array([0., 0.])
     actionVS = np.array([0., 0.])
-    tol = 1.5
-    goal_tol = 10.0
+    tol = 2.5
+    goal_tol = 3.0
     horizon = 1
     arm_status = ' '
     trigger = False # Enable collection
@@ -44,6 +44,7 @@ class general_control():
         self.pub_current_goal = rospy.Publisher('/control/goal', Float32MultiArray, queue_size=10)
         self.pub_horizon = rospy.Publisher('/control/horizon', Float32MultiArray, queue_size=10)
         self.pub_exclude = rospy.Publisher('/control/exclude', Float32MultiArray, queue_size=10)
+        self.pub_grasp_state = rospy.Publisher('/control/grasp_state', Float32MultiArray, queue_size=10)
 
         self.obs_srv = rospy.ServiceProxy('/observation', observation)
         self.move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
@@ -90,9 +91,9 @@ class general_control():
 
         path = np.array(req.desired_path).reshape(-1, self.state_dim)
         
-        real_path, actions, success = self.run_tracking(path)
+        real_path, actions, success, i_path = self.run_tracking(path)
 
-        return {'real_path': real_path, 'actions': actions, 'success' : success}
+        return {'real_path': real_path, 'actions': actions, 'success' : success, 'i_path': i_path}
 
     def weightedL2(self, ds, W = np.diag(np.array([1.,1.,0.2, 0.2]))):
         # return np.sqrt( np.dot(ds.T, np.dot(W, ds)) )
@@ -103,7 +104,11 @@ class general_control():
         # Reset gripper
         self.trigger = False
         self.ResetArm()
-        rospy.sleep(2.)
+        rospy.sleep(3.)
+
+        # grasp_state = np.copy(np.concatenate((self.obj_pos, self.gripper_load), axis=0))
+        ds = np.copy(self.obj_pos) - S[0,:2]
+        S[:,:2] += ds
 
         i_path = 1 #S.shape[0]-1#
         msg = Float32MultiArray()
@@ -113,12 +118,8 @@ class general_control():
             self.pub_current_goal.publish(msg)
             self.rate.sleep()
 
-        rospy.sleep(1.0)
-        
         self.plot_clear_srv()
-        
         self.plot_ref_srv(S.reshape((-1,)))
-        self.trigger_srv(True)
         n = -1
         count = 0
         total_count = 0
@@ -126,15 +127,23 @@ class general_control():
         action = np.array([0.,0.])
         dd_count = 0
         Controller = 'GP'
-        
+
+        # print "Fix position and press key... "
+        # raw_input()
+
+        self.trigger_srv(True)        
         print("[control] Tracking path...")
+        finish = False
+        wh = 5
         while 1:
+            # msg.data = grasp_state
+            # self.pub_grasp_state.publish(msg)
             change = False
             state = np.concatenate((self.obj_pos, self.gripper_load), axis=0)
-            if i_path == S.shape[0]-1:
+            if i_path >= S.shape[0]-wh-1:
                 msg.data = S[-1,:]
-            elif self.weightedL2(state[:]-S[i_path,:]) < self.tol or (self.weightedL2(state[:]-S[i_path+1,:]) < self.weightedL2(state[:]-S[i_path,:]) and self.weightedL2(state[:]-S[i_path+1,:])):# < self.tol*3):
-                i_path += 1
+            elif self.weightedL2(state[:]-S[i_path,:]) < self.tol or (self.weightedL2(state[:]-S[i_path+wh,:]) < self.weightedL2(state[:]-S[i_path,:])):# and self.weightedL2(state[:]-S[i_path+1,:])) < self.tol*3):
+                i_path += wh
                 msg.data = S[i_path,:]
                 count = 0
                 change = True
@@ -158,18 +167,29 @@ class general_control():
                 if 0:#Controller == 'GP':
                     action = self.actionGP
                 else:
-                    action = self.actionVS
+                    action = self.actionVS#self.snap_action(self.actionVS)
                 n = self.stepSize
                 dd_count = 0
 
-            print total_count, count, i_path, action, self.weightedL2(state[:]-S[i_path,:]), self.weightedL2(state[:]-S[-1,:]), self.weightedL2(state[:]-S[i_path,:]) - d_prev
+            print total_count, count, i_path, S.shape[0], action, self.weightedL2(state[:]-S[i_path,:]), self.weightedL2(state[:]-S[-1,:])#, self.weightedL2(state[:]-S[i_path,:]) - d_prev
             
             d_prev =  self.weightedL2(state[:]-S[i_path,:])
 
             suc = self.move_srv(action).success
             n -= 1
 
-            if not suc or self.drop or count > 1000:
+            if self.drop:
+                c = 0
+                while self.drop:
+                    if c == 10:
+                        print('[control] Dropped.')
+                        success = False
+                        finish = True
+                        break
+                    c += 1
+                    self.rate.sleep()
+
+            if not suc or finish or count > 1000:
                 print("[control] Fail.")
                 success = False
                 break
@@ -190,7 +210,7 @@ class general_control():
         Sreal = self.gets_srv().states
         Areal = self.gets_srv().actions
 
-        return Sreal, Areal, success
+        return Sreal, Areal, success, i_path
 
     def callbackDrop(self, msg):
         self.drop = msg.data
@@ -207,6 +227,24 @@ class general_control():
 
     def CallbackBestActionVS(self, msg):
         self.actionVS = np.array(msg.data)
+
+    def snap_action(self, a):
+        A = np.array([[1.,1.],[-1.,-1.],[-1.,1.],[1.,-1.],[1.5,0.],[-1.5,0.],[0.,-1.5],[0.,1.5]])
+        Min = 1e4
+        for ac in A:
+            f = np.linalg.norm(a-ac)
+            if f < Min:
+                af = np.copy(ac)
+                Min = f
+        # if np.any(af == 0.):
+        #     i = np.where(af != 0.0)
+        #     af[i] = np.sign(af[i]) * 1.5
+        print af, f, a        
+        return af
+
+
+
+
 
 
 if __name__ == '__main__':

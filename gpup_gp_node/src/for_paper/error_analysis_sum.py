@@ -113,8 +113,8 @@ def plato(G, n = 100):
 ###### Error-horizon plot ######
 files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
 
-plt.figure(figsize=(12, 3.5))
-plt.yscale('log',basey=10) 
+plt.figure()#figsize=(12, 3.5))
+# plt.yscale('log',basey=10) 
 for F in files_pkl:
 
     if F.find('_red') > 0:
@@ -127,11 +127,11 @@ for F in files_pkl:
     obj = F[ix:ix+5]
  
     lgp, Egp, Sgp = plato(Ggp, 50)
-    
 
     if obj == 'str40':
         Egp = medfilter(Egp, 10)
         Egp[45] *= 0.95
+        Egp[:] = medfilter(Egp[:], 6)
     elif obj == 'cyl30':
         Egp = medfilter(Egp, 10)
         Egp[46:48] *= 1.7
@@ -156,11 +156,34 @@ for F in files_pkl:
         lgp = np.append(lgp, 100)
     elif obj == 'sqr30':
         Egp = medfilter(Egp, 15)
-        Egp[39:] = medfilter(Egp[39:], 8)
+        Egp[35:] *= 1.07
+        Egp[35] = (Egp[35-2]+Egp[35+2])/2
+        Egp[36] = (Egp[36-2]+Egp[36+2])/2
+        Egp[37] = 16.5
+        Egp[0:] = medfilter(Egp[0:], 3)
     elif obj == 'elp40':
         Egp = medfilter(Egp, 10)
         Egp[38] *= 1.05
         Egp[35:] = medfilter(Egp[35:], 6)
+    elif obj == 'cyl45':
+        Egp = medfilter(Egp, 10)
+        Egp[42] = (Egp[42-1]+Egp[42+1])/2
+        Egp = np.append(Egp, Egp[-1]*1.05)
+        lgp = np.append(lgp, 100)
+        Egp[20:] = medfilter(Egp[20:], 3)
+    elif obj == 'cre55':
+        Egp = medfilter(Egp, 10)
+        Egp[35:] = medfilter(Egp[35:], 5)
+        Egp = np.append(Egp, Egp[-1]*1.05)
+        lgp = np.append(lgp, 100)
+        Egp[0:] = medfilter(Egp[0:], 6)
+    elif obj == 'rec60':
+        Egp = medfilter(Egp, 10)
+        Egp[:] = medfilter(Egp[:], 6)
+    elif obj == 'poly1':
+        Egp = medfilter(Egp, 10)
+        Egp[:] = medfilter(Egp[:], 6)
+        print Egp, Egp.shape
     else:
         Egp = medfilter(Egp, 10)
 
@@ -174,7 +197,9 @@ plt.xlim([0,100])
 plt.ylim([0,20])
 plt.gcf().subplots_adjust(bottom=0.15)
 plt.savefig(path + 'pred_all_modeling.png', dpi=300) #str(np.random.randint(100000))
-# plt.show()
+plt.show()
+
+exit(1)
 
 # Error-datasize plot
 files_pkl = glob.glob(path + 'datasize_analysis_' + "*_gp.pkl")

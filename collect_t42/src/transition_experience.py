@@ -7,7 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'sem60'
+Obj = 'cyl35'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -449,6 +449,7 @@ class transition_experience():
         states[:,2] = self.transform_angles(states[:,2])
 
 <<<<<<< HEAD
+<<<<<<< HEAD
         if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10','cre55','sem60'])): # Include orientation angle
 =======
 <<<<<<< HEAD
@@ -457,6 +458,9 @@ class transition_experience():
         if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10','cre55'])): # Include orientation angle
 >>>>>>> 18b0a07bea923f4bf684fa5fc4450cc097a068b9
 >>>>>>> 27d10921625a9ee72a14e48110de2c7d93acdf4d
+=======
+        if np.any(self.Object == np.array(['sqr30','poly10','poly6','elp40','str40','tri50','rec60','rec10','cre55'])): # Include orientation angle
+>>>>>>> 6523b7c1bd7a31cf1222bf528381a6d8e9458c58
             if self.with_fingers:
                 states = states[:,[0,1,11,12,2,3,4,5,6,7,8,9,10]]
                 states[:,5:] *= 1000.
