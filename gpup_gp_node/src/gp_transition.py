@@ -17,7 +17,7 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
-simORreal = 't42_' + 'sem60'
+simORreal = 't42_' + 'poly6'
 discreteORcont = 'discrete'
 useDiffusionMaps = True
 probability_threshold = 0.65
@@ -100,7 +100,6 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         print('[gp_transition] Change kd-tree to have %d points.'%N)
 
         return True
-
 
     # Particles prediction
     def batch_predict(self, SA):

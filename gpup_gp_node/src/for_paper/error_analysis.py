@@ -15,8 +15,8 @@ import time
 
 version = 0
 
-Obj = 'cre55'
-if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','tri50','cre55','sem60'])):
+Obj = 'poly6_red'
+if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','tri50','cre55','sem60','poly6_red'])):
     state_dim = 5
 else:
     state_dim = 4
@@ -125,12 +125,12 @@ H[0] = 1
 w = [40, 40, 100, 100]
 
 ## GP
-pr = ''
+pr = '_red'
 if 0:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, _, Suc = pickle.load(f)
 
-    if 1:
+    if 0:
         with open(path + 'prediction_analysis_' + Obj + pr +  '_gp.pkl', 'r') as f: 
             Ggp = pickle.load(f)
     else: 
@@ -141,7 +141,7 @@ if 0:
         print("Run %d for %s, number of samples %d."%(j, Obj, len(Ggp)))
         path_inx = np.random.randint(len(test_paths))
         R = test_paths[path_inx]
-        h = np.random.randint(400,np.min([1100,R.shape[0]-1]))
+        h = np.random.randint(1,np.min([1100,R.shape[0]-1]))
         A = action_seq[path_inx]
         if state_dim == 5:
             R = R[:,[0,1,11,12,2]]

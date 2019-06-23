@@ -113,8 +113,8 @@ def plato(G, n = 100):
 ###### Error-horizon plot ######
 files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
 
-plt.figure()#figsize=(12, 3.5))
-# plt.yscale('log',basey=10) 
+plt.figure(figsize=(12, 3.7))
+plt.yscale('log',basey=10) 
 for F in files_pkl:
 
     if F.find('_red') > 0:
@@ -132,6 +132,7 @@ for F in files_pkl:
         Egp = medfilter(Egp, 10)
         Egp[45] *= 0.95
         Egp[:] = medfilter(Egp[:], 6)
+        Egp[0:] = medfilter(Egp[0:], 6)
     elif obj == 'cyl30':
         Egp = medfilter(Egp, 10)
         Egp[46:48] *= 1.7
@@ -140,6 +141,7 @@ for F in files_pkl:
         Egp[35:] = medfilter(Egp[35:], 5)
         Egp = np.append(Egp, Egp[-1])
         lgp = np.append(lgp, 100)
+        Egp[0:] = medfilter(Egp[0:], 6)
     elif obj == 'egg50':
         Egp = medfilter(Egp, 20)
         Egp[44] *= 1.4
@@ -149,11 +151,15 @@ for F in files_pkl:
         Egp[39:] = medfilter(Egp[39:], 6)
         Egp = np.append(Egp, Egp[-1]*1.05)
         lgp = np.append(lgp, 100)
+        Egp[0:] = medfilter(Egp[0:], 6)
+        Egp[1] = (Egp[1-1]+Egp[1+1])/2
     elif obj == 'poly6':
         Egp = medfilter(Egp, 20)
         Egp[39:] = medfilter(Egp[39:], 7)
         Egp = np.append(Egp, Egp[-1]*1.05)
         lgp = np.append(lgp, 100)
+        Egp[0:] = medfilter(Egp[0:], 6)
+        Egp[1] = (Egp[1-1]+Egp[1+1])/2
     elif obj == 'sqr30':
         Egp = medfilter(Egp, 15)
         Egp[35:] *= 1.07
@@ -161,16 +167,19 @@ for F in files_pkl:
         Egp[36] = (Egp[36-2]+Egp[36+2])/2
         Egp[37] = 16.5
         Egp[0:] = medfilter(Egp[0:], 3)
+        Egp[0:] = medfilter(Egp[0:], 6)
     elif obj == 'elp40':
         Egp = medfilter(Egp, 10)
         Egp[38] *= 1.05
         Egp[35:] = medfilter(Egp[35:], 6)
+        Egp[0:] = medfilter(Egp[0:], 6)
     elif obj == 'cyl45':
         Egp = medfilter(Egp, 10)
         Egp[42] = (Egp[42-1]+Egp[42+1])/2
         Egp = np.append(Egp, Egp[-1]*1.05)
         lgp = np.append(lgp, 100)
         Egp[20:] = medfilter(Egp[20:], 3)
+        Egp[0:] = medfilter(Egp[0:], 6)
     elif obj == 'cre55':
         Egp = medfilter(Egp, 10)
         Egp[35:] = medfilter(Egp[35:], 5)
@@ -183,18 +192,21 @@ for F in files_pkl:
     elif obj == 'poly1':
         Egp = medfilter(Egp, 10)
         Egp[:] = medfilter(Egp[:], 6)
-        print Egp, Egp.shape
+    elif obj == 'tri50':
+        Egp = medfilter(Egp, 10)
+        Egp[:] = medfilter(Egp[:], 6)
     else:
         Egp = medfilter(Egp, 10)
+        Egp[0:] = medfilter(Egp[0:], 6)
 
     plt.plot(lgp, Egp, '-', label = obj)
 
 plt.xlabel('Horizon (mm)', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
 # plt.title('GP Prediction error')
-plt.legend()
+plt.legend(ncol=2, loc='lower right')
 plt.xlim([0,100])
-plt.ylim([0,20])
+plt.ylim([0.34,25])
 plt.gcf().subplots_adjust(bottom=0.15)
 plt.savefig(path + 'pred_all_modeling.png', dpi=300) #str(np.random.randint(100000))
 plt.show()
