@@ -15,7 +15,7 @@ import time
 
 version = 0
 
-Obj = 'cre55'
+Obj = 'poly6'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','tri50','cre55'])):
     state_dim = 5
 else:
@@ -125,7 +125,7 @@ H[0] = 1
 w = [40, 40, 100, 100]
 
 ## GP
-pr = ''
+pr = 'w_poly6'
 if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)

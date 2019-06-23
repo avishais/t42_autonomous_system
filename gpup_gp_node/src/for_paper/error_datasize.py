@@ -14,7 +14,7 @@ import time
 # np.random.seed(10)
 
 version = 0
-Obj = 'str40'
+Obj = 'poly6'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','egg50'])):
     state_dim = 5
 else:
@@ -89,7 +89,7 @@ if 1:
         l_start = 1000
 
     Ld = range(l_start, 150000,2000)#2500)
-    n = 200
+    n = 100
     h = 10
     for l in Ld:
         g = setKD_srv(l)
