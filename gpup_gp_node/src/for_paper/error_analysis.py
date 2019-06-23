@@ -15,8 +15,13 @@ import time
 
 version = 0
 
+<<<<<<< HEAD
 Obj = 'poly6_red'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','tri50','cre55','sem60','poly6_red'])):
+=======
+Obj = 'poly6'
+if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','tri50','cre55'])):
+>>>>>>> 39d2ac562eaddb8d1ef206ee3838a25be4d88943
     state_dim = 5
 else:
     state_dim = 4
