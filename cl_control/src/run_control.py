@@ -41,7 +41,7 @@ def tracking_error(S1, S2):
 
 track_srv = rospy.ServiceProxy('/control', pathTrackReq)
 
-Obj = 'cyl35'
+Obj = 'sqr30'
 path = '/home/pracsys/catkin_ws/src/t42_control/cl_control/results/'
 
 test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
