@@ -9,6 +9,7 @@ import matplotlib.animation as animation
 from matplotlib.patches import Ellipse, Polygon
 import pickle
 import time
+from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
@@ -28,20 +29,23 @@ def medfilter(X, W):
         X[:,k] = np.copy(x_new)
     return X
 
-def tracking_error(S1, S2):
+def tracking_error(Sref, S):
+    nbrs = NearestNeighbors(n_neighbors=1, algorithm='ball_tree').fit(Sref)
+
     Sum = 0.
-    for s1, s2 in zip(S1, S2):
-        Sum += np.linalg.norm(s1[:2]-s2[:2])**2
+    for s in S:
+        _, i = nbrs.kneighbors(s.reshape(1,-1))
+        Sum += np.linalg.norm(s[:2]-Sref[i,:2])**2
 
-    l = 0.
-    for i in range(1,S1.shape[0]):
-        l += np.linalg.norm(S1[i,:2] - S1[i-1,:2])
-
-    return np.sqrt(Sum / S1.shape[0]), l
+    return np.sqrt(Sum / S.shape[0])
 
 track_srv = rospy.ServiceProxy('/control', pathTrackReq)
 
+<<<<<<< HEAD
 Obj = 'sqr30'
+=======
+Obj = 'poly6'
+>>>>>>> 7685905aea88becb45a7e61f84ae011f2497089d
 path = '/home/pracsys/catkin_ws/src/t42_control/cl_control/results/'
 
 test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -83,19 +87,31 @@ else:
 
 plt.figure(1)
 
+Err = []
 for P in Pro:
     # j = np.array([item[0] for item in P])
     Sreal = [item[1] for item in P]
     Sref = [item[5] for item in P]
     I = [item[4] for item in P]
-    
-    for sreal, sref in zip(Sreal, Sref):
-        sreal = medfilter(sreal, 10)
+
+    for sreal, sref, i_path in zip(Sreal, Sref, I):
+        sreal = sreal[:-20,:]
+
+        sreal = medfilter(sreal[:,:4], 10)
         ds = sreal[0,:2] - sref[0,:2]
         sref[:,:2] += ds
+        sref = sref[:i_path,:]
+
+        Err.append(tracking_error(sref, sreal))
+
         plt.plot(sref[:,0],sref[:,1],'--k')
+        # plt.plot(sref[i_path,0],sref[i_path,1],'or')
+        # plt.plot(sref[:,0],sref[:,1],':m')
         plt.plot(sreal[:,0],sreal[:,1],'-r')
-    plt.show()
+    # plt.show()
+
+print np.mean(np.array(Err))
+
 
 
 # for S, Sref in zip(Pro, test_paths):

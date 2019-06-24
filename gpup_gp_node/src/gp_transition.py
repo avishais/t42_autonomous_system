@@ -17,7 +17,7 @@ from sklearn.neighbors import NearestNeighbors
 
 # np.random.seed(10)
 
-simORreal = 't42_' + 'cyl35'
+simORreal = 't42_' + 'poly6'
 discreteORcont = 'discrete'
 useDiffusionMaps = True
 probability_threshold = 0.65
@@ -25,6 +25,9 @@ plotRegData = False
 diffORspec = 'diff'
 
 class Spin_gp(data_load, mean_shift, svm_failure):
+
+    time_nn = 0.0
+    num_checks_nn = 0 
 
     def __init__(self):
         # Number of NN
@@ -97,7 +100,6 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         print('[gp_transition] Change kd-tree to have %d points.'%N)
 
         return True
-
 
     # Particles prediction
     def batch_predict(self, SA):
@@ -316,8 +318,13 @@ class Spin_gp(data_load, mean_shift, svm_failure):
         # Propagate
         sa = np.concatenate((s, a), axis=0)
         # sa = self.normz( sa )    
+        st = rospy.get_time()
         sa_normz = self.one_predict(self.normz( sa ) )
+        self.time_nn += rospy.get_time() - st
+        self.num_checks_nn += 1 
         s_next = self.denormz( sa_normz )
+
+        # print(self.time_nn / self.num_checks_nn) 
 
         return {'next_state': s_next, 'node_probability': node_probability}
 
