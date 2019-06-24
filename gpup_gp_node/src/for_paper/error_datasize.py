@@ -14,8 +14,8 @@ import time
 # np.random.seed(10)
 
 version = 0
-Obj = 'poly6'
-if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','egg50'])):
+Obj = 'elp40'
+if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','egg50','cre55'])):
     state_dim = 5
 else:
     state_dim = 4
@@ -77,7 +77,7 @@ def tracking_error(S1, S2):
 w = [40, 40, 100, 100]
 
 ## GP
-if 0:
+if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
