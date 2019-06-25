@@ -9,14 +9,14 @@ import var
 
 # np.random.seed(1)
 
-extend_previous_opt = False
+extend_previous_opt = True
 
 class data_load(object):
     # Dillute = 100000
 
     def __init__(self, simORreal = 'sim', discreteORcont = 'discrete', with_fingers = False, K = 100, K_manifold=-1, sigma=-1, dim=-1, Dillute = var.N_dillute_, dr = 'diff'):
         
-        if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40','t42_tri50','t42_egg50','t42_str40','t42_rec60','t42_rec10','t42_cre55','t42_sem60'])): # Include orientation angle
+        if np.any(simORreal == np.array(['t42_sqr30','t42_poly10','t42_poly6','t42_elp40','t42_tri50','t42_egg50','t42_str40','t42_rec60','t42_rec10'])): # Include orientation angle
             dim_ = var.dim_ + 1 + 8 if with_fingers else var.dim_ + 1
         else:
             dim_ = var.dim_ + 8 if with_fingers else var.dim_
@@ -25,7 +25,7 @@ class data_load(object):
         self.postfix = '_v' + str(var.data_version_) + '_d' + str(dim_) + '_m' + str(var.stepSize_)
         self.prefix =  simORreal + '_'
         self.file = simORreal + '_data_' + discreteORcont + self.postfix + '.obj'
-        self.path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
+        self.path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/'
         self.dr = dr
         self.K = K
         self.load()
@@ -170,7 +170,7 @@ class data_load(object):
             theta_opt = []
             K_opt = []
         # [theta_opt.append([]) for _ in range(self.state_dim)] # List for each dimension
-        N = 5000
+        N = 4650
         for i in range(N):
             print('[data_load] Computing hyper-parameters for data point %d out of %d.'% (i, N))
             sa = self.Xtrain[np.random.randint(self.Xtrain.shape[0]), :]
@@ -180,9 +180,12 @@ class data_load(object):
                 for k in Kcandidate:
                     print('[data_load] Running with k = %d (i=%d)...'%(k,i))
 
-                    idx = self.kdt.query(sa.reshape(1,-1), k = k, return_distance=False)
-                    X_nn = self.Xtrain[idx,:].reshape(k, self.state_action_dim)
-                    Y_nn = self.Ytrain[idx,:].reshape(k, self.state_dim)
+                    try:
+                        idx = self.kdt.query(sa.reshape(1,-1), k = k, return_distance=False)
+                        X_nn = self.Xtrain[idx,:].reshape(k, self.state_action_dim)
+                        Y_nn = self.Ytrain[idx,:].reshape(k, self.state_dim)
+                    except:
+                        continue
 
                     if K_manifold > 0:
                         X_nn, Y_nn = reduction(sa, X_nn, Y_nn, K_manifold)
