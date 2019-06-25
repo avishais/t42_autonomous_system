@@ -61,7 +61,7 @@ with open(test_path + 'testpaths_' + 'cyl35' + '_d_v' + str(1) + '.pkl', 'r') as
 rollout_srv = rospy.ServiceProxy('/rollout/rollout', rolloutReq)
 rospy.init_node('collect_test_paths', anonymous=True)
 
-Obj = 'poly6'
+Obj = 'sqr30'
 path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 if 1:
@@ -78,11 +78,15 @@ if 1:
         suc = roll.success
         print("Got %d points with a %s trial."%(S.shape[0], 'successful' if suc else 'failed'))
 
+        if i == 1:
+            plt.plot(S[:,0], S[:,1],'-')
+            plt.show()
+
         test_paths.append(S)
         Suc.append(suc)
 
-    with open(path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'w') as f: 
-        pickle.dump([action_seq, test_paths, Obj, Suc], f)
+        with open(path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'w') as f: 
+            pickle.dump([action_seq, test_paths, Obj, Suc], f)
 else:
     with open(path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
