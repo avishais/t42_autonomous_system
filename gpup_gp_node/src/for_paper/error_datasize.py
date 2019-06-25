@@ -14,7 +14,7 @@ import time
 # np.random.seed(10)
 
 version = 0
-Obj = 'poly6'
+Obj = 'cyl45'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','egg50'])):
     state_dim = 5
 else:
@@ -25,8 +25,11 @@ nn_srv = rospy.ServiceProxy('/nn/predict', StateAction2State)
 setKD_srv = rospy.ServiceProxy('/gp/set_new_kdtree', setKD)
 rospy.init_node('error_analysis_t42', anonymous=True)
 
-path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
-test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+print "Waiting for service /gp/transitionOneParticle ..."
+rospy.wait_for_service('/gp/transitionOneParticle')
+
+path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
+test_path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 def medfilter(x, W):
     w = int(W/2)
@@ -77,7 +80,7 @@ def tracking_error(S1, S2):
 w = [40, 40, 100, 100]
 
 ## GP
-if 0:
+if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
