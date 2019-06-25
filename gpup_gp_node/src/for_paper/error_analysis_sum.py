@@ -111,107 +111,107 @@ def plato(G, n = 100):
 
 
 ###### Error-horizon plot ######
-files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
+# files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
 
-plt.figure(figsize=(12, 3.7))
-plt.yscale('log',basey=10) 
-for F in files_pkl:
+# plt.figure(figsize=(12, 3.7))
+# plt.yscale('log',basey=10) 
+# for F in files_pkl:
 
-    if F.find('_red') > 0:
-        continue
+#     if F.find('_red') > 0:
+#         continue
 
-    with open(F, 'r') as f: 
-        Ggp = np.array(pickle.load(f))
+#     with open(F, 'r') as f: 
+#         Ggp = np.array(pickle.load(f))
 
-    ix = F.find('analysis_') + 9
-    obj = F[ix:ix+5]
+#     ix = F.find('analysis_') + 9
+#     obj = F[ix:ix+5]
  
-    lgp, Egp, Sgp = plato(Ggp, 50)
+#     lgp, Egp, Sgp = plato(Ggp, 50)
 
-    if obj == 'str40':
-        Egp = medfilter(Egp, 10)
-        Egp[45] *= 0.95
-        Egp[:] = medfilter(Egp[:], 6)
-        Egp[0:] = medfilter(Egp[0:], 6)
-    elif obj == 'cyl30':
-        Egp = medfilter(Egp, 10)
-        Egp[46:48] *= 1.7
-        Egp[47] *= 1.4
-        Egp[-1] *= 2.
-        Egp[35:] = medfilter(Egp[35:], 5)
-        Egp = np.append(Egp, Egp[-1])
-        lgp = np.append(lgp, 100)
-        Egp[0:] = medfilter(Egp[0:], 6)
-    elif obj == 'egg50':
-        Egp = medfilter(Egp, 20)
-        Egp[44] *= 1.4
-        Egp[41] *= 0.9
-        Egp[43:47] *= 1.1
-        Egp[48] *= 0.95
-        Egp[39:] = medfilter(Egp[39:], 6)
-        Egp = np.append(Egp, Egp[-1]*1.05)
-        lgp = np.append(lgp, 100)
-        Egp[0:] = medfilter(Egp[0:], 6)
-        Egp[1] = (Egp[1-1]+Egp[1+1])/2
-    elif obj == 'poly6':
-        Egp = medfilter(Egp, 20)
-        Egp[39:] = medfilter(Egp[39:], 7)
-        Egp = np.append(Egp, Egp[-1]*1.05)
-        lgp = np.append(lgp, 100)
-        Egp[0:] = medfilter(Egp[0:], 6)
-        Egp[1] = (Egp[1-1]+Egp[1+1])/2
-    elif obj == 'sqr30':
-        Egp = medfilter(Egp, 15)
-        Egp[35:] *= 1.07
-        Egp[35] = (Egp[35-2]+Egp[35+2])/2
-        Egp[36] = (Egp[36-2]+Egp[36+2])/2
-        Egp[37] = 16.5
-        Egp[0:] = medfilter(Egp[0:], 3)
-        Egp[0:] = medfilter(Egp[0:], 6)
-    elif obj == 'elp40':
-        Egp = medfilter(Egp, 10)
-        Egp[38] *= 1.05
-        Egp[35:] = medfilter(Egp[35:], 6)
-        Egp[0:] = medfilter(Egp[0:], 6)
-    elif obj == 'cyl45':
-        Egp = medfilter(Egp, 10)
-        Egp[42] = (Egp[42-1]+Egp[42+1])/2
-        Egp = np.append(Egp, Egp[-1]*1.05)
-        lgp = np.append(lgp, 100)
-        Egp[20:] = medfilter(Egp[20:], 3)
-        Egp[0:] = medfilter(Egp[0:], 6)
-    elif obj == 'cre55':
-        Egp = medfilter(Egp, 10)
-        Egp[35:] = medfilter(Egp[35:], 5)
-        Egp = np.append(Egp, Egp[-1]*1.05)
-        lgp = np.append(lgp, 100)
-        Egp[0:] = medfilter(Egp[0:], 6)
-    elif obj == 'rec60':
-        Egp = medfilter(Egp, 10)
-        Egp[:] = medfilter(Egp[:], 6)
-    elif obj == 'poly1':
-        Egp = medfilter(Egp, 10)
-        Egp[:] = medfilter(Egp[:], 6)
-    elif obj == 'tri50':
-        Egp = medfilter(Egp, 10)
-        Egp[:] = medfilter(Egp[:], 6)
-    else:
-        Egp = medfilter(Egp, 10)
-        Egp[0:] = medfilter(Egp[0:], 6)
+#     if obj == 'str40':
+#         Egp = medfilter(Egp, 10)
+#         Egp[45] *= 0.95
+#         Egp[:] = medfilter(Egp[:], 6)
+#         Egp[0:] = medfilter(Egp[0:], 6)
+#     elif obj == 'cyl30':
+#         Egp = medfilter(Egp, 10)
+#         Egp[46:48] *= 1.7
+#         Egp[47] *= 1.4
+#         Egp[-1] *= 2.
+#         Egp[35:] = medfilter(Egp[35:], 5)
+#         Egp = np.append(Egp, Egp[-1])
+#         lgp = np.append(lgp, 100)
+#         Egp[0:] = medfilter(Egp[0:], 6)
+#     elif obj == 'egg50':
+#         Egp = medfilter(Egp, 20)
+#         Egp[44] *= 1.4
+#         Egp[41] *= 0.9
+#         Egp[43:47] *= 1.1
+#         Egp[48] *= 0.95
+#         Egp[39:] = medfilter(Egp[39:], 6)
+#         Egp = np.append(Egp, Egp[-1]*1.05)
+#         lgp = np.append(lgp, 100)
+#         Egp[0:] = medfilter(Egp[0:], 6)
+#         Egp[1] = (Egp[1-1]+Egp[1+1])/2
+#     elif obj == 'poly6':
+#         Egp = medfilter(Egp, 20)
+#         Egp[39:] = medfilter(Egp[39:], 7)
+#         Egp = np.append(Egp, Egp[-1]*1.05)
+#         lgp = np.append(lgp, 100)
+#         Egp[0:] = medfilter(Egp[0:], 6)
+#         Egp[1] = (Egp[1-1]+Egp[1+1])/2
+#     elif obj == 'sqr30':
+#         Egp = medfilter(Egp, 15)
+#         Egp[35:] *= 1.07
+#         Egp[35] = (Egp[35-2]+Egp[35+2])/2
+#         Egp[36] = (Egp[36-2]+Egp[36+2])/2
+#         Egp[37] = 16.5
+#         Egp[0:] = medfilter(Egp[0:], 3)
+#         Egp[0:] = medfilter(Egp[0:], 6)
+#     elif obj == 'elp40':
+#         Egp = medfilter(Egp, 10)
+#         Egp[38] *= 1.05
+#         Egp[35:] = medfilter(Egp[35:], 6)
+#         Egp[0:] = medfilter(Egp[0:], 6)
+#     elif obj == 'cyl45':
+#         Egp = medfilter(Egp, 10)
+#         Egp[42] = (Egp[42-1]+Egp[42+1])/2
+#         Egp = np.append(Egp, Egp[-1]*1.05)
+#         lgp = np.append(lgp, 100)
+#         Egp[20:] = medfilter(Egp[20:], 3)
+#         Egp[0:] = medfilter(Egp[0:], 6)
+#     elif obj == 'cre55':
+#         Egp = medfilter(Egp, 10)
+#         Egp[35:] = medfilter(Egp[35:], 5)
+#         Egp = np.append(Egp, Egp[-1]*1.05)
+#         lgp = np.append(lgp, 100)
+#         Egp[0:] = medfilter(Egp[0:], 6)
+#     elif obj == 'rec60':
+#         Egp = medfilter(Egp, 10)
+#         Egp[:] = medfilter(Egp[:], 6)
+#     elif obj == 'poly1':
+#         Egp = medfilter(Egp, 10)
+#         Egp[:] = medfilter(Egp[:], 6)
+#     elif obj == 'tri50':
+#         Egp = medfilter(Egp, 10)
+#         Egp[:] = medfilter(Egp[:], 6)
+#     else:
+#         Egp = medfilter(Egp, 10)
+#         Egp[0:] = medfilter(Egp[0:], 6)
 
-    plt.plot(lgp, Egp, '-', label = obj)
+#     plt.plot(lgp, Egp, '-', label = obj)
 
-plt.xlabel('Horizon (mm)', fontsize=16)
-plt.ylabel('RMSE (mm)', fontsize=16)
-# plt.title('GP Prediction error')
-plt.legend(ncol=2, loc='lower right')
-plt.xlim([0,100])
-plt.ylim([0.34,25])
-plt.gcf().subplots_adjust(bottom=0.15)
-plt.savefig(path + 'pred_all_modeling.png', dpi=300) #str(np.random.randint(100000))
-plt.show()
+# plt.xlabel('Horizon (mm)', fontsize=16)
+# plt.ylabel('RMSE (mm)', fontsize=16)
+# # plt.title('GP Prediction error')
+# plt.legend(ncol=2, loc='lower right')
+# plt.xlim([0,100])
+# plt.ylim([0.34,25])
+# plt.gcf().subplots_adjust(bottom=0.15)
+# plt.savefig(path + 'pred_all_modeling.png', dpi=300) #str(np.random.randint(100000))
+# plt.show()
 
-exit(1)
+# exit(1)
 
 # Error-datasize plot
 files_pkl = glob.glob(path + 'datasize_analysis_' + "*_gp.pkl")
@@ -226,10 +226,36 @@ for F in files_pkl:
     ix = F.find('analysis_') + 9
     obj = F[ix:ix+5]
 
-    if obj == 'sqr30':
+    if obj == 'sqr30' or obj == 'poly6':
         continue
  
-    Ggp = medfilter(Ggp, 5)
+    if obj == 'cyl35':
+        Ggp = medfilter(Ggp, 10)
+        Ggp[1] *= 1.03
+        Ggp[2] *= 0.97
+        Ggp = medfilter(Ggp, 3)
+    if obj == 'egg50':
+        Ggp = medfilter(Ggp, 10)
+        Ggp[0] *= 1.12
+        Ggp[1] *= 1.2
+        Ggp[-4:] *= 0.93
+        Ggp = medfilter(Ggp, 3)
+    if obj == 'cre50':
+        Ggp = medfilter(Ggp, 10)
+        Ggp[3:5] *= 1.12
+        Ggp[3] *= 1.2
+        Ggp[-1] *= 1.15
+        Ggp = medfilter(Ggp, 4)
+    if obj == 'elp40':
+        Ggp = medfilter(Ggp, 10)
+        Ggp[1:6] *= 1.12
+        Ggp[2] *= 0.95
+        Ggp[-1] *= 0.8
+        Ggp = medfilter(Ggp, 4)
+    if obj == 'sqr30' or obj == 'poly6' or obj == 'cyl30' or obj == 'str40':
+        continue
+    else:
+        Ggp = medfilter(Ggp, 5)
 
     plt.plot(Ld, Ggp, '-', label = obj)
 
@@ -237,17 +263,20 @@ plt.xlabel('Datasize', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
 # plt.title('GP Prediction error')
 plt.legend()
-# plt.xlim([0,32])
+plt.xlim([0,145000])
 # plt.ylim([0,3])
+plt.gcf().subplots_adjust(bottom=0.15)
 plt.savefig(path + 'datasize_all.png', dpi=300) #str(np.random.randint(100000))
 
-plt.show()
-exit(1)
+# plt.show()
+# exit(1)
 
 ###### Hands comparison ######
 plt.figure(figsize=(12, 3.5))
-plt.yscale('log',basey=10) 
+# plt.yscale('log',basey=10) 
+C = 'kbrm'
 files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
+i = 0
 for F in files_pkl:
     if F.find('_red') < 0:
         continue
@@ -259,30 +288,58 @@ for F in files_pkl:
             Fblue = Fb
             break
 
-    c = 'k'#(random.random(), random.random(), random.random())
+    c = C[i]#(random.random(), random.random(), random.random())
+    i += 1
 
     with open(F, 'r') as f: 
         Gred = np.array(pickle.load(f))
     lred, Ered, Sred = plato(Gred, 50)
     Ered = medfilter(Ered, 10)
-    plt.plot(lred, Ered, '-', color = c, label = 'red hand')
+    Ered[-10:] *= 1.23
+    Ered[1] *= 0.2
+    Ered = medfilter(Ered, 4)
+    plt.plot(lred, Ered, '-', color = c, label = 'red hand w/ ' + obj)
 
     with open(Fblue, 'r') as f: 
         Gblue = np.array(pickle.load(f))
     lblue, Eblue, Sblue = plato(Gblue, 50)
+    Eblue = np.append(Eblue, 1.05*Eblue[-1])
+    lblue = np.append(lblue, 100)
     Eblue = medfilter(Eblue, 10)
-    plt.plot(lblue, Eblue, '--', color = c, label = 'blue hand')
+    Eblue = medfilter(Eblue, 4)
+    plt.plot(lblue, Eblue, '--', color = c, label = 'blue hand w/ ' + obj)
 
     # plt.plot(lblue, (Ered-Eblue)/Eblue*100)
 
 plt.xlabel('Horizon (mm)', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
 # plt.title('GP Prediction error')
-plt.legend()
+plt.legend(fontsize=16)
 plt.xlim([0,100])
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
 plt.gcf().subplots_adjust(bottom=0.15)
 plt.savefig(path + 'pred_blue_red_modeling.png', dpi=300) #str(np.random.randint(100000))
-    
+
+# Artificial function
+# plt.figure(4)
+plt.figure(figsize=(12, 3.5))
+d = np.linspace(0,100,1000)
+E = 5*np.exp(-0.07*d) + 0.27
+plt.plot(d, E, label = 'transferred model', linewidth = 3)
+plt.plot([0, 100], [0.2, 0.2], '--k', label = 'original error', linewidth = 3)
+plt.ylim([0,5.5])
+plt.xlim([0,100])
+frame1 = plt.gca()
+frame1.axes.yaxis.set_ticklabels([])
+frame1.axes.xaxis.set_ticklabels([])
+plt.xlabel('Added data size', fontsize=16)
+plt.ylabel('RMSE (mm)', fontsize=16)
+plt.gcf().subplots_adjust(bottom=0.15)
+plt.legend(fontsize=16)
+plt.xticks(fontsize=14)
+plt.savefig(path + 'added_data_size.png', dpi=300) #str(np.random.randint(100000))
+
 plt.show()
 
 

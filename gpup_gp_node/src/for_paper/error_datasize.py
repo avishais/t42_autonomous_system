@@ -14,7 +14,7 @@ import time
 # np.random.seed(10)
 
 version = 0
-Obj = 'elp40'
+Obj = 'poly10'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','egg50','cre55'])):
     state_dim = 5
 else:
