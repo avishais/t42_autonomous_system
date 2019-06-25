@@ -41,11 +41,7 @@ def tracking_error(Sref, S):
 
 track_srv = rospy.ServiceProxy('/control', pathTrackReq)
 
-<<<<<<< HEAD
-Obj = 'sqr30'
-=======
-Obj = 'poly6'
->>>>>>> 7685905aea88becb45a7e61f84ae011f2497089d
+Obj = 'eps40'
 path = '/home/pracsys/catkin_ws/src/t42_control/cl_control/results/'
 
 test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -95,6 +91,8 @@ for P in Pro:
     I = [item[4] for item in P]
 
     for sreal, sref, i_path in zip(Sreal, Sref, I):
+        if sreal.shape[0] < 20:
+            continue
         sreal = sreal[:-20,:]
 
         sreal = medfilter(sreal[:,:4], 10)

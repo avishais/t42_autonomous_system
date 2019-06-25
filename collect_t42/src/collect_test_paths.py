@@ -61,7 +61,7 @@ with open(test_path + 'testpaths_' + 'cyl35' + '_d_v' + str(1) + '.pkl', 'r') as
 rollout_srv = rospy.ServiceProxy('/rollout/rollout', rolloutReq)
 rospy.init_node('collect_test_paths', anonymous=True)
 
-Obj = 'sqr30'
+Obj = 'poly10'
 path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 if 1:
@@ -77,10 +77,6 @@ if 1:
         S = np.array(roll.states).reshape(-1,state_dim)
         suc = roll.success
         print("Got %d points with a %s trial."%(S.shape[0], 'successful' if suc else 'failed'))
-
-        if i == 1:
-            plt.plot(S[:,0], S[:,1],'-')
-            plt.show()
 
         test_paths.append(S)
         Suc.append(suc)
