@@ -15,21 +15,16 @@ import time
 
 version = 0
 
-Obj = 'poly6_red'
-if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','tri50','cre55','sem60','poly6_red'])):
-    state_dim = 5
-else:
     state_dim = 4
 
-naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 nn_srv = rospy.ServiceProxy('/nn/predict', StateAction2State)
 rospy.init_node('error_analysis_t42', anonymous=True)
 
 print "Waiting for service /gp/transitionOneParticle ..."
 rospy.wait_for_service('/gp/transitionOneParticle')
 
-path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
-test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+path = '/home/juntao/catkin_ws/src/t42_control/gpup_gp_node/src/for_paper/results/'
+test_path = '/home/juntao/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 def medfilter(x, W):
     w = int(W/2)
@@ -125,7 +120,7 @@ H[0] = 1
 w = [40, 40, 100, 100]
 
 ## GP
-pr = '_red'
+pr = ''
 if 0:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, _, Suc = pickle.load(f)

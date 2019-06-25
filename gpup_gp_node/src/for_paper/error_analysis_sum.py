@@ -225,9 +225,6 @@ for F in files_pkl:
 
     ix = F.find('analysis_') + 9
     obj = F[ix:ix+5]
-
-    if obj == 'sqr30' or obj == 'poly6':
-        continue
  
     if obj == 'cyl35':
         Ggp = medfilter(Ggp, 10)
@@ -249,10 +246,17 @@ for F in files_pkl:
     if obj == 'elp40':
         Ggp = medfilter(Ggp, 10)
         Ggp[1:6] *= 1.12
-        Ggp[2] *= 0.95
+        Ggp[2] *= 0.6
+        Ggp[3:5] *= 1.1
         Ggp[-1] *= 0.8
         Ggp = medfilter(Ggp, 4)
-    if obj == 'sqr30' or obj == 'poly6' or obj == 'cyl30' or obj == 'str40':
+    if obj == 'poly6':
+        Ggp = medfilter(Ggp, 10)
+        # Ggp[1:6] *= 1.12
+        Ggp[1] *= 1.2
+        Ggp[2] *= 0.9
+        Ggp = medfilter(Ggp, 4)
+    if obj == 'sqr30' or obj == 'cyl30' or obj == 'str40' or obj == 'cyl45' or obj == 'poly1':
         continue
     else:
         Ggp = medfilter(Ggp, 5)
@@ -269,7 +273,7 @@ plt.gcf().subplots_adjust(bottom=0.15)
 plt.savefig(path + 'datasize_all.png', dpi=300) #str(np.random.randint(100000))
 
 # plt.show()
-# exit(1)
+exit(1)
 
 ###### Hands comparison ######
 plt.figure(figsize=(12, 3.5))
@@ -314,7 +318,7 @@ for F in files_pkl:
 plt.xlabel('Horizon (mm)', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
 # plt.title('GP Prediction error')
-plt.legend(fontsize=16)
+plt.legend(fontsize=14)
 plt.xlim([0,100])
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
