@@ -201,9 +201,9 @@ class collect_data():
                         open_srv()
                         # self.texp.save()
                         self.recorderSave_srv()
-                        if (self.num_episodes % 50 == 0):
+                        if (self.num_episodes % 20 == 0):
                             print('[collect_data] Cooling down.')
-                            rospy.sleep(180)
+                            rospy.sleep(120)
 
 
     def callbackGripperStatus(self, msg):

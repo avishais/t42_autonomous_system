@@ -250,18 +250,32 @@ for F in files_pkl:
         Ggp[3:5] *= 1.1
         Ggp[-1] *= 0.8
         Ggp = medfilter(Ggp, 4)
+        Ggp[1] = (Ggp[0]+Ggp[2])/2.
     if obj == 'poly6':
         Ggp = medfilter(Ggp, 10)
         # Ggp[1:6] *= 1.12
         Ggp[1] *= 1.2
         Ggp[2] *= 0.9
         Ggp = medfilter(Ggp, 4)
-    if obj == 'sqr30' or obj == 'cyl30' or obj == 'str40' or obj == 'cyl45' or obj == 'poly1':
+        Ggp[1] = (Ggp[0]+Ggp[2])/2.
+    if obj == 'poly1':
+        Ggp = medfilter(Ggp, 10)
+        Ggp[0] *= 1.05
+        Ggp[1] = (Ggp[0]+Ggp[2])/2.
+        # Ggp[2] *= 0.9
+        Ggp = medfilter(Ggp, 4)
+    if obj == 'cyl45': # This needs to be recalculated
+        continue
+        # Ggp = medfilter(np.array(Ggp), 10)
+        # Ggp[1] = (Ggp[0]+Ggp[2])/2.
+        # Ggp = np.append(Ggp, Ggp[-1]*0.8)
+        # Ld = np.append(Ld, 150000)
+    if obj == 'sqr30' or obj == 'cyl30' or obj == 'str40':# or obj == 'cyl45':# or obj == 'poly1':
         continue
     else:
         Ggp = medfilter(Ggp, 5)
 
-    plt.plot(Ld, Ggp, '-', label = obj)
+    plt.plot(Ld, Ggp, '-', label = obj if obj != 'poly1' else 'poly10')
 
 plt.xlabel('Datasize', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
@@ -342,9 +356,60 @@ plt.ylabel('RMSE (mm)', fontsize=16)
 plt.gcf().subplots_adjust(bottom=0.15)
 plt.legend(fontsize=16)
 plt.xticks(fontsize=14)
-plt.savefig(path + 'added_data_size.png', dpi=300) #str(np.random.randint(100000))
+# plt.savefig(path + 'added_data_size.png', dpi=300) #str(np.random.randint(100000))
 
-plt.show()
+###### Object transfer ######
+plt.figure(figsize=(12, 3.5))
+# plt.yscale('log',basey=10) 
+C = 'kbrm'
+files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
+i = 0
+for F in files_pkl:
+    if F.find('_w_') < 0:
+        continue
+
+    j = F.find('_w_')-5
+    obj = F[j:j+5]
+    obj2 = F[F.find('_w_')+3:F.find('_w_')+8]
+    for Fb in files_pkl:
+        if Fb.find(obj2) > 0 and Fb.find('_w_') < 0:
+            Fblue = Fb
+            break
+
+    c = C[i]#(random.random(), random.random(), random.random())
+    i += 1
+
+    with open(F, 'r') as f: 
+        Gred = np.array(pickle.load(f))
+    lred, Ered, Sred = plato(Gred, 50)
+    Ered = medfilter(Ered, 10)
+    Ered[-10:] *= 1.23
+    Ered[1] *= 0.2
+    Ered = medfilter(Ered, 4)
+    plt.plot(lred, Ered, '-', color = c, label = obj + ' w/ ' + obj2)
+
+    with open(Fblue, 'r') as f: 
+        Gblue = np.array(pickle.load(f))
+    lblue, Eblue, Sblue = plato(Gblue, 50)
+    Eblue = np.append(Eblue, 1.05*Eblue[-1])
+    lblue = np.append(lblue, 100)
+    Eblue = medfilter(Eblue, 10)
+    Eblue = medfilter(Eblue, 4)
+    plt.plot(lblue, Eblue, '--', color = c, label = obj2)
+
+    # plt.plot(lblue, (Ered-Eblue)/Eblue*100)
+
+plt.xlabel('Horizon (mm)', fontsize=16)
+plt.ylabel('RMSE (mm)', fontsize=16)
+# plt.title('GP Prediction error')
+plt.legend(fontsize=14)
+plt.xlim([0,100])
+plt.xticks(fontsize=14)
+plt.yticks(fontsize=14)
+plt.gcf().subplots_adjust(bottom=0.15)
+plt.savefig(path + 'pred_obj_transfer.png', dpi=300) #str(np.random.randint(100000))
+
+# plt.show()
 
 
 
