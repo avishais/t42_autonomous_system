@@ -162,10 +162,8 @@ def main():
     # Process raw data
     if 1:
         for obj, file in zip(objs, files):
-            # if obj == 'cyl30':
-                # continue
+            
             target_file = 'raw_t42_' + obj + cd_mode[:-1] + '.obj'
-
             if not check_exist(target_file, ('discrete/' if discrete else 'continuous/'), transition_path):
                 print('Loading data for ' + obj + '...')
                 with open(file, 'rb') as filehandler:
@@ -194,6 +192,7 @@ def main():
                 SA_test = []
                 label_train = []
                 label_test = []
+                A_seq = []
 
                 for i in range(len(episodes)):
                     e = episodes[i]
@@ -207,6 +206,8 @@ def main():
                         sa_good = np.concatenate((e['states'][j_good,:], e['actions'][j_good,:]), axis=0)
                         SA_test.append(sa_good)
                         label_test.append(False)
+
+                        A_seq.append(e['actions'])
                     else:
                         sa_bad = np.concatenate((e['states'][-3:,:], e['actions'][-3:,:]), axis=1)
                         for sa in sa_bad:
@@ -219,7 +220,7 @@ def main():
                             SA_train.append(sa_good)
                             label_train.append(False)
 
-                et = {'train_data': SA_train, 'train_labels': label_train, 'test_data': SA_test, 'test_labels': label_test}
+                et = {'train_data': SA_train, 'train_labels': label_train, 'test_data': SA_test, 'test_labels': label_test, 'test_action_seq': A_seq}
                 with open(failure_path + ('discrete/' if discrete else 'continuous/') + target_file, 'wb') as f: 
                     pickle.dump(et, f)
                 print "Saved %d training points and %d test points for object %s."%(len(SA_train), len(SA_test), obj)
@@ -255,8 +256,6 @@ def main():
 
                     scores = dict( zip( names, scores))
                 
-            break
-
     return 1
 
 
