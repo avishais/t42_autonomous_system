@@ -502,9 +502,9 @@ class transition_experience():
         SA = np.concatenate((SA[inx_fail], SA[inx_suc]), axis=0)
         done = np.concatenate((done[inx_fail], done[inx_suc]), axis=0)
         
-        with open(self.dest_path + 't42_' + self.Object + '_svm_data_' + self.mode + '_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '.obj', 'wb') as f: 
-            pickle.dump([SA, done], f)
-        print('Saved svm data.')
+        # with open(self.dest_path + 't42_' + self.Object + '_svm_data_' + self.mode + '_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '.obj', 'wb') as f: 
+        #     pickle.dump([SA, done], f)
+        # print('Saved svm data.')
 
         ##  Test data
         # Normalize
@@ -564,7 +564,6 @@ class transition_experience():
         names = ['Nearest Neighbors', 'Linear SVM', 'RBF SVM', 'Gaussian Process',
          'Decision Tree', 'Random Forest', 'Neural Net', 'AdaBoost']
 
-
         classifiers = [
             KNeighborsClassifier(3),
             SVC(kernel="linear", C=0.025),
@@ -586,7 +585,6 @@ class transition_experience():
         scores = dict( zip( names, scores))
             
         # ######################################################
-
 
         return np.array([float(s)/SA_test.shape[0]*100, float(s_fail)/c_fail*100, float(s_suc)/c_suc*100]), scores
 
