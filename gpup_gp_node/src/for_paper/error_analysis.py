@@ -15,7 +15,7 @@ import time
 
 version = 0
 
-Obj = 'sqr30'
+Obj = 'tri50'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','tri50','cre55','sem60','poly6_red'])):
     state_dim = 5
 else:
@@ -130,7 +130,7 @@ if 0:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, _, Suc = pickle.load(f)
 
-    if 0:
+    if 1:
         with open(path + 'prediction_analysis_' + Obj + pr +  '_gp.pkl', 'r') as f: 
             Ggp = pickle.load(f)
     else: 
