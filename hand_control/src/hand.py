@@ -144,8 +144,8 @@ class hand_control():
 
     def callbackMarkers(self, msg):
         try:
-            if np.abs(msg.position.x) < 0.2 and msg.position.y < 0.12 and msg.position.y > -0.5:
-                self.obj_pos = np.array([msg.position.x, msg.position.y])
+            # if np.abs(msg.position.x) < 0.2 and msg.position.y < 0.12 and msg.position.y > -0.5:
+            self.obj_pos = np.array([msg.position.x, msg.position.y])
             self.obj_height = msg.position.z
         except:
             self.obj_pos = np.array([np.nan, np.nan])
