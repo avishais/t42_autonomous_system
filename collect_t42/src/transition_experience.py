@@ -44,7 +44,6 @@ class transition_experience():
         if os.path.isfile(self.file_name):
             print('Loading data from ' + self.file_name)
             with open(self.file_name, 'rb') as filehandler:
-            # filehandler = open(self.file_name, 'r')
                 self.memory = pickle.load(filehandler)
             print('Loaded transition data of size %d.'%self.getSize())
         else:
@@ -69,6 +68,8 @@ class transition_experience():
         return len(self.memory)
 
     def plot_data(self):
+
+        # print self.memory[0]
 
         T = np.array([item[0] for item in self.memory])
         states = np.array([item[1] for item in self.memory])
