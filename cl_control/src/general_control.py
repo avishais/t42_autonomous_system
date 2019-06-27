@@ -28,6 +28,7 @@ class general_control():
     horizon = 1
     arm_status = ' '
     trigger = False # Enable collection
+    drop_to_hole = True
 
     def __init__(self):
         rospy.init_node('cl_control', anonymous=True)
@@ -49,6 +50,8 @@ class general_control():
         self.obs_srv = rospy.ServiceProxy('/observation', observation)
         self.move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
         self.arm_reset_srv = rospy.ServiceProxy('/RegraspObject', RegraspObject)
+        self.open_srv = rospy.ServiceProxy('/OpenGripper', Empty)
+        self.close_srv = rospy.ServiceProxy('/CloseGripper', close)
         rospy.Subscriber('/ObjectIsReset', String, self.callbackTrigger)
 
         self.trigger_srv = rospy.ServiceProxy('/rollout/record_trigger', SetBool)
@@ -91,9 +94,9 @@ class general_control():
 
         path = np.array(req.desired_path).reshape(-1, self.state_dim)
         
-        real_path, actions, success, i_path = self.run_tracking(path)
+        real_path, actions, Treal, success, i_path = self.run_tracking(path)
 
-        return {'real_path': real_path, 'actions': actions, 'success' : success, 'i_path': i_path}
+        return {'real_path': real_path, 'actions': actions, 'time': Treal, 'success' : success, 'i_path': i_path}
 
     def weightedL2(self, ds, W = np.diag(np.array([1.,1.,0.2, 0.2]))):
         # return np.sqrt( np.dot(ds.T, np.dot(W, ds)) )
@@ -103,7 +106,8 @@ class general_control():
         
         # Reset gripper
         self.trigger = False
-        self.ResetArm()
+        # self.ResetArm()
+        self.close_srv()
         rospy.sleep(3.)
 
         # grasp_state = np.copy(np.concatenate((self.obj_pos, self.gripper_load), axis=0))
@@ -128,8 +132,8 @@ class general_control():
         dd_count = 0
         Controller = 'GP'
 
-        # print "Fix position and press key... "
-        # raw_input()
+        print "Fix position and press key... "
+        raw_input()
 
         self.trigger_srv(True)        
         print("[control] Tracking path...")
@@ -207,10 +211,21 @@ class general_control():
             total_count += 1
             self.rate.sleep()
 
-        Sreal = self.gets_srv().states
-        Areal = self.gets_srv().actions
+        res = self.gets_srv()
+        Sreal = res.states
+        Areal = res.actions
+        Treal = res.time
 
-        return Sreal, Areal, success, i_path
+        # Drop to hole
+        if self.drop_to_hole and success:
+            print('[general_control] Dropping object to hole...')
+            for _ in range(30):
+                self.move_srv(np.array([-6.,-6.]))
+                self.rate.sleep()
+            print('[general_control] Object dropped.')
+
+
+        return Sreal, Areal, Treal, success, i_path
 
     def callbackDrop(self, msg):
         self.drop = msg.data

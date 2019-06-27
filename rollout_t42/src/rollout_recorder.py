@@ -17,9 +17,10 @@ class rolloutRecorder():
     drop = True
     running = False
     action = np.array([0.,0.])
-    S = A = []
+    S = A = T = []
     suc = True
     drop_counter = 0
+    T0 = 0.
     fail = False
     angle = np.array([0.])
     marker0 = np.array([0.,0.])
@@ -54,6 +55,7 @@ class rolloutRecorder():
                     
                 self.S.append(self.state)
                 self.A.append(self.action)
+                self.T.append(rospy.get_time() - self.T0)
 
                 if self.fail:
                     print('[rollout_recorder] Episode ended with %d points.'%len(self.S))
@@ -96,6 +98,8 @@ class rolloutRecorder():
         if self.running:
             self.S = []
             self.A = []
+            self.T = []
+            self.T0 = rospy.get_time()
             print('[rollout_recorder] Recording started.')
             self.fail = False
         else:
@@ -106,7 +110,7 @@ class rolloutRecorder():
     def get_states(self, msg):
         # S = self.medfilter(np.array(self.S), 20)
 
-        return {'states': np.array(self.S).reshape((-1,)), 'actions': np.array(self.A).reshape((-1,))}
+        return {'states': np.array(self.S).reshape((-1,)), 'actions': np.array(self.A).reshape((-1,)), 'time': np.array(self.T).reshape((-1,))}
 
     def medfilter(self, x, W):
         print('[rollout_recorder] Smoothing data...')
