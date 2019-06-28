@@ -130,7 +130,7 @@ if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, _, Suc = pickle.load(f)
 
-    if 0:
+    if 1:
         with open(path + 'prediction_analysis_' + Obj + pr +  '_gp.pkl', 'r') as f: 
             Ggp = pickle.load(f)
     else: 

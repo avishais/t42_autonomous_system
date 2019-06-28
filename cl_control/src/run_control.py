@@ -41,14 +41,14 @@ def tracking_error(Sref, S):
 
 track_srv = rospy.ServiceProxy('/control', pathTrackReq)
 
-Obj = 'cyl35'
+Obj = 'tri50'
 path = '/home/pracsys/catkin_ws/src/t42_control/cl_control/results/'
 
 test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 with open(test_path + 'testpaths_' + Obj + '_d_v' + str(1) + '.pkl', 'r') as f: 
     action_seq, test_paths, Obj, _ = pickle.load(f)
 
-if 0:
+if 1:
 
     j = 0
     Pro = []

@@ -11,26 +11,12 @@ from transition_experience import *
 
 def main():
 
-<<<<<<< HEAD
-    texp = transition_experience(Load = True, discrete=False, postfix='', Object = 'cyl35', with_fingers = False)
-
-    texp.process_transition_data(stepSize = 1, plot = True)
-    # texp.process_svm(stepSize = 1)
-=======
-<<<<<<< HEAD
-    texp = transition_experience(Load = True, discrete=False, postfix='', Object = 'poly10', with_fingers = False)
+    texp = transition_experience(Load = True, discrete=False, postfix='')#, Object = 'cyl35', with_fingers = False)
 
     # texp.process_transition_data(stepSize = 1, plot = True)
     # texp.process_svm(stepSize = 1)
-=======
-    texp = transition_experience(Load = True, discrete=True, postfix='', Object = 'cyl30', with_fingers = False)
 
-    # texp.process_transition_data(stepSize = 1, plot = True)
-    texp.process_svm(stepSize = 1)
->>>>>>> 714febbca4679450a4db95f1b74779234ae9d6d9
->>>>>>> 49f6de2c2209df597a0171521e749c4f37204bd1
-
-    # texp.plot_data()
+    texp.plot_data()
 
     return 1
 

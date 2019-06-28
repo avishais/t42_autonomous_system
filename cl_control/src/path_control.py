@@ -48,13 +48,13 @@ test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 with open(test_path + 'testpaths_' + Obj + '_d_v' + str(1) + '.pkl', 'r') as f: 
     action_seq, test_paths, Obj, _ = pickle.load(f)
 
-i = 4 # str40
-# i = 0 # cyl35
+# i = 4 # str40
+i = 1 # cyl35
 # i = 5 # sqr30
 # i = 2 # poly10
 
-S = test_paths[i][:1030,:]
-A = action_seq[i][:1030,:]
+S = test_paths[i]#[:1030,:]
+A = action_seq[i]#[:1030,:]
 
 if 1:
     S = S[:,:4]

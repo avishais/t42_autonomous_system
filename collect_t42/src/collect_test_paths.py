@@ -61,7 +61,7 @@ with open(test_path + 'testpaths_' + 'cyl35' + '_d_v' + str(1) + '.pkl', 'r') as
 rollout_srv = rospy.ServiceProxy('/rollout/rollout', rolloutReq)
 rospy.init_node('collect_test_paths', anonymous=True)
 
-Obj = 'poly10'
+Obj = 'tri50'
 path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 if 1:

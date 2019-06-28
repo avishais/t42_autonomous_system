@@ -7,7 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'poly10'
+Obj = 'tri50'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'

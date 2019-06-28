@@ -106,8 +106,8 @@ class general_control():
         
         # Reset gripper
         self.trigger = False
-        # self.ResetArm()
-        self.close_srv()
+        self.ResetArm()
+        # self.close_srv()
         rospy.sleep(3.)
 
         # grasp_state = np.copy(np.concatenate((self.obj_pos, self.gripper_load), axis=0))
@@ -132,8 +132,8 @@ class general_control():
         dd_count = 0
         Controller = 'GP'
 
-        print "Fix position and press key... "
-        raw_input()
+        # print "Fix position and press key... "
+        # raw_input()
 
         self.trigger_srv(True)        
         print("[control] Tracking path...")
