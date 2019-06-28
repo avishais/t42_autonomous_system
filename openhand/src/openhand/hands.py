@@ -697,7 +697,8 @@ class Model_T42(OpenHand):
 
 	#default OpenHand commands:
 	def reset(self):
-		self.release()
+		# self.release()
+		pass
 
 	def close(self,amnt=0.45):	#position-based closing mechanism
 		self.moveMotor(0,amnt)

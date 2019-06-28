@@ -46,7 +46,7 @@ class keyboard_control():
             if ord(self.ch) == 27:
                 break
 
-            if np.any(self.ch == np.array(['o','p','n','m'])):
+            if np.any(self.ch == np.array(['o','p','n','m','u','j'])):
                 moveKey_srv(self.ch)
                 self.ch = 's'
                 rospy.sleep(1.0)

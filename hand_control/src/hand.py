@@ -18,6 +18,7 @@ from hand_control.srv import TargetAngles, IsDropped, observation, close, ObjOri
 import geometry_msgs.msg
 import math
 import time
+import pickle
 
 class hand_control():
 
@@ -54,6 +55,13 @@ class hand_control():
     
     move_servos_srv = 0.
     df = 0.0
+    
+    memory = []
+    Action = np.array([0.,0.,0.,0.])
+    record_trigger = False
+    T = 0.0
+
+    path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
     def __init__(self):
         rospy.init_node('hand_control', anonymous=True)
@@ -95,7 +103,7 @@ class hand_control():
 
         msg = Float32MultiArray()
 
-        self.rate = rospy.Rate(100)
+        self.rate = rospy.Rate(10)
         c = True
         count = 0
         while not rospy.is_shutdown():
@@ -112,6 +120,9 @@ class hand_control():
                 dr, verbose = self.CheckDropped()
                 pub_drop.publish(dr)
             count += 1
+
+            if self.record_trigger:
+                self.record()
 
             if c and not np.all(self.gripper_load==0): # Wait till openhand services ready and set gripper open pose
                 self.moveGripper(self.finger_opening_position)
@@ -131,6 +142,10 @@ class hand_control():
         self.angle = np.array(self.angle)
         return {'ori':self.angle[0]}
 	#this is to calculate the orientation of the object in space
+
+    def record(self):
+        time = rospy.get_time()-self.T
+        self.memory += [(time, self.Action)]
     
     def getCorner(self,msg):
         self.cornerPos = [msg.position.x, msg.position.y]
@@ -314,10 +329,10 @@ class hand_control():
             inc_angles = np.multiply(self.finger_move_offset, np.array([0., 0., 0., 0.]))
         # Up
         if action == 'w': 
-            inc_angles = np.multiply(self.finger_move_offset, np.array([0., -1., -1., 0.]))
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., -0.6, -0.6, 1.0]))
         # Down
         if action == 'x':
-            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., 1., -1.]))
+            inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., 1., -0.7]))
         # Tilt right
         if action == 'd':
             inc_angles = np.multiply(self.finger_move_offset, np.array([0., 1., -1., 0.]))
@@ -377,6 +392,8 @@ class hand_control():
         self.gripper_cur_pos[ np.where( self.gripper_cur_pos < 0.0 )[0]] = 0.0
         self.gripper_cur_pos[ np.where( self.gripper_cur_pos > 1.0 )[0]] = 1.0
         suc = self.moveGripper(self.gripper_cur_pos)
+
+        self.Action = np.copy(inc_angles)
         return suc
 
 
@@ -424,6 +441,19 @@ class hand_control():
         if action == 'p':
             msg = Empty()
             self.OpenGripper(msg)
+            return True
+
+        # Start recording
+        if action == 'u':
+            self.record_trigger = True 
+            self.memory = []
+            self.T = rospy.get_time()
+            return True
+        # Stop recording
+        if action == 'j':
+            self.record_trigger = False 
+            with open(self.path + 'modelO_actionSeq_d_roll_' + str(np.random.randint(100000)) + '.pkl', 'wb') as f: 
+                pickle.dump(self.memory, f)
             return True
         
         # Power grip/close

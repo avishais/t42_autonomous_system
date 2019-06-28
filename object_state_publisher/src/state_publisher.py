@@ -17,17 +17,19 @@ class state_listener():
         rospy.init_node('object_state_listener', anonymous=True)
 
         rospy.Subscriber('/marker_pose', multifacePose, self.callbackmultifacePose)
-        rec_srv = rospy.ServiceProxy('/record_hand_pose', Empty)
+        # rec_srv = rospy.ServiceProxy('/record_hand_pose', Empty)
         pose_pub = rospy.Publisher('/object_pose', Float64MultiArray, queue_size=15)
 
-        rospy.sleep(2.0)
-        rec_srv()
+        # rospy.sleep(2.0)
+        # rec_srv()
 
         print('[object_state_listener] Publishing object pose...')
+        msg = Float64MultiArray()
 
         rate = rospy.Rate(100)
         while not rospy.is_shutdown():
-            pub.publish(self.obj_pose)
+            msg.data = self.obj_pose
+            pose_pub.publish(msg)
             rate.sleep()
         
 
@@ -48,17 +50,17 @@ class state_listener():
             y = msg.pose.position.y - (.30/2)
             z = msg.pose.position.z - (.64/2)
         elif id == 0:
-            x = msg.pose.position.x - (.60/2)
-            y = msg.pose.position.y - (.30/2)
-            z = msg.pose.position.z - (.64/2)
-	    else:
+            x = msg.pose.position.y# - (.60/2)
+            y = msg.pose.position.x# - (.30/2)
+            z = msg.pose.position.z# - (.64/2)
+        else:
             print('[object_state_listener] Cannot identify marker...')
 
         # Orientation
-        orientation = msg.pose.orientation
-        roll, pitch, yaw = euler_from_quaternion(orientation)
+        # orientation = msg.pose.orientation
+        roll, pitch, yaw = 0,0,0#euler_from_quaternion(orientation)
 
-        self.obj_pose = np.array([x, y, z, roll, pitch, yaw])
+        self.obj_pose = np.array([x*1e3, y*1e3, z*1e3, roll, pitch, yaw])
 
         print self.obj_pose
 
