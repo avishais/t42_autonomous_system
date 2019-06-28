@@ -10,7 +10,7 @@ from std_srvs.srv import Empty, EmptyResponse
 import geometry_msgs.msg
 
 class actorPubRec():
-    discrete_actions = False
+    discrete_actions = True
 
     gripper_pos = np.array([0., 0.])
     gripper_load = np.array([0., 0.])
