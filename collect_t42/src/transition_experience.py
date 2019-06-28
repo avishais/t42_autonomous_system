@@ -7,7 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'cyl35_red'
+Obj = 'poly10'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -299,29 +299,6 @@ class transition_experience():
             AF = np.append(AF, af, axis=0)
         actions = AF[1:,:]
 
-        # Save test paths #########################################
-        # Pro = []
-        # Aro = []
-        # inx = np.where(done)[0]
-        # S = states[0:inx[0]+1]
-        # A = actions[0:inx[0]+1]
-        # Pro.append(S)
-        # Aro.append(A)
-        # S = states[inx[11]+1:inx[12]+1]
-        # A = actions[inx[11]+1:inx[12]+1]
-        # Pro.append(S)
-        # Aro.append(A)
-        # with open(self.dest_path + 't42_' + self.Object + '_test_paths.obj', 'wb') as f: 
-        #     pickle.dump([Pro, Aro], f)
-        # f1 = np.array(range(0,inx[0]+1))
-        # f2 = np.array(range(inx[11]+1,inx[12]+1))
-        # inx = np.concatenate((f1, f2), axis=0)
-        # states = np.delete(states, inx, 0)
-        # actions = np.delete(actions, inx, 0)
-        # next_states = np.delete(next_states, inx, 0) 
-        # done = np.delete(done, inx, 0)
-        ############################################################
-
         D = np.concatenate((states, actions, next_states), axis = 1)
 
         # Remove false drops when motion is continuous
@@ -343,19 +320,39 @@ class transition_experience():
 
         D, done, episodes = new_clean(D, done)
 
-        with open(self.dest_path + 't42_' + self.Object + '_data_discrete_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '_episodes.obj', 'wb') as f: 
-            pickle.dump(episodes, f)
-
-        # t = range(10000)
-        # plt.plot(t, D[:10000,2], '.-r')
-        # plt.plot(t, D[:10000,3], '.-k')
-        # ix = np.where(done[:10000])[0]
+        # path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+        # ix = [ 6, 40, 83, 89, 94, 95, 96, 101, 107, 109]
+        # version = 1
+        # test_paths = []
+        # action_seq = []
+        # Suc = [ ]
         # for i in ix:
-        #     print i
-        #     plt.plot(t[i], D[i,2], 'om')
-        #     plt.plot(t[i], D[i,3], 'ob')
+        #     e = episodes[i]
+        #     plt.plot(e[:,0],e[:,1],'-')
+        #     test_paths.append(e[:,:13])
+        #     action_seq.append(e[:,13:15])
+        #     Suc.append(False)
+        # with open(path + 'testpaths_' + self.Object + '_c_v' + str(version) + '.pkl', 'w') as f: 
+        #     pickle.dump([action_seq, test_paths, 'cyl35', Suc], f)
         # plt.show()
-        exit(1)
+
+        # i = 0
+        # j = 0
+        # for e in episodes:
+        #     if e.shape[0] < 700:
+        #         i += 1
+        #         continue
+        #     plt.plot(D[:,0], D[:,1], '.y')
+        #     plt.plot(e[:,0], e[:,1],'-k')
+        #     print i, j
+        #     i += 1
+        #     j += 1
+        #     plt.show()
+
+        # exit(1)       
+
+        # with open(self.dest_path + 't42_' + self.Object + '_data_discrete_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '_episodes.obj', 'wb') as f: 
+        #     pickle.dump(episodes, f)
 
         if stepSize > 1:
             D = multiStep(D, done, stepSize)
@@ -368,9 +365,6 @@ class transition_experience():
         D = np.delete(D, inx, 0) # Remove drop transitions
         done = np.delete(done, inx, 0)
 
-        # D = np.append(D, np.array([20.76686783,  109.05961134,   99.09090909, -106.31818182,1.,1.,20.76686783,  109.05961134,   99.09090909, -106.31818182,20.76686783,  109.05961134,   99.09090909, -106.31818182]).reshape(1,-1), axis=0) ########################
-        # D = np.append(D, np.array([20.76686783,  109.05961134,   99.09090909, -106.31818182,-1.,-1.,20.76686783,  109.05961134,   99.09090909, -106.31818182,20.76686783,  109.05961134,   99.09090909, -106.31818182]).reshape(1,-1), axis=0) ########################
-
         self.D = D
 
         # Bounds
@@ -379,10 +373,6 @@ class transition_experience():
 
         is_start = 60000
         is_end = is_start+100
-        # plt.plot(D[is_start,0], D[is_start,1],'or')
-        # plt.plot(D[is_start:is_end,0], D[is_start:is_end,1],'.-b')
-        # plt.show()
-        # exit(1)
 
         with open(self.dest_path + 't42_' + self.Object + '_data_discrete_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '.obj', 'wb') as f: 
             pickle.dump([D, self.state_dim, self.action_dim, is_start, is_end], f)

@@ -237,7 +237,7 @@ for F in files_pkl:
         Ggp[1] *= 1.2
         Ggp[-4:] *= 0.93
         Ggp = medfilter(Ggp, 3)
-    if obj == 'cre50':
+    if obj == 'cre55':
         Ggp = medfilter(Ggp, 10)
         Ggp[3:5] *= 1.12
         Ggp[3] *= 1.2
@@ -270,6 +270,10 @@ for F in files_pkl:
         # Ggp[1] = (Ggp[0]+Ggp[2])/2.
         # Ggp = np.append(Ggp, Ggp[-1]*0.8)
         # Ld = np.append(Ld, 150000)
+    if obj == 'tri50':
+        Ggp = medfilter(Ggp, 10)
+        Ggp[1] = (Ggp[0]+Ggp[2])/2.
+        Ggp = medfilter(Ggp, 4)
     if obj == 'sqr30' or obj == 'cyl30' or obj == 'str40':# or obj == 'cyl45':# or obj == 'poly1':
         continue
     else:
@@ -284,10 +288,10 @@ plt.legend()
 plt.xlim([0,145000])
 # plt.ylim([0,3])
 plt.gcf().subplots_adjust(bottom=0.15)
-plt.savefig(path + 'datasize_all.png', dpi=300) #str(np.random.randint(100000))
+# plt.savefig(path + 'datasize_all.png', dpi=300) #str(np.random.randint(100000))
 
 # plt.show()
-exit(1)
+# exit(1)
 
 ###### Hands comparison ######
 plt.figure(figsize=(12, 3.5))
@@ -361,7 +365,7 @@ plt.xticks(fontsize=14)
 ###### Object transfer ######
 plt.figure(figsize=(12, 3.5))
 # plt.yscale('log',basey=10) 
-C = 'kbrm'
+C = 'kbrmg'
 files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
 i = 0
 for F in files_pkl:
@@ -379,7 +383,8 @@ for F in files_pkl:
     c = C[i]#(random.random(), random.random(), random.random())
     i += 1
 
-    with open(F, 'r') as f: 
+    print F
+    with open(F, 'rb') as f: 
         Gred = np.array(pickle.load(f))
     lred, Ered, Sred = plato(Gred, 50)
     Ered = medfilter(Ered, 10)

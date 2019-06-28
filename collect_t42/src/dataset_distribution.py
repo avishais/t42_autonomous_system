@@ -17,8 +17,8 @@ from svm_class import svm_failure
 np.random.seed(415)
 
 path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
-transition_path = '/home/pracsys/Dropbox/transfer/RUM/transition_data/'
-failure_path = '/home/pracsys/Dropbox/transfer/RUM/failure_data/'
+transition_path = '/home/pracsys/Dropbox/transfer/RUM/Model_T42/transition_data/'
+failure_path = '/home/pracsys/Dropbox/transfer/RUM/Model_T42/failure_data/'
 
 def get_objs(discrete=True):
     files = glob.glob(path + "*.obj")

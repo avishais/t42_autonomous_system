@@ -125,8 +125,8 @@ H[0] = 1
 w = [40, 40, 100, 100]
 
 ## GP
-pr = '_w_poly10'
-if 1:
+pr = ''
+if 0:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, _, Suc = pickle.load(f)
 
