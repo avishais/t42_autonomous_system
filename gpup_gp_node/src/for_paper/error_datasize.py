@@ -14,7 +14,7 @@ import time
 # np.random.seed(10)
 
 version = 0
-Obj = 'sem60'
+Obj = 'cyl35'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','egg50','cre55','tri50','sem60'])):
     state_dim = 5
 else:
@@ -85,7 +85,7 @@ if 1:
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
     if 0:
-        with open(path + 'datasize_analysis_' + Obj + '_gp.pkl', 'r') as f: 
+        with open(path + 'datasize_analysis_' + Obj + '_o_gp.pkl', 'r') as f: 
             Ld, Ggp = pickle.load(f)
     else: 
         Ggp = []
@@ -131,16 +131,16 @@ if 1:
 
         Ggp.append(np.sqrt(e / n))
         
-        with open(path + 'datasize_analysis_' + Obj + '_gp.pkl', 'w') as f: 
+        with open(path + 'datasize_analysis_' + Obj + '_o_gp.pkl', 'w') as f: 
             pickle.dump([Ld, Ggp], f)
 
     Ggp = np.array(Ggp)
 
-    with open(path + 'datasize_analysis_' + Obj + '_gp.pkl', 'w') as f: 
+    with open(path + 'datasize_analysis_' + Obj + '_o_gp.pkl', 'w') as f: 
         pickle.dump([Ld, Ggp], f)
 
 else:
-    with open(path + 'datasize_analysis_' + Obj + '_gp.pkl', 'r') as f: 
+    with open(path + 'datasize_analysis_' + Obj + '_o_gp.pkl', 'r') as f: 
         Ld, Ggp = np.array(pickle.load(f))
 
  

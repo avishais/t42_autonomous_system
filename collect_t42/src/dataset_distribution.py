@@ -128,8 +128,8 @@ def process_transition_data(Object, memory):
     state_action_dim = state_dim + action_dim 
 
     done = validate_drops(states, done)
-    if np.any(Object == np.array(['poly6', 'cyl35_red'])): # When the actions length is not at the same size as the states
-        done[-1] = True
+    # if np.any(Object == np.array(['poly6', 'cyl35_red'])): # When the actions length is not at the same size as the states
+    #     done[-1] = True
 
     D = np.concatenate((T.reshape(-1,1), states, actions, next_states), axis = 1)
 
@@ -154,7 +154,7 @@ def process_transition_data(Object, memory):
     return E, s       
 
 def main():
-    discrete = True # discrete or continuous
+    discrete = False # discrete or continuous
     objs, files = get_objs(discrete)
 
     cd_mode = '_d_' if discrete else '_c_'
@@ -166,9 +166,16 @@ def main():
             target_file = 'raw_t42_' + obj + cd_mode[:-1] + '.obj'
             if not check_exist(target_file, ('discrete/' if discrete else 'continuous/'), transition_path):
                 print('Loading data for ' + obj + '...')
-                with open(file, 'rb') as filehandler:
-                    memory = pickle.load(filehandler)
+                try:
+                    with open(file, 'rb') as filehandler:
+                        memory = pickle.load(filehandler)
+                except:
+                    print('Failed to load ' + file)
+                    continue
                 print('Loaded transition data of size %d.'%len(memory))
+
+                if len(memory) < 100000:
+                    continue
 
                 #### Transition data ####
                 episodes, data_size = process_transition_data(obj, memory)

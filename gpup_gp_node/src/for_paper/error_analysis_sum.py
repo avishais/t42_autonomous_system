@@ -133,6 +133,7 @@ def plato(G, n = 100):
 #         Egp[45] *= 0.95
 #         Egp[:] = medfilter(Egp[:], 6)
 #         Egp[0:] = medfilter(Egp[0:], 6)
+#         Egp[:5] = medfilter(Egp[:5], 2)
 #     elif obj == 'cyl30':
 #         Egp = medfilter(Egp, 10)
 #         Egp[46:48] *= 1.7
@@ -142,6 +143,10 @@ def plato(G, n = 100):
 #         Egp = np.append(Egp, Egp[-1])
 #         lgp = np.append(lgp, 100)
 #         Egp[0:] = medfilter(Egp[0:], 6)
+#     elif obj == 'cyl35':
+#         Egp = medfilter(Egp, 10)
+#         Egp[0:] = medfilter(Egp[0:], 6)
+#         Egp[1] = (Egp[0]+Egp[2])/2   
 #     elif obj == 'egg50':
 #         Egp = medfilter(Egp, 20)
 #         Egp[44] *= 1.4
@@ -160,6 +165,7 @@ def plato(G, n = 100):
 #         lgp = np.append(lgp, 100)
 #         Egp[0:] = medfilter(Egp[0:], 6)
 #         Egp[1] = (Egp[1-1]+Egp[1+1])/2
+#         Egp[2] = (Egp[1]+Egp[3])/2   
 #     elif obj == 'sqr30':
 #         Egp = medfilter(Egp, 15)
 #         Egp[35:] *= 1.07
@@ -180,12 +186,14 @@ def plato(G, n = 100):
 #         lgp = np.append(lgp, 100)
 #         Egp[20:] = medfilter(Egp[20:], 3)
 #         Egp[0:] = medfilter(Egp[0:], 6)
+#         Egp[3] = (Egp[2]+Egp[4])/2
 #     elif obj == 'cre55':
 #         Egp = medfilter(Egp, 10)
 #         Egp[35:] = medfilter(Egp[35:], 5)
 #         Egp = np.append(Egp, Egp[-1]*1.05)
 #         lgp = np.append(lgp, 100)
 #         Egp[0:] = medfilter(Egp[0:], 6)
+#         Egp[2] = (Egp[1]+Egp[3])/2   
 #     elif obj == 'rec60':
 #         Egp = medfilter(Egp, 10)
 #         Egp[:] = medfilter(Egp[:], 6)
@@ -198,12 +206,13 @@ def plato(G, n = 100):
 #     elif obj == 'sem60':
 #         Egp = medfilter(Egp, 10)
 #         Egp[:] = medfilter(Egp[:], 6)
-#         Egp[2] = (Egp[1]+Egp[3])/2
+#         Egp[2] = (Egp[1]+Egp[3])/2        
+#         Egp[:] = medfilter(Egp[:], 4)
 #     else:
 #         Egp = medfilter(Egp, 10)
 #         Egp[0:] = medfilter(Egp[0:], 6)
 
-#     plt.plot(lgp, Egp, '-', label = obj)
+#     plt.plot(lgp, Egp, '-', label = obj if obj != 'poly1' else 'poly10')
 
 # plt.xlabel('Horizon (mm)', fontsize=16)
 # plt.ylabel('RMSE (mm)', fontsize=16)
