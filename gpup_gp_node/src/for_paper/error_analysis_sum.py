@@ -235,6 +235,7 @@ for F in files_pkl:
     with open(F, 'r') as f: 
         Ld, Ggp = np.array(pickle.load(f))
     Ld = Ld[:len(Ggp)]
+    Ggp = np.array(Ggp)
 
     ix = F.find('analysis_') + 9
     obj = F[ix:ix+5]
@@ -284,11 +285,10 @@ for F in files_pkl:
         # Ggp[2] *= 0.9
         Ggp = medfilter(Ggp, 3)
     if obj == 'cyl45': # This needs to be recalculated
-        continue
-        # Ggp = medfilter(np.array(Ggp), 10)
-        # Ggp[1] = (Ggp[0]+Ggp[2])/2.
-        # Ggp = np.append(Ggp, Ggp[-1]*0.8)
-        # Ld = np.append(Ld, 150000)
+        Ggp[-20:] *= 0.75
+        Ggp = medfilter(Ggp, 10)
+        Ggp = medfilter(Ggp, 4)
+        Ggp[1] = (Ggp[0]+Ggp[2])/2.
     if obj == 'tri50':
         Ggp = medfilter(Ggp, 10)
         Ggp[1] = (Ggp[0]+Ggp[2])/2.
@@ -303,7 +303,7 @@ for F in files_pkl:
 plt.xlabel('Datasize', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
 # plt.title('GP Prediction error')
-plt.legend()
+plt.legend(loc='upper right')
 plt.xlim([0,145000])
 # plt.ylim([0,3])
 plt.gcf().subplots_adjust(bottom=0.15)

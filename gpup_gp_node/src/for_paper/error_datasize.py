@@ -80,7 +80,7 @@ def tracking_error(S1, S2):
 w = [40, 40, 100, 100]
 
 ## GP
-if 1:
+if 0:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
@@ -142,11 +142,13 @@ if 1:
 else:
     with open(path + 'datasize_analysis_' + Obj + '_o_gp.pkl', 'r') as f: 
         Ld, Ggp = np.array(pickle.load(f))
+    Ggp = np.array(Ggp)
+    nl = len(Ggp)
 
  
 Ggp = medfilter(Ggp, 5)
 
-plt.plot(Ld, Ggp, '-b', label = 'GP')
+plt.plot(Ld[:nl], Ggp, '-b', label = 'GP')
 
 plt.xlabel('Number of datapoints', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
