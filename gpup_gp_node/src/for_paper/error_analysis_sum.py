@@ -284,10 +284,10 @@ plt.legend()
 plt.xlim([0,145000])
 # plt.ylim([0,3])
 plt.gcf().subplots_adjust(bottom=0.15)
-plt.savefig(path + 'datasize_all.png', dpi=300) #str(np.random.randint(100000))
+# plt.savefig(path + 'datasize_all.png', dpi=300) #str(np.random.randint(100000))
 
 # plt.show()
-exit(1)
+# exit(1)
 
 ###### Hands comparison ######
 plt.figure(figsize=(12, 3.5))
@@ -337,7 +337,7 @@ plt.xlim([0,100])
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 plt.gcf().subplots_adjust(bottom=0.15)
-plt.savefig(path + 'pred_blue_red_modeling.png', dpi=300) #str(np.random.randint(100000))
+# plt.savefig(path + 'pred_blue_red_modeling.png', dpi=300) #str(np.random.randint(100000))
 
 # Artificial function
 # plt.figure(4)
@@ -361,7 +361,7 @@ plt.xticks(fontsize=14)
 ###### Object transfer ######
 plt.figure(figsize=(12, 3.5))
 # plt.yscale('log',basey=10) 
-C = 'kbrm'
+C = 'kbrmgc'
 files_pkl = glob.glob(path + 'prediction_analysis_' + "*_gp.pkl")
 i = 0
 for F in files_pkl:
@@ -407,9 +407,9 @@ plt.xlim([0,100])
 plt.xticks(fontsize=14)
 plt.yticks(fontsize=14)
 plt.gcf().subplots_adjust(bottom=0.15)
-plt.savefig(path + 'pred_obj_transfer.png', dpi=300) #str(np.random.randint(100000))
+# plt.savefig(path + 'pred_obj_transfer.png', dpi=300) #str(np.random.randint(100000))
 
-# plt.show()
+plt.show()
 
 
 

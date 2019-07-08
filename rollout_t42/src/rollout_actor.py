@@ -22,24 +22,26 @@ class rollout():
     drop_counter = 0
 
     def __init__(self):
-        rospy.init_node('rollout_t42', anonymous=True)
+        rospy.init_node('rollout_actor_t42', anonymous=True)
 
         self.move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
         self.arm_reset_srv = rospy.ServiceProxy('/RegraspObject', RegraspObject)
         rospy.Subscriber('/cylinder_drop', Bool, self.callbackObjectDrop)
         rospy.Subscriber('/rollout/action', Float32MultiArray, self.callbackAction)
-        rospy.Service('/rollout/run_trigger', SetBool, self.callbackTrigger)
         # suc_pub = rospy.Publisher('/rollout/move_success', Bool, queue_size=10)
         fail_pub = rospy.Publisher('/rollout/fail', Bool, queue_size = 10)
+        self.running_pub = rospy.Publisher('/rollout_actor/runnning', Bool, queue_size = 10)
 
-        print('[rollout] Ready to rollout...')
+        rospy.Service('/rollout/run_trigger', SetBool, self.callbackTrigger)
+
+        print('[rollout_actor] Ready to rollout...')
+        self.running_pub.publish(False)
 
         self.rate = rospy.Rate(2.5) # 15hz
         while not rospy.is_shutdown():
             # suc_pub.publish(self.suc)
 
             if self.running:
-                print self.action
                 self.suc = self.move_srv(self.action).success
 
                 fail_pub.publish(not self.suc or self.drop)
@@ -47,9 +49,11 @@ class rollout():
                 if not self.suc:
                     print("[rollout_actor] Load Fail")
                     self.running = False
+                    self.running_pub.publish(False)
                 elif self.drop:
                     print("[rollout_actor] Drop Fail")
                     self.running = False
+                    self.running_pub.publish(False)
 
             self.rate.sleep()
 
@@ -66,7 +70,9 @@ class rollout():
     def callbackTrigger(self, msg):
         self.running = msg.data
         if self.running:
+            print("[rollout_actor] Started ...")
             self.suc = True
+            self.running_pub.publish(True)
 
         return {'success': True, 'message': ''}
 

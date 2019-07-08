@@ -185,7 +185,7 @@ class hand_control():
             rospy.logerr('[hand_control] Actuators overheated, taking a break...')
             # rospy.signal_shutdown('[hand_control] Actuators overheated, shutting down. Disconnect power cord!')
             while 1:
-                if np.all(self.gripper_temperature < 45.):
+                if np.all(self.gripper_temperature < 60.):
                     break
                 # rospy.sleep(60*2)
                 self.rate.sleep()

@@ -53,15 +53,39 @@ version = 1#var.data_version_
 #         np.array([[ 0., -1.5] for _ in range(int(200*1./stepSize))])), axis=0 )
 # action_seq.append(A)
 
-#v1
+discrete = False
 test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
-with open(test_path + 'testpaths_' + 'cyl35' + '_d_v' + str(1) + '.pkl', 'r') as f: 
+
+#v1
+if discrete:
+    org_paths = 'testpaths_' + 'cyl35' + '_d_v' + str(1) + '.pkl'
+    md = 'd'
+else:
+    org_paths = 'testpaths_' + 'cyl35' + '_c_v' + str(1) + '.pkl'
+    md = 'c'
+with open(test_path + org_paths, 'r') as f: 
     action_seq, _, _, _ = pickle.load(f)
 
 rollout_srv = rospy.ServiceProxy('/rollout/rollout', rolloutReq)
 rospy.init_node('collect_test_paths', anonymous=True)
 
-Obj = 'cyl35_red'
+'''
+d:
+TODO: 
+
+c - data:
+HAVE: elp40, poly10, sqr30, str40, cyl30, poly6, egg50, cyl45
+TOFINISH: tri50, cyl35?
+TODO: rec10, rec60, sem60, cre55
+
+c - test paths
+TODO: poly10, str40
+
+got cl:
+cyl35, elp40, poly6, poly10, sqr30, str40, tri50
+'''
+
+Obj = 'poly10'
 path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 if 1:
@@ -71,7 +95,7 @@ if 1:
     for A in action_seq:
         Af = A.reshape((-1,))
         print("Rollout number " + str(i) + ".")
-        i += 1
+        i += 1       
         
         roll = rollout_srv(Af)
         S = np.array(roll.states).reshape(-1,state_dim)
@@ -80,11 +104,11 @@ if 1:
 
         test_paths.append(S)
         Suc.append(suc)
-
-        with open(path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'w') as f: 
-            pickle.dump([action_seq, test_paths, Obj, Suc], f)
+        
+        # with open(path + 'testpaths_' + Obj + '_' + md + '_v' + str(version) + '.pkl', 'w') as f: 
+        #     pickle.dump([action_seq, test_paths, Obj, Suc], f)
 else:
-    with open(path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
+    with open(path + 'testpaths_' + Obj + '_' + md + '_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, Obj, Suc = pickle.load(f)
 
 

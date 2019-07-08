@@ -19,6 +19,7 @@ class rolloutPublisher():
     suc = True
     drop_counter = 0
     fail = False
+    actor_running = False
 
     def __init__(self):
         rospy.init_node('rollout_t42', anonymous=True)
@@ -30,6 +31,7 @@ class rolloutPublisher():
         self.action_pub = rospy.Publisher('/rollout/action', Float32MultiArray, queue_size = 10)
         # rospy.Subscriber('/rollout/move_success', Bool, self.callbackSuccess)
         rospy.Subscriber('/rollout/fail', Bool, self.callbacFail)
+        rospy.Subscriber('/rollout_actor/runnning', Bool, self.callbackActorRunning)
 
         self.rollout_actor_srv = rospy.ServiceProxy('/rollout/run_trigger', SetBool)
 
@@ -86,8 +88,10 @@ class rolloutPublisher():
         self.S.append(np.copy(state))  
 
         print("[rollout_action_publisher] Rolling-out actions...")
+        while not self.actor_running:
+            self.rollout_actor_srv(True)
+            self.rate.sleep()
         self.record_srv(True)
-        self.rollout_actor_srv(True)
         
         # Publish episode actions
         self.running = True
@@ -105,11 +109,13 @@ class rolloutPublisher():
             msg.data = action
             self.action_pub.publish(msg)
             n -= 1
-            print i, action, A.shape[0]
+            print(i, action, A.shape[0])
 
             if self.fail: # not suc or fail:
                 success = False
                 print("[rollout] Drop Fail.")
+                self.record_srv(False)
+                self.rollout_actor_srv(False)
                 break
 
             if i == A.shape[0] and n == 0:
@@ -141,6 +147,9 @@ class rolloutPublisher():
         self.running = msg.data
 
         return {'success': True, 'message': ''}
+
+    def callbackActorRunning(self, msg):
+        self.actor_running = msg.data
 
     def CallbackRollout(self, req):
 

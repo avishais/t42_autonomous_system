@@ -9,6 +9,10 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pickle
 import geometry_msgs.msg
+from sensor_msgs.msg import CompressedImage, Image
+# import cv2
+
+record_images = False
 
 class rolloutRecorder():
 
@@ -27,8 +31,13 @@ class rolloutRecorder():
     marker1 = np.array([0.,0.])
     marker2 = np.array([0.,0.])
     marker3 = np.array([0.,0.])
-    
 
+    images = []
+    I = []
+    pos_image = np.array([0,0])
+    Simage = []
+    Timages = []
+    
     def __init__(self):
         rospy.init_node('rollout_recorder', anonymous=True)
 
@@ -40,13 +49,21 @@ class rolloutRecorder():
         rospy.Subscriber('/rollout/fail', Bool, self.callbacFail)
         rospy.Subscriber('/object_orientation',Float32MultiArray, self.callbackOrientation)
         rospy.Subscriber('/finger_markers', geometry_msgs.msg.PoseArray, self.callAddFingerPos)
-        
+
         rospy.Service('/rollout/record_trigger', SetBool, self.callbackTrigger)
         rospy.Service('/rollout/get_states', gets, self.get_states)
         rollout_actor_srv = rospy.ServiceProxy('/rollout/run_trigger', SetBool)
         rollout_srv = rospy.ServiceProxy('/rollout/run_trigger', SetBool)
+        if record_images:
+            rospy.Subscriber('/camera/color/image_raw', Image, self.callbackImage,  queue_size = 1)
+            rospy.Subscriber('/marker2D', geometry_msgs.msg.Pose, self.callbackPosImage)
 
-        self.rate = rospy.Rate(10) # 10hz
+        print('[rollout_recorder] Ready ...')
+
+        if not record_images:
+            self.rate = rospy.Rate(10) # 10hz
+        else:
+            self.rate = rospy.Rate(2) # 5hz
         while not rospy.is_shutdown():
 
             if self.running:
@@ -56,6 +73,12 @@ class rolloutRecorder():
                 self.S.append(self.state)
                 self.A.append(self.action)
                 self.T.append(rospy.get_time() - self.T0)
+
+                if record_images:
+                    
+                    self.images.append(self.I)
+                    self.Simage.append(self.pos_image)
+                    self.Timages.append(rospy.get_time() - self.T0)
 
                 if self.fail:
                     print('[rollout_recorder] Episode ended with %d points.'%len(self.S))
@@ -77,6 +100,17 @@ class rolloutRecorder():
 
     def callbackOrientation(self,msg):
         self.angle = msg.data
+
+    def callbackImage(self, msg):
+        # self.I = msg.data
+        self.I = np.fromstring(msg.data, np.uint8).reshape(480,640,3)
+        # self.I = cv2.imdecode(self.I, -1)
+        # print self.I.shape
+        # plt.imshow(self.I)
+        # plt.show()
+
+    def callbackPosImage(self, msg):
+        self.pos_image = np.array([msg.position.x, msg.position.y])
 
     def callAddFingerPos(self, msg):
         tempMarkers =  msg.poses
@@ -100,6 +134,8 @@ class rolloutRecorder():
             self.A = []
             self.T = []
             self.T0 = rospy.get_time()
+            self.images = []
+            self.Timages = []
             print('[rollout_recorder] Recording started.')
             self.fail = False
         else:
@@ -108,7 +144,10 @@ class rolloutRecorder():
         return {'success': True, 'message': ''}
 
     def get_states(self, msg):
-        # S = self.medfilter(np.array(self.S), 20)
+
+        if record_images:
+            with open('/media/pracsys/DATA/hand_images_data/rollout_red_' + str(np.random.randint(10000)) + '.pkl', 'wb') as f:
+                pickle.dump([self.Timages, self.Simage, self.images, self.S, self.A, self.T], f)          
 
         return {'states': np.array(self.S).reshape((-1,)), 'actions': np.array(self.A).reshape((-1,)), 'time': np.array(self.T).reshape((-1,))}
 
@@ -124,8 +163,6 @@ class rolloutRecorder():
             else:
                 x_new[i] = np.mean(x[i-w:i+w])
         return x_new
-
-
 
 if __name__ == '__main__':
     try:

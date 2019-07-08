@@ -16,7 +16,7 @@ class collect_data():
 
     gripper_closed = False
     trigger = True # Enable collection
-    discrete_actions = True # Discrete or continuous actions
+    discrete_actions = False # Discrete or continuous actions
     arm_status = ' '
     global_trigger = True
 
@@ -265,7 +265,7 @@ class collect_data():
                 if self.first:
                     n = np.random.randint(200)
                 else:
-                    n = np.random.randint(12, 50)
+                    n = np.random.randint(15, 80)
                     a = np.random.uniform(-1.,1.,2)
                     print "Running " + str(n) + " times action " + str(a) + " ..."
             else:
