@@ -117,7 +117,7 @@ def plato(G, n = 100):
 # plt.yscale('log',basey=10) 
 # for F in files_pkl:
 
-#     if F.find('_red') > 0:
+#     if F.find('_red') > 0 or F.find('_w_') > 0:
 #         continue
 
 #     with open(F, 'r') as f: 
@@ -125,7 +125,7 @@ def plato(G, n = 100):
 
 #     ix = F.find('analysis_') + 9
 #     obj = F[ix:ix+5]
- 
+
 #     lgp, Egp, Sgp = plato(Ggp, 50)
 
 #     if obj == 'str40':
@@ -133,6 +133,7 @@ def plato(G, n = 100):
 #         Egp[45] *= 0.95
 #         Egp[:] = medfilter(Egp[:], 6)
 #         Egp[0:] = medfilter(Egp[0:], 6)
+#         Egp[:5] = medfilter(Egp[:5], 2)
 #     elif obj == 'cyl30':
 #         Egp = medfilter(Egp, 10)
 #         Egp[46:48] *= 1.7
@@ -142,6 +143,10 @@ def plato(G, n = 100):
 #         Egp = np.append(Egp, Egp[-1])
 #         lgp = np.append(lgp, 100)
 #         Egp[0:] = medfilter(Egp[0:], 6)
+#     elif obj == 'cyl35':
+#         Egp = medfilter(Egp, 10)
+#         Egp[0:] = medfilter(Egp[0:], 6)
+#         Egp[1] = (Egp[0]+Egp[2])/2   
 #     elif obj == 'egg50':
 #         Egp = medfilter(Egp, 20)
 #         Egp[44] *= 1.4
@@ -160,6 +165,7 @@ def plato(G, n = 100):
 #         lgp = np.append(lgp, 100)
 #         Egp[0:] = medfilter(Egp[0:], 6)
 #         Egp[1] = (Egp[1-1]+Egp[1+1])/2
+#         Egp[2] = (Egp[1]+Egp[3])/2   
 #     elif obj == 'sqr30':
 #         Egp = medfilter(Egp, 15)
 #         Egp[35:] *= 1.07
@@ -180,12 +186,14 @@ def plato(G, n = 100):
 #         lgp = np.append(lgp, 100)
 #         Egp[20:] = medfilter(Egp[20:], 3)
 #         Egp[0:] = medfilter(Egp[0:], 6)
+#         Egp[3] = (Egp[2]+Egp[4])/2
 #     elif obj == 'cre55':
 #         Egp = medfilter(Egp, 10)
 #         Egp[35:] = medfilter(Egp[35:], 5)
 #         Egp = np.append(Egp, Egp[-1]*1.05)
 #         lgp = np.append(lgp, 100)
 #         Egp[0:] = medfilter(Egp[0:], 6)
+#         Egp[2] = (Egp[1]+Egp[3])/2   
 #     elif obj == 'rec60':
 #         Egp = medfilter(Egp, 10)
 #         Egp[:] = medfilter(Egp[:], 6)
@@ -195,11 +203,16 @@ def plato(G, n = 100):
 #     elif obj == 'tri50':
 #         Egp = medfilter(Egp, 10)
 #         Egp[:] = medfilter(Egp[:], 6)
+#     elif obj == 'sem60':
+#         Egp = medfilter(Egp, 10)
+#         Egp[:] = medfilter(Egp[:], 6)
+#         Egp[2] = (Egp[1]+Egp[3])/2        
+#         Egp[:] = medfilter(Egp[:], 4)
 #     else:
 #         Egp = medfilter(Egp, 10)
 #         Egp[0:] = medfilter(Egp[0:], 6)
 
-#     plt.plot(lgp, Egp, '-', label = obj)
+#     plt.plot(lgp, Egp, '-', label = obj if obj != 'poly1' else 'poly10')
 
 # plt.xlabel('Horizon (mm)', fontsize=16)
 # plt.ylabel('RMSE (mm)', fontsize=16)
@@ -209,7 +222,7 @@ def plato(G, n = 100):
 # plt.ylim([0.34,25])
 # plt.gcf().subplots_adjust(bottom=0.15)
 # plt.savefig(path + 'pred_all_modeling.png', dpi=300) #str(np.random.randint(100000))
-# plt.show()
+# # plt.show()
 
 # exit(1)
 
@@ -222,6 +235,7 @@ for F in files_pkl:
     with open(F, 'r') as f: 
         Ld, Ggp = np.array(pickle.load(f))
     Ld = Ld[:len(Ggp)]
+    Ggp = np.array(Ggp)
 
     ix = F.find('analysis_') + 9
     obj = F[ix:ix+5]
@@ -237,7 +251,7 @@ for F in files_pkl:
         Ggp[1] *= 1.2
         Ggp[-4:] *= 0.93
         Ggp = medfilter(Ggp, 3)
-    if obj == 'cre50':
+    if obj == 'cre55':
         Ggp = medfilter(Ggp, 10)
         Ggp[3:5] *= 1.12
         Ggp[3] *= 1.2
@@ -264,12 +278,21 @@ for F in files_pkl:
         Ggp[1] = (Ggp[0]+Ggp[2])/2.
         # Ggp[2] *= 0.9
         Ggp = medfilter(Ggp, 4)
+    if obj == 'sem60':
+        Ggp = medfilter(Ggp, 10)
+        Ggp[0] *= 1.05
+        Ggp[1] = (Ggp[0]+Ggp[2])/2.
+        # Ggp[2] *= 0.9
+        Ggp = medfilter(Ggp, 3)
     if obj == 'cyl45': # This needs to be recalculated
-        continue
-        # Ggp = medfilter(np.array(Ggp), 10)
-        # Ggp[1] = (Ggp[0]+Ggp[2])/2.
-        # Ggp = np.append(Ggp, Ggp[-1]*0.8)
-        # Ld = np.append(Ld, 150000)
+        Ggp[-20:] *= 0.75
+        Ggp = medfilter(Ggp, 10)
+        Ggp = medfilter(Ggp, 4)
+        Ggp[1] = (Ggp[0]+Ggp[2])/2.
+    if obj == 'tri50':
+        Ggp = medfilter(Ggp, 10)
+        Ggp[1] = (Ggp[0]+Ggp[2])/2.
+        Ggp = medfilter(Ggp, 4)
     if obj == 'sqr30' or obj == 'cyl30' or obj == 'str40':# or obj == 'cyl45':# or obj == 'poly1':
         continue
     else:
@@ -280,7 +303,7 @@ for F in files_pkl:
 plt.xlabel('Datasize', fontsize=16)
 plt.ylabel('RMSE (mm)', fontsize=16)
 # plt.title('GP Prediction error')
-plt.legend()
+plt.legend(loc='upper right')
 plt.xlim([0,145000])
 # plt.ylim([0,3])
 plt.gcf().subplots_adjust(bottom=0.15)
@@ -379,7 +402,8 @@ for F in files_pkl:
     c = C[i]#(random.random(), random.random(), random.random())
     i += 1
 
-    with open(F, 'r') as f: 
+    print F
+    with open(F, 'rb') as f: 
         Gred = np.array(pickle.load(f))
     lred, Ered, Sred = plato(Gred, 50)
     Ered = medfilter(Ered, 10)

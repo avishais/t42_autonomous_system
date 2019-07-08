@@ -48,7 +48,7 @@ test_path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 with open(test_path + 'testpaths_' + Obj + '_d_v' + str(1) + '.pkl', 'r') as f: 
     action_seq, test_paths, Obj, _ = pickle.load(f)
 
-if 1:
+if 0:
 
     j = 0
     Pro = []
@@ -82,42 +82,42 @@ else:
 
 ## Plot ##
 
-# plt.figure(1)
+plt.figure(1)
 
-# Err = []
-# i = 0
-# for P in Pro:
-#     # j = np.array([item[0] for item in P])
-#     Sreal = [item[1] for item in P]
-#     Sref = [item[5] for item in P]
-#     I = [item[4] for item in P]
+Err = []
+i = 0
+for P in Pro:
+    # j = np.array([item[0] for item in P])
+    Sreal = [item[1] for item in P]
+    Sref = [item[5] for item in P]
+    I = [item[4] for item in P]
 
-#     print "----", i
-#     i += 1
+    print "----", i
+    i += 1
 
-#     for sreal, sref, i_path in zip(Sreal, Sref, I):
-#         if sreal.shape[0] < 20:
-#             continue
+    for sreal, sref, i_path in zip(Sreal, Sref, I):
+        if sreal.shape[0] < 20:
+            continue
 
-#         print sref.shape, i_path
+        print sref.shape, i_path
 
-#         sreal = sreal[:-20,:]
+        sreal = sreal[:-20,:]
 
-#         sreal = medfilter(sreal[:,:4], 10)
-#         ds = sreal[0,:2] - sref[0,:2]
-#         sref[:,:2] += ds
-#         sref = sref[:i_path,:]
+        sreal = medfilter(sreal[:,:4], 10)
+        ds = sreal[0,:2] - sref[0,:2]
+        sref[:,:2] += ds
+        sref = sref[:i_path,:]
 
-#         Err.append(tracking_error(sref, sreal))
+        Err.append(tracking_error(sref, sreal))
 
-#         plt.plot(sref[:,0],sref[:,1],'--k')
-#         # plt.plot(sref[i_path,0],sref[i_path,1],'or')
-#         # plt.plot(sref[:,0],sref[:,1],':m')
-#         plt.plot(sreal[:,0],sreal[:,1],'-r')
-#     plt.show()
+        plt.plot(sref[:,0],sref[:,1],'--k')
+        # plt.plot(sref[i_path,0],sref[i_path,1],'or')
+        # plt.plot(sref[:,0],sref[:,1],':m')
+        plt.plot(sreal[:,0],sreal[:,1],'-r')
+plt.show()
 
-# print np.mean(np.array(Err))
-# exit(1)
+print np.mean(np.array(Err))
+exit(1)
 
 fig, ax = plt.subplots(figsize=(12,6))
 

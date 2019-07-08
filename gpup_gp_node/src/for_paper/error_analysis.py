@@ -13,9 +13,9 @@ import time
 
 # np.random.seed(10)
 
-version = 0
+version = 1
 
-Obj = 'sem60'
+Obj = 'elp40'
 if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','tri50','cre55','sem60','poly6_red'])):
     state_dim = 5
 else:
@@ -125,13 +125,13 @@ H[0] = 1
 w = [40, 40, 100, 100]
 
 ## GP
-pr = '_w_poly10'
+pr = ''
 if 1:
     with open(test_path + 'testpaths_' + Obj + '_d_v' + str(version) + '.pkl', 'r') as f: 
         action_seq, test_paths, _, Suc = pickle.load(f)
 
-    if 1:
-        with open(path + 'prediction_analysis_' + Obj + pr +  '_gp.pkl', 'r') as f: 
+    if 0:
+        with open(path + 'prediction_analysis_' + Obj + pr +  '_v1_gp.pkl', 'r') as f: 
             Ggp = pickle.load(f)
     else: 
         Ggp = []
@@ -172,16 +172,16 @@ if 1:
         j += 1
 
         if j == 10000 or j % 5 == 0:
-            with open(path + 'prediction_analysis_' + Obj + pr + '_gp.pkl', 'w') as f: 
+            with open(path + 'prediction_analysis_' + Obj + pr + '_v1_gp.pkl', 'w') as f: 
                 pickle.dump(Ggp, f)
 
-    with open(path + 'prediction_analysis_' + Obj + pr + '_gp.pkl', 'w') as f: 
+    with open(path + 'prediction_analysis_' + Obj + pr + '_v1_gp.pkl', 'w') as f: 
         pickle.dump(Ggp, f)
 
     Ggp = np.array(Ggp)
 
 else:
-    with open(path + 'prediction_analysis_' + Obj + pr + '_gp.pkl', 'r') as f: 
+    with open(path + 'prediction_analysis_' + Obj + pr + '_v1_gp.pkl', 'r') as f: 
         Ggp = np.array(pickle.load(f))
 
 if 0:
