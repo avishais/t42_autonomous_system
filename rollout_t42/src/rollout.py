@@ -88,7 +88,8 @@ class rolloutPublisher():
         self.S.append(np.copy(state))  
 
         print("[rollout_action_publisher] Rolling-out actions...")
-        while not self.actor_running:
+        # while not self.actor_running:
+        for _ in range(3):
             self.rollout_actor_srv(True)
             self.rate.sleep()
         self.record_srv(True)

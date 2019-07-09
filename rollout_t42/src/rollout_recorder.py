@@ -10,9 +10,8 @@ import matplotlib.pyplot as plt
 import pickle
 import geometry_msgs.msg
 from sensor_msgs.msg import CompressedImage, Image
-# import cv2
 
-record_images = False
+record_images = True
 
 class rolloutRecorder():
 
@@ -63,7 +62,7 @@ class rolloutRecorder():
         if not record_images:
             self.rate = rospy.Rate(10) # 10hz
         else:
-            self.rate = rospy.Rate(2) # 5hz
+            self.rate = rospy.Rate(2) # 2hz
         while not rospy.is_shutdown():
 
             if self.running:
@@ -146,7 +145,7 @@ class rolloutRecorder():
     def get_states(self, msg):
 
         if record_images:
-            with open('/media/pracsys/DATA/hand_images_data/rollout_red_' + str(np.random.randint(10000)) + '.pkl', 'wb') as f:
+            with open('/media/pracsys/DATA/hand_images_data/rollout_blue_' + str(np.random.randint(10000)) + '.pkl', 'wb') as f:
                 pickle.dump([self.Timages, self.Simage, self.images, self.S, self.A, self.T], f)          
 
         return {'states': np.array(self.S).reshape((-1,)), 'actions': np.array(self.A).reshape((-1,)), 'time': np.array(self.T).reshape((-1,))}
