@@ -20,6 +20,7 @@ path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 transition_path = '/home/pracsys/Dropbox/transfer/RUM/Model_T42/transition_data/'
 failure_path = '/home/pracsys/Dropbox/transfer/RUM/Model_T42/failure_data/'
 
+
 def get_objs(discrete=True):
     files = glob.glob(path + "*.obj")
 
@@ -43,7 +44,7 @@ def check_exist(target_file, cd_str, path):
 
     return False
 
-def process_transition_data(Object, memory):
+def process_transition_data(Object, memory, red=False):
 
     def medfilter(x, W):
         w = int(W/2)
@@ -118,6 +119,10 @@ def process_transition_data(Object, memory):
     next_states = np.array([item[3] for item in memory])
     done = np.array([item[4] for item in memory]) 
 
+    if red:
+        actions = np.fliplr(actions)
+        print('Flipped.')
+
     states[:,:2] *= 1000.
     states[:,3:11] *= 1000.
     next_states[:,:2] *= 1000.
@@ -154,7 +159,7 @@ def process_transition_data(Object, memory):
     return E, s       
 
 def main():
-    discrete = False # discrete or continuous
+    discrete = True # discrete or continuous
     objs, files = get_objs(discrete)
 
     cd_mode = '_d_' if discrete else '_c_'
@@ -174,11 +179,11 @@ def main():
                     continue
                 print('Loaded transition data of size %d.'%len(memory))
 
-                if len(memory) < 100000:
-                    continue
+                # if len(memory) < 100000:
+                #     continue
 
                 #### Transition data ####
-                episodes, data_size = process_transition_data(obj, memory)
+                episodes, data_size = process_transition_data(obj, memory, True if target_file.find('_red') > 0 else False)
 
                 # Each episode is a dictionary with keys {'episode_number', 'time_stamps', 'states', 'actions', 'next_states'}
                 with open(transition_path + ('discrete/' if discrete else 'continuous/') + target_file, 'wb') as f: 
