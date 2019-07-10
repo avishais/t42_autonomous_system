@@ -7,7 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'tri50'
+Obj = 'rec60'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -69,16 +69,20 @@ class transition_experience():
 
     def plot_data(self):
 
-        # del self.memory[72920:72920 + 35155]
+        # del self.memory[86681]
         # file_pi = open(self.file_name, 'wb')
         # pickle.dump(self.memory, file_pi)
 
         T = np.array([item[0] for item in self.memory])
         states = np.array([item[1] for item in self.memory])
+
         states[:,:2] *= 1000.
         states[:,3:-2] *= 1000.
         done = np.array([item[4] for item in self.memory])
         failed_states = states[done]
+
+        
+        
 
         plt.figure(1)
         ax1 = plt.subplot(221)

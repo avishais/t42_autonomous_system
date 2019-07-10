@@ -74,18 +74,18 @@ d:
 TODO: 
 
 c - data:
-HAVE: elp40, poly10, sqr30, str40, cyl30, poly6, egg50, cyl45
-TOFINISH: tri50, cyl35?
+HAVE: elp40, poly10, sqr30, str40, cyl30, poly6, egg50, cyl45, tri50
+TOFINISH: cyl35 (250,000)
 TODO: rec10, rec60, sem60, cre55
 
 c - test paths
-TODO: poly10, str40
+TODO: str40
 
 got cl:
 cyl35, elp40, poly6, poly10, sqr30, str40, tri50
 '''
 
-Obj = 'poly10'
+Obj = 'str40'
 path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
 
 if 1:
@@ -93,6 +93,7 @@ if 1:
     Suc = []
     i = 0
     for A in action_seq:
+        A = np.fliplr(A) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Af = A.reshape((-1,))
         print("Rollout number " + str(i) + ".")
         i += 1       
