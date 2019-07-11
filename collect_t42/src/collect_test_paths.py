@@ -99,6 +99,7 @@ if 1:
         i += 1       
         
         roll = rollout_srv(Af)
+        print len(roll.states)
         S = np.array(roll.states).reshape(-1,state_dim)
         suc = roll.success
         print("Got %d points with a %s trial."%(S.shape[0], 'successful' if suc else 'failed'))

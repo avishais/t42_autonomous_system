@@ -268,6 +268,8 @@ class hand_control():
             if self.gripper_pos[0] > 0.9 or self.gripper_pos[1] > 0.9 or self.gripper_pos[0] < 0.03 or self.gripper_pos[1] < 0.03:
                 verbose = '[hand] Desired angles out of bounds.'
                 return True, verbose
+        except:
+            print('[hand] Error with gripper_pos.')
 
             # Check load
             if abs(self.gripper_load[0]) > self.max_load or abs(self.gripper_load[1]) > self.max_load:

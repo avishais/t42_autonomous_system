@@ -124,9 +124,9 @@ class collect_data():
                         # print('[collect_data] Rolling out file: ' + files[ia])
                         # Af = np.loadtxt(files[ia], delimiter = ',', dtype=float)[:,:2]
                         if np.random.uniform() > 0.5:
-                            Af = np.tile(np.array([-1.,1.]), (np.random.randint(50,200), 1))
+                            Af = np.tile(np.array([-1.,1.]), (np.random.randint(100,500), 1))
                         else:
-                            Af = np.tile(np.array([1.,-1.]), (np.random.randint(50,200), 1))
+                            Af = np.tile(np.array([1.,-1.]), (np.random.randint(100,500), 1))
                         print('[collect_data] Rolling out shooting with %d steps.'%Af.shape[0])
                     
                     # Start episode
