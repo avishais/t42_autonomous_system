@@ -9,6 +9,8 @@ from predict_nn import predict_nn
 
 class Spin_predict(predict_nn, svm_failure):
 
+    state_dim = 4
+
     def __init__(self):
         predict_nn.__init__(self)
         svm_failure.__init__(self, simORreal = 't42_cyl35', discrete = True)
@@ -24,7 +26,7 @@ class Spin_predict(predict_nn, svm_failure):
     def batch_svm_check(self, S, a):
         failed_inx = []
         for i in range(S.shape[0]):
-            p = self.probability(S[i,:], a[:2]) # Probability of failure
+            p = self.probability(S[i,:], a) # Probability of failure
             prob_fail = np.random.uniform(0,1)
             if prob_fail <= p:
                 failed_inx.append(i)
@@ -103,10 +105,7 @@ class Spin_predict(predict_nn, svm_failure):
 
         # Propagate
         sa = np.concatenate((s, a), axis=0)
-        st = rospy.get_time()
         s_next = self.predict(sa) 
-        self.time_nn += rospy.get_time() - st
-        self.num_checks_nn += 1 
 
         # print(self.time_nn / self.num_checks_nn) 
 
