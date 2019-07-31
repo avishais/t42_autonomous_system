@@ -15,8 +15,8 @@ import time
 
 version = 1
 
-Obj = 'cre55'
-if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','tri50','cre55','sem60','poly6_red'])):
+Obj = 'egg50'
+if np.any(Obj == np.array(['sqr30','poly10','poly6','elp40','str40','rec60','rec10','tri50','cre55','sem60','poly6_red','egg50'])):
     state_dim = 5
 else:
     state_dim = 4
