@@ -1,7 +1,8 @@
 #!/usr/bin/env python
 
 import rospy
-from gpup_gp_node_exp.srv import batch_transition, one_transition
+from gpup_gp_node.srv import batch_transition, one_transition
+#from gpup_gp_node_exp.srv import batch_transition, one_transition
 import numpy as np
 from svm_class import svm_failure
 
@@ -110,8 +111,6 @@ class Spin_predict(predict_nn, svm_failure):
         # print(self.time_nn / self.num_checks_nn) 
 
         return {'next_state': s_next, 'node_probability': node_probability}
-
-   
 
 if __name__ == '__main__':
     
