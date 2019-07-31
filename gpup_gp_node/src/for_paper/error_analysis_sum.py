@@ -117,7 +117,7 @@ plt.figure(figsize=(12, 3.7))
 plt.yscale('log',basey=10) 
 for F in files_pkl:
 
-    if F.find('_red') > 0 or F.find('_w_') > 0:
+    if F.find('_red') > 0 or F.find('_w_') > 0 or F.find('_v1') < 0:
         continue
 
     # if F.find('_v1') < 0:
@@ -131,87 +131,88 @@ for F in files_pkl:
 
     lgp, Egp, Sgp = plato(Ggp, 50)
 
-    if obj == 'str40':
-        Egp = medfilter(Egp, 10)
-        Egp[45] *= 0.95
-        Egp[:] = medfilter(Egp[:], 6)
-        Egp[0:] = medfilter(Egp[0:], 6)
-        Egp[:5] = medfilter(Egp[:5], 2)
-    elif obj == 'cyl30':
-        Egp = medfilter(Egp, 10)
-        Egp[46:48] *= 1.7
-        Egp[47] *= 1.4
-        Egp[-1] *= 2.
-        Egp[35:] = medfilter(Egp[35:], 5)
-        Egp = np.append(Egp, Egp[-1])
-        lgp = np.append(lgp, 100)
-        Egp[0:] = medfilter(Egp[0:], 6)
-    elif obj == 'cyl35':
-        Egp = medfilter(Egp, 10)
-        Egp[0:] = medfilter(Egp[0:], 6)
-        Egp[1] = (Egp[0]+Egp[2])/2   
-    elif obj == 'egg50':
-        Egp = medfilter(Egp, 20)
-        Egp[44] *= 1.4
-        Egp[41] *= 0.9
-        Egp[43:47] *= 1.1
-        Egp[48] *= 0.95
-        Egp[39:] = medfilter(Egp[39:], 6)
-        Egp = np.append(Egp, Egp[-1]*1.05)
-        lgp = np.append(lgp, 100)
-        Egp[0:] = medfilter(Egp[0:], 6)
-        Egp[1] = (Egp[1-1]+Egp[1+1])/2
-    elif obj == 'poly6':
-        Egp = medfilter(Egp, 20)
-        Egp[39:] = medfilter(Egp[39:], 7)
-        Egp = np.append(Egp, Egp[-1]*1.05)
-        lgp = np.append(lgp, 100)
-        Egp[0:] = medfilter(Egp[0:], 6)
-        Egp[1] = (Egp[1-1]+Egp[1+1])/2
-        Egp[2] = (Egp[1]+Egp[3])/2   
-    elif obj == 'sqr30':
-        Egp = medfilter(Egp, 15)
-        Egp[35:] *= 1.07
-        Egp[35] = (Egp[35-2]+Egp[35+2])/2
-        Egp[36] = (Egp[36-2]+Egp[36+2])/2
-        Egp[37] = 16.5
-        Egp[0:] = medfilter(Egp[0:], 3)
-        Egp[0:] = medfilter(Egp[0:], 6)
-    elif obj == 'elp40':
-        Egp = medfilter(Egp, 10)
-        Egp[38] *= 1.05
-        Egp[35:] = medfilter(Egp[35:], 6)
-        Egp[0:] = medfilter(Egp[0:], 6)
-    elif obj == 'cyl45':
-        Egp = medfilter(Egp, 10)
-        Egp[42] = (Egp[42-1]+Egp[42+1])/2
-        Egp = np.append(Egp, Egp[-1]*1.05)
-        lgp = np.append(lgp, 100)
-        Egp[20:] = medfilter(Egp[20:], 3)
-        Egp[0:] = medfilter(Egp[0:], 6)
-        Egp[3] = (Egp[2]+Egp[4])/2
-    elif obj == 'cre55':
-        Egp = medfilter(Egp, 10)
-        Egp[35:] = medfilter(Egp[35:], 5)
-        Egp = np.append(Egp, Egp[-1]*1.05)
-        lgp = np.append(lgp, 100)
-        Egp[0:] = medfilter(Egp[0:], 6)
-        Egp[2] = (Egp[1]+Egp[3])/2   
-    elif obj == 'rec60':
-        Egp = medfilter(Egp, 10)
-        Egp[:] = medfilter(Egp[:], 6)
-    elif obj == 'poly1':
-        Egp = medfilter(Egp, 10)
-        Egp[:] = medfilter(Egp[:], 6)
-    elif obj == 'tri50':
-        Egp = medfilter(Egp, 10)
-        Egp[:] = medfilter(Egp[:], 6)
-    elif obj == 'sem60':
-        Egp = medfilter(Egp, 10)
-        Egp[:] = medfilter(Egp[:], 6)
-        Egp[2] = (Egp[1]+Egp[3])/2        
-        Egp[:] = medfilter(Egp[:], 4)
-    else:
+    # if obj == 'str40':
+    #     Egp = medfilter(Egp, 10)
+    #     Egp[45] *= 0.95
+    #     Egp[:] = medfilter(Egp[:], 6)
+    #     Egp[0:] = medfilter(Egp[0:], 6)
+    #     Egp[:5] = medfilter(Egp[:5], 2)
+    # elif obj == 'cyl30':
+    #     Egp = medfilter(Egp, 10)
+    #     Egp[46:48] *= 1.7
+    #     Egp[47] *= 1.4
+    #     Egp[-1] *= 2.
+    #     Egp[35:] = medfilter(Egp[35:], 5)
+    #     Egp = np.append(Egp, Egp[-1])
+    #     lgp = np.append(lgp, 100)
+    #     Egp[0:] = medfilter(Egp[0:], 6)
+    # elif obj == 'cyl35':
+    #     Egp = medfilter(Egp, 10)
+    #     Egp[0:] = medfilter(Egp[0:], 6)
+    #     Egp[1] = (Egp[0]+Egp[2])/2   
+    # elif obj == 'egg50':
+    #     Egp = medfilter(Egp, 20)
+    #     Egp[44] *= 1.4
+    #     Egp[41] *= 0.9
+    #     Egp[43:47] *= 1.1
+    #     Egp[48] *= 0.95
+    #     Egp[39:] = medfilter(Egp[39:], 6)
+    #     Egp = np.append(Egp, Egp[-1]*1.05)
+    #     lgp = np.append(lgp, 100)
+    #     Egp[0:] = medfilter(Egp[0:], 6)
+    #     Egp[1] = (Egp[1-1]+Egp[1+1])/2
+    # elif obj == 'poly6':
+    #     Egp = medfilter(Egp, 20)
+    #     Egp[39:] = medfilter(Egp[39:], 7)
+    #     Egp = np.append(Egp, Egp[-1]*1.05)
+    #     lgp = np.append(lgp, 100)
+    #     Egp[0:] = medfilter(Egp[0:], 6)
+    #     Egp[1] = (Egp[1-1]+Egp[1+1])/2
+    #     Egp[2] = (Egp[1]+Egp[3])/2   
+    # elif obj == 'sqr30':
+    #     Egp = medfilter(Egp, 15)
+    #     Egp[35:] *= 1.07
+    #     Egp[35] = (Egp[35-2]+Egp[35+2])/2
+    #     Egp[36] = (Egp[36-2]+Egp[36+2])/2
+    #     Egp[37] = 16.5
+    #     Egp[0:] = medfilter(Egp[0:], 3)
+    #     Egp[0:] = medfilter(Egp[0:], 6)
+    # elif obj == 'elp40':
+    #     Egp = medfilter(Egp, 10)
+    #     Egp[38] *= 1.05
+    #     Egp[35:] = medfilter(Egp[35:], 6)
+    #     Egp[0:] = medfilter(Egp[0:], 6)
+    # elif obj == 'cyl45':
+    #     Egp = medfilter(Egp, 10)
+    #     Egp[42] = (Egp[42-1]+Egp[42+1])/2
+    #     Egp = np.append(Egp, Egp[-1]*1.05)
+    #     lgp = np.append(lgp, 100)
+    #     Egp[20:] = medfilter(Egp[20:], 3)
+    #     Egp[0:] = medfilter(Egp[0:], 6)
+    #     Egp[3] = (Egp[2]+Egp[4])/2
+    # elif obj == 'cre55':
+    #     Egp = medfilter(Egp, 10)
+    #     Egp[35:] = medfilter(Egp[35:], 5)
+    #     Egp = np.append(Egp, Egp[-1]*1.05)
+    #     lgp = np.append(lgp, 100)
+    #     Egp[0:] = medfilter(Egp[0:], 6)
+    #     Egp[2] = (Egp[1]+Egp[3])/2   
+    # elif obj == 'rec60':
+    #     Egp = medfilter(Egp, 10)
+    #     Egp[:] = medfilter(Egp[:], 6)
+    # elif obj == 'poly1':
+    #     Egp = medfilter(Egp, 10)
+    #     Egp[:] = medfilter(Egp[:], 6)
+    # elif obj == 'tri50':
+    #     Egp = medfilter(Egp, 10)
+    #     Egp[:] = medfilter(Egp[:], 6)
+    # elif obj == 'sem60':
+    #     Egp = medfilter(Egp, 10)
+    #     Egp[:] = medfilter(Egp[:], 6)
+    #     Egp[2] = (Egp[1]+Egp[3])/2        
+    #     Egp[:] = medfilter(Egp[:], 4)
+    # else:
+    if 1:
         Egp = medfilter(Egp, 10)
         Egp[0:] = medfilter(Egp[0:], 6)
 

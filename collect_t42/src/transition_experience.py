@@ -7,7 +7,7 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'cyl20'
+Obj = 'cyl30'
 
 class transition_experience():
     path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
@@ -546,6 +546,7 @@ class transition_experience():
         print 'Success rate: ' + str(float(s)/SA_test.shape[0]*100)
         print 'Drop prediction accuracy: ' + str(float(s_fail)/c_fail*100)
         print 'Success prediction accuracy: ' + str(float(s_suc)/c_suc*100)
+        # exit(1)
 
         # ######################################################
         # More classifiers
@@ -578,6 +579,8 @@ class transition_experience():
             score = clf.score(SA_test, 1*done_test)
             scores.append(score)
             print name, score
+            print SA_test[0].shape, SA_test[0]
+            print clf.predict(SA_test[0].reshape(1,-1)), done_test[0]
 
         scores = dict( zip( names, scores))
             
