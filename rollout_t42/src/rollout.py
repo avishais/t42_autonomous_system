@@ -129,7 +129,7 @@ class rolloutPublisher():
             self.rate.sleep()
 
         rospy.sleep(1)
-        # self.open_srv()
+        self.open_srv()
 
         return success
 

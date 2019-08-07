@@ -10,13 +10,13 @@ from rollout_t42.srv import rolloutReq
 import time
 import glob
 
-rollout = 1
+rollout = 0
 
 comp = 'pracsys'
 
 Set = '1'
-set_modes = ['naive']
-# set_modes = ['robust', 'naive']
+# set_modes = ['naive']
+set_modes = ['robust', 'naive']
 
 ############################# Rollout ################################
 if rollout:
@@ -46,11 +46,14 @@ if rollout:
 
             print('Rolling-out file number ' + str(i+1) + ': ' + action_file + '.')
 
-            A = np.loadtxt(action_file, delimiter=',', dtype=float)[:,:2]
+            try:
+                A = np.loadtxt(action_file, delimiter=',', dtype=float)[:,:2]
+            except:
+                continue
 
             Af = A.reshape((-1,))
             Pro = []
-            for j in range(2):
+            for j in range(10):
                 print("Rollout number " + str(j) + ".")
                 
                 Sro = np.array(rollout_srv(Af).states).reshape(-1,state_dim)
@@ -74,24 +77,6 @@ def medfilter(x, W):
             x_new[i] = np.mean(x[i-w:i+w])
     return x_new
 
-# if Set == '1':
-#     # Goal centers - set 1
-#     C = np.array([
-#         [17, 117],
-#         [75, 75],
-#         [-83, 66],
-#         [-52, 77],
-#         [48, 114],
-#         [-31, 100],
-#         [5.4, 108],
-#         [87, 65]])
-
-if Set == '1':
-    # Goal centers - set 1
-    C = np.array([[12,103],[2.8,110],[57,108],[77,95],[-25, 96],[95, 76],[-38, 82],[58, 81]])
-
-
-    # Obs = np.array([[42, 90, 13.63], [-45, 101, 8]])
 
 rp = 7.
 r = 10.
@@ -113,11 +98,14 @@ if not rollout and 1:
         for k in range(len(files)):
 
             pklfile = files[k]
-            if pklfile.find(set_mode) < 0:
+            if pklfile.find(set_mode) < 0 or pklfile.find('traj') > 0:
                 continue
-            ctr = C[int(pklfile[pklfile.find('goal')+4]), :] # Goal center
+
+            o = pklfile.find('goal')+4
+            o1 = pklfile[o:].find('_') + 1 + o
+            o2 = pklfile[o1:].find('_') +  o1
+            ctr = [float(pklfile[o:o1-1]), float(pklfile[o1:o2])] # Goal center
             print ctr
-            # exit(1)
 
             for j in range(len(pklfile)-1, 0, -1):
                 if pklfile[j] == '/':
@@ -147,8 +135,8 @@ if not rollout and 1:
             A = np.loadtxt(pklfile[:-3] + 'txt', delimiter=',', dtype=float)[:,:2]
             maxR = A.shape[0]
             maxX = np.max([x.shape[0] for x in Pro])
-            
-            c = np.sum([(1 if x.shape[0]==maxR else 0) for x in Pro])
+
+            c = np.sum([(1 if maxR - x.shape[0] < 10 else 0) for x in Pro])
 
             Smean = []
             Sstd = []
@@ -170,8 +158,10 @@ if not rollout and 1:
             p = 0
             for S in Pro:
                 plt.plot(S[:,0], S[:,1], 'r')
-                if S.shape[0] < maxR:
-                    plt.plot(S[-1,0], S[-1,1], 'oc')
+                if maxR - S.shape[0] > 10:
+                    plt.plot(S[-1,0], S[-1,1], 'or')
+                else:
+                    plt.plot(S[-1,0], S[-1,1], 'og')
 
                 if np.linalg.norm(S[-1,:2]-ctr) <= r:
                     p += 1
@@ -193,7 +183,7 @@ if not rollout and 1:
 
             plt.plot(Straj[:,0], Straj[:,1], '-k', linewidth=3.5, label='Planned path')
 
-            plt.plot(Smean[:,0], Smean[:,1], '-b', label='rollout mean')
+            # plt.plot(Smean[:,0], Smean[:,1], '-b', label='rollout mean')
             # X = np.concatenate((Smean[:,0]+Sstd[:,0], np.flip(Smean[:,0]-Sstd[:,0])), axis=0)
             # Y = np.concatenate((Smean[:,1]+Sstd[:,1], np.flip(Smean[:,1]-Sstd[:,1])), axis=0)
             # plt.fill( X, Y , alpha = 0.5 , color = 'b')

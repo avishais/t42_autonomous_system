@@ -31,8 +31,8 @@ naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 rospy.init_node('run_planNroll', anonymous=True)
 
 #goals = np.array([[1.69,80],[-25,65],[68,74],[-28,95],[100,60],[48,75],[-8,113],[-19,66],[22,118],[-25,65],[-49,67],[92,82]])
-# goals = np.array([[68,74],[-28,95],[100,60],[-25,65],[48,75],[-8,113],[-19,66],[22,118],[-25,65],[-49,67],[92,82],[1.69,80]])
-goals = np.array([[60., 96.],[80.,81.]])#,[85, 74], [90, 72], [62, 90], [-15, 82]])
+goals = np.array([[68,74],[-28,95],[100,60],[-25,65],[48,75],[-8,113],[-19,66],[22,118],[-25,65],[-49,67],[92,82],[1.69,80]])
+# goals = np.array([[60., 96.],[80.,81.]])#,[85, 74], [90, 72], [62, 90], [-15, 82]])
 set_modes = ['naive', 'robust']
 
 msg = planroll()
@@ -66,7 +66,7 @@ def medfilter(x, W = 40):
                 x_new[i] = np.mean(x[i-w:i+w])
         return x_new
 
-if 0:
+if 1:
     for goal in goals:
         for set_mode in set_modes:
             print "Running " + set_mode + " with goal " + str(goal) + "..."

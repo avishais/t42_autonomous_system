@@ -93,7 +93,6 @@ if 1:
     Suc = []
     i = 0
     for A in action_seq:
-        A = np.fliplr(A) #!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
         Af = A.reshape((-1,))
         print("Rollout number " + str(i) + ".")
         i += 1       

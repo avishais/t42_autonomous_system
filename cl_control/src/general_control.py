@@ -12,10 +12,6 @@ from rollout_t42.srv import gets
 from gpup_gp_node_exp.srv import one_transition
 from cl_control.srv import pathTrackReq
 
-import sys
-sys.path.insert(0, '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/src/')
-import var
-
 class general_control():
 
     drop = True
@@ -23,17 +19,16 @@ class general_control():
     gripper_load = np.array([0., 0.])
     actionGP = np.array([0., 0.])
     actionVS = np.array([0., 0.])
-    tol = 2.5
-    goal_tol = 3.0
+    actionNN = np.array([0., 0.])
+    tol = 1.0
+    goal_tol = 1.5
     horizon = 1
     arm_status = ' '
     trigger = False # Enable collection
-    drop_to_hole = True
+    drop_to_hole = False
 
     def __init__(self):
         rospy.init_node('cl_control', anonymous=True)
-
-        self.gp = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 
         rospy.Subscriber('/hand_control/obj_pos_mm', Float32MultiArray, self.callbackObj)
         rospy.Subscriber('/gripper/load', Float32MultiArray, self.callbackGripperLoad)
@@ -42,6 +37,7 @@ class general_control():
         rospy.Service('/control', pathTrackReq, self.CallbackTrack)
         rospy.Subscriber('/gp_controller/action', Float32MultiArray, self.CallbackBestActionGP)
         rospy.Subscriber('/vs_controller/action', Float32MultiArray, self.CallbackBestActionVS)
+        rospy.Subscriber('/nn_controller/action', Float32MultiArray, self.CallbackBestActionNN)
         self.pub_current_goal = rospy.Publisher('/control/goal', Float32MultiArray, queue_size=10)
         self.pub_horizon = rospy.Publisher('/control/horizon', Float32MultiArray, queue_size=10)
         self.pub_exclude = rospy.Publisher('/control/exclude', Float32MultiArray, queue_size=10)
@@ -110,9 +106,9 @@ class general_control():
         # self.close_srv()
         rospy.sleep(3.)
 
-        # grasp_state = np.copy(np.concatenate((self.obj_pos, self.gripper_load), axis=0))
-        ds = np.copy(self.obj_pos) - S[0,:2]
-        S[:,:2] += ds
+        grasp_state = np.copy(np.concatenate((self.obj_pos, self.gripper_load), axis=0))
+        # ds = np.copy(self.obj_pos) - S[0,:2]
+        # S[:,:2] += ds
 
         i_path = 1 #S.shape[0]-1#
         msg = Float32MultiArray()
@@ -130,7 +126,7 @@ class general_control():
         d_prev = 1000
         action = np.array([0.,0.])
         dd_count = 0
-        Controller = 'GP'
+        Controller = 'NN'
 
         # print "Fix position and press key... "
         # raw_input()
@@ -138,22 +134,23 @@ class general_control():
         self.trigger_srv(True)        
         print("[control] Tracking path...")
         finish = False
-        wh = 5
+        wh = 3
+        msgg = Float32MultiArray()
         while 1:
-            # msg.data = grasp_state
-            # self.pub_grasp_state.publish(msg)
+            msgg.data = grasp_state
+            self.pub_grasp_state.publish(msgg)
             change = False
             state = np.concatenate((self.obj_pos, self.gripper_load), axis=0)
             if i_path >= S.shape[0]-wh-1:
                 msg.data = S[-1,:]
-            elif self.weightedL2(state[:]-S[i_path,:]) < self.tol or (self.weightedL2(state[:]-S[i_path+wh,:]) < self.weightedL2(state[:]-S[i_path,:])):# and self.weightedL2(state[:]-S[i_path+1,:])) < self.tol*3):
+            elif self.weightedL2(state[:]-S[i_path,:]) < self.tol or (self.weightedL2(state[:]-S[i_path+wh,:]) < self.weightedL2(state[:]-S[i_path,:]) and self.weightedL2(state[:]-S[i_path+wh,:]) < self.tol*6):
                 i_path += wh
                 msg.data = S[i_path,:]
                 count = 0
                 change = True
-                self.tol = 1.5
+                self.tol = 1.0
                 dd_count = 0
-                Controller = 'GP'
+                Controller = 'NN'
             elif count > 100:# and i_path < S.shape[0]-1:
                 self.tol = 2.5
                 Controller == 'VS'
@@ -168,10 +165,12 @@ class general_control():
             #     n = 1
             #     print "Extended..."
             if n <= 0:# or dd_count > 5:
-                if 0:#Controller == 'GP':
+                if Controller == 'GP':
                     action = self.actionGP
-                else:
+                elif Controller == 'VS':
                     action = self.actionVS#self.snap_action(self.actionVS)
+                else:
+                    action = self.actionNN
                 n = self.stepSize
                 dd_count = 0
 
@@ -242,6 +241,9 @@ class general_control():
 
     def CallbackBestActionVS(self, msg):
         self.actionVS = np.array(msg.data)
+
+    def CallbackBestActionNN(self, msg):
+        self.actionNN = np.array(msg.data)
 
     def snap_action(self, a):
         A = np.array([[1.,1.],[-1.,-1.],[-1.,1.],[1.,-1.],[1.5,0.],[-1.5,0.],[0.,-1.5],[0.,1.5]])

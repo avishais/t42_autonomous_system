@@ -1,8 +1,8 @@
 <?xml version="1.0"?>
 <package format="2">
-  <name>gpup_gp_node_exp</name>
+  <name>gpup_gp_node</name>
   <version>0.0.0</version>
-  <description>The gpup_gp_node_exp package</description>
+  <description>The gpup_gp_node package</description>
 
   <!-- One maintainer tag required, multiple allowed, one person per tag -->
   <!-- Example:  -->

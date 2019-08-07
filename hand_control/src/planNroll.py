@@ -95,9 +95,7 @@ class planRoll():
         #     self.rate.sleep()
         # start = start[[0,1,11,12,3,4,5,6,7,8,9,10]] # For cylinder
         # start[:2] *= 1000
-        start = np.array([  2.03328312e+01,   1.11295141e+02,   9.91000000e+01,  -9.86000000e+01,
-            -1.81094348e-02,   7.92978175e-02,   5.88817716e-02,   8.14538330e-02,
-            -1.90590799e-02,   9.94075567e-02,   5.67422092e-02,   1.03955227e-01])
+        start = np.array([  2.03328312e+01,   1.11295141e+02,   9.91000000e+01,  -9.86000000e+01])
         start = start[:self.state_dim]
 
         print "[plan_call] Start state: " + str(start)
