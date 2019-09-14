@@ -7,10 +7,10 @@ from scipy.io import savemat
 import scipy.signal
 
 version = '0'
-Obj = 'cyl30'
+Obj = 'cyl35_red_plan'
 
 class transition_experience():
-    path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/dataset/'
+    path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/data/'
     dest_path = '/home/pracsys/catkin_ws/src/t42_control/gpup_gp_node/data/dataset_processed/' 
 
     def __init__(self, Load=True, discrete = True, postfix='', Object = Obj, with_fingers = False):
@@ -150,9 +150,8 @@ class transition_experience():
         for i in range(states.shape[0]-1):
             if np.linalg.norm(states[i,:2]-states[i+1,:2]) > 8. and not done[i]:
                 done[i] = True
-
+        
         return done
-
     
     def process_transition_data(self, stepSize = 1, plot = False):
 
@@ -289,7 +288,7 @@ class transition_experience():
         self.state_action_dim = self.state_dim + self.action_dim 
 
         done = self.validate_drops(states, done)
-        if np.any(self.Object == np.array(['poly6', 'cyl35_red'])): # When the actions length is not at the same size as the states
+        if np.any(self.Object == np.array(['poly6', 'cyl35_red_plan'])): # When the actions length is not at the same size as the states
             done[-1] = True
 
         # Add grasp state to action
@@ -357,8 +356,10 @@ class transition_experience():
 
         # exit(1)       
 
-        # with open(self.dest_path + 't42_' + self.Object + '_data_discrete_v' + version + '_d' + str(states.shape[1]) + '_m' + str(stepSize) + '_episodes.obj', 'wb') as f: 
-        #     pickle.dump(episodes, f)
+        with open(self.dest_path + 't42_' + self.Object + '_data_discrete_v' + version + '.1_d' + str(states.shape[1]) + '_m' + str(stepSize) + '_episodes.obj', 'wb') as f: 
+            pickle.dump(episodes, f)
+        print len(episodes)
+        exit(1)
 
         if stepSize > 1:
             D = multiStep(D, done, stepSize)

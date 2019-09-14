@@ -30,10 +30,8 @@ naive_srv = rospy.ServiceProxy('/gp/transitionOneParticle', one_transition)
 
 rospy.init_node('run_planNroll', anonymous=True)
 
-#goals = np.array([[1.69,80],[-25,65],[68,74],[-28,95],[100,60],[48,75],[-8,113],[-19,66],[22,118],[-25,65],[-49,67],[92,82]])
-goals = np.array([[68,74],[-28,95],[100,60],[-25,65],[48,75],[-8,113],[-19,66],[22,118],[-25,65],[-49,67],[92,82],[1.69,80]])
-# goals = np.array([[60., 96.],[80.,81.]])#,[85, 74], [90, 72], [62, 90], [-15, 82]])
-set_modes = ['naive', 'robust']
+goals = np.array([[-25, 75]])
+set_modes = ['naive', 'critic']
 
 msg = planroll()
 
@@ -76,30 +74,29 @@ if 1:
             # First rollout is from the known start state
             res = pr_srv(goal, set_mode)
             File = res.file
+            # File = '/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/critic_goal-30.0_60.0_n61981_plan.'# Overload
+            # File = '/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/critic_goal-30.0_60.0_n33397_plan.'# Overload
+            # File = '/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/critic_goal-30.0_72.0_n94352_plan.'# 
 
             # Now, more runs from approximately the start state
-            # A = np.loadtxt(File + 'txt', delimiter=',', dtype=float)[:,:2]
-            # with open(File + 'pkl' ,'r') as f:  
-            #     S = pickle.load(f)
+            A = np.loadtxt(File + 'txt', delimiter=',', dtype=float)[:,:2]
 
-            # P = []
-            # P.append(S)
+            P = []
+            Af = A.reshape((-1,))
+            for j in range(1):
+                print("Rollout number " + str(j) + ".")
 
-            # Af = A.reshape((-1,))
-            # for j in range(10):
-            #     print("Rollout number " + str(j) + ".")
-
-            #     ResetArm()
+                # ResetArm()
                 
-            #     Sro = np.array(rollout_srv(Af).states).reshape(-1,state_dim)
+                Sro = np.array(rollout_srv(Af).states).reshape(-1,state_dim)
 
-            #     P.append(Sro)
+                P.append(Sro)
 
-            #     slow_open()
+                # slow_open()
 
-            #     with open(File + 'pkl', 'w') as f: 
-            #         pickle.dump(P, f)
-
+                with open(File + '.pkl', 'w') as f: 
+                    pickle.dump(P, f)
+exit(1)
 # pr_proc_srv()
 
 path = '/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/'

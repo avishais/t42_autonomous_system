@@ -10,7 +10,7 @@ import matplotlib.pyplot as plt
 import pickle
 
 
-class rollout():
+class rollout_actor():
 
     states = []
     plot_num = 0
@@ -24,6 +24,7 @@ class rollout():
     def __init__(self):
         rospy.init_node('rollout_actor_t42', anonymous=True)
 
+        rospy.Service('/rollout/run_actor', SetBool, self.callbackTrigger)
         self.move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
         self.arm_reset_srv = rospy.ServiceProxy('/RegraspObject', RegraspObject)
         rospy.Subscriber('/cylinder_drop', Bool, self.callbackObjectDrop)
@@ -31,8 +32,7 @@ class rollout():
         # suc_pub = rospy.Publisher('/rollout/move_success', Bool, queue_size=10)
         fail_pub = rospy.Publisher('/rollout/fail', Bool, queue_size = 10)
         self.running_pub = rospy.Publisher('/rollout_actor/runnning', Bool, queue_size = 10)
-
-        rospy.Service('/rollout/run_trigger', SetBool, self.callbackTrigger)
+        
 
         print('[rollout_actor] Ready to rollout...')
         self.running_pub.publish(False)
@@ -43,7 +43,6 @@ class rollout():
 
             if self.running:
                 self.suc = self.move_srv(self.action).success
-
                 fail_pub.publish(not self.suc or self.drop)
                
                 if not self.suc:
@@ -69,7 +68,6 @@ class rollout():
 
     def callbackTrigger(self, msg):
         self.running = msg.data
-        print "-------------------------------------"
         if self.running:
             print("[rollout_actor] Started ...")
             self.suc = True
@@ -80,6 +78,6 @@ class rollout():
 
 if __name__ == '__main__':
     try:
-        rollout()
+        rollout_actor()
     except rospy.ROSInterruptException:
         pass

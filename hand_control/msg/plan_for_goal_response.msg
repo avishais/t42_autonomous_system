@@ -1,3 +1,3 @@
-float32[] planned_actions
-float32[] planned_path
+float64[] planned_actions
+float64[] planned_path
 bool reached_goal

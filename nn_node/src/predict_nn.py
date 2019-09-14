@@ -16,7 +16,7 @@ class predict_nn:
     def __init__(self):
 
         save_path = '/home/pracsys/catkin_ws/src/t42_control/nn_node/models/'
-        model_name = 'real_A_heldout0.1_1.pkl' # Name of the model we want to depickle
+        model_name = 'real_A_heldout0.5_1.pkl' # Name of the model we want to depickle
         self.model_path = save_path + model_name
 
         print('[predict_nn] Loading training data...')
@@ -42,6 +42,9 @@ class predict_nn:
         state_delta = self.model(inpt)
         state_delta = state_delta.detach().numpy()
         state_delta = self.denormalize(state_delta)
+
+        state_delta[...,0] *= 1.1
+        state_delta[...,1] *= 1.05
 
         next_state = (sa[...,:4] + state_delta)
         return next_state

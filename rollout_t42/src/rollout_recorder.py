@@ -11,7 +11,7 @@ import pickle
 import geometry_msgs.msg
 from sensor_msgs.msg import CompressedImage, Image
 
-record_images = False
+record_images = True
 
 class rolloutRecorder():
 
@@ -74,7 +74,6 @@ class rolloutRecorder():
                 self.T.append(rospy.get_time() - self.T0)
 
                 if record_images:
-                    
                     self.images.append(self.I)
                     self.Simage.append(self.pos_image)
                     self.Timages.append(rospy.get_time() - self.T0)
@@ -145,7 +144,8 @@ class rolloutRecorder():
     def get_states(self, msg):
 
         if record_images:
-            with open('/media/pracsys/DATA/hand_images_data/rollout_blue_' + str(np.random.randint(10000)) + '.pkl', 'wb') as f:
+            # with open('/media/pracsys/DATA/hand_images_data/rollout_blue_' + str(np.random.randint(10000)) + '.pkl', 'wb') as f:
+            with open('/home/pracsys/Videos/rollout_blue_' + str(np.random.randint(10000)) + '.pkl', 'wb') as f:
                 pickle.dump([self.Timages, self.Simage, self.images, self.S, self.A, self.T], f)          
 
         print(np.array(self.S).shape)

@@ -16,7 +16,7 @@ class collect_data():
 
     gripper_closed = False
     trigger = True # Enable collection
-    discrete_actions = False # Discrete or continuous actions
+    discrete_actions = True # Discrete or continuous actions
     arm_status = ' '
     global_trigger = True
 
@@ -39,14 +39,14 @@ class collect_data():
         self.recorderSave_srv = rospy.ServiceProxy('/actor/save', Empty)
         obs_srv = rospy.ServiceProxy('/observation', observation)
         drop_srv = rospy.ServiceProxy('/IsObjDropped', IsDropped)
-        move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
+        self.move_srv = rospy.ServiceProxy('/MoveGripper', TargetAngles)
         rospy.Subscriber('/ObjectIsReset', String, self.callbackTrigger)
         arm_reset_srv = rospy.ServiceProxy('/RegraspObject', RegraspObject)
         # record_srv = rospy.ServiceProxy('/record_hand_pose', recordHandPose)
         rospy.Subscriber('/cylinder_drop', Bool, self.callbackObjectDrop)
         recorder_srv = rospy.ServiceProxy('/actor/trigger', Empty)
 
-        self.collect_mode = 'auto' # 'manual' or 'auto' or 'plan'
+        self.collect_mode = 'plan' # 'manual' or 'auto' or 'plan'
         
         if self.collect_mode == 'manual':
             rospy.Subscriber('/keyboard/desired_action', Float32MultiArray, self.callbackDesiredAction)
@@ -69,6 +69,8 @@ class collect_data():
         time.sleep(2.)
 
         print('[collect_data] Ready to collect...')
+        print('[collect_data] Position object and press key...')
+        raw_input()
 
         rate = rospy.Rate(2.5) # 15hz
         count_fail = 0
@@ -78,7 +80,7 @@ class collect_data():
             if self.global_trigger:
 
                 if self.collect_mode != 'manual':
-                    if np.random.uniform() > 0.5:
+                    if np.random.uniform() > 0.: #0.5
                         self.collect_mode = 'plan'
                         self.first = True
                         # files = glob.glob('/home/pracsys/catkin_ws/src/t42_control/hand_control/plans/*.txt')
@@ -87,20 +89,22 @@ class collect_data():
                     else:
                         self.collect_mode = 'auto'
 
-                if not self.trigger and self.arm_status == 'waiting':
+                if self.trigger:# and self.arm_status == 'waiting':
                     
-                    if self.collect_mode == 'manual': 
-                        ResetKeyboard_srv()
+                    # if self.collect_mode == 'manual': 
+                    #     ResetKeyboard_srv()
                     if 1:#drop_srv().dropped:
-                        arm_reset_srv()
-                        # close_srv()
-                        print('[collect_data] Waiting for arm to grasp object...')
-                        # raw_input()
+                        print "Closing"
+                        close_srv()
                         time.sleep(1.0)
+                        # arm_reset_srv()
+                        # print('[collect_data] Waiting for arm to grasp object...')
+                        # print('[collect_data] Position object and press key...')
+                        # raw_input()
                     else:
                         self.trigger = True
-                
-                if self.arm_status != 'moving' and self.trigger:
+
+                if self.trigger:# self.arm_status != 'moving' and self.trigger:
 
                     print('[collect_data] Verifying grasp...')
                     if drop_srv().dropped: # Check if really grasped
@@ -123,8 +127,8 @@ class collect_data():
                         # ia = np.random.randint(len(files))
                         # print('[collect_data] Rolling out file: ' + files[ia])
                         # Af = np.loadtxt(files[ia], delimiter = ',', dtype=float)[:,:2]
-                        if np.random.uniform() > 0.5:
-                            Af = np.tile(np.array([-1.,1.]), (np.random.randint(100,500), 1))
+                        if np.random.uniform() > 0.:
+                            Af = np.tile(np.array([-1.,1.]), (np.random.randint(50,160), 1))
                         else:
                             Af = np.tile(np.array([1.,-1.]), (np.random.randint(100,500), 1))
                         print('[collect_data] Rolling out shooting with %d steps.'%Af.shape[0])
@@ -142,6 +146,9 @@ class collect_data():
                             self.first = False
                             n = 0
                             print('[collect_data] Running random actions...')
+                            episode_cur = 0
+                            episode_max = np.random.randint(200)
+                            print('[collect_data] Rolling out random actions with %d steps.'%episode_max)
                         
                         if n == 0:
                             if self.collect_mode == 'auto':
@@ -156,10 +163,12 @@ class collect_data():
                                 else:
                                     action, n = self.choose_action()                           
                         print action, ep_step
+                        if not self.first:
+                            episode_cur += 1
                         
                         msg.data = action
                         pub_gripper_action.publish(msg)
-                        suc = move_srv(action).success
+                        suc = self.move_srv(action).success
                         n -= 1
 
                         # Get observation
@@ -189,6 +198,11 @@ class collect_data():
                         if not suc or fail:
                             Done = True
                             break
+
+                        if not self.first and episode_cur > episode_max:
+                            recorder_srv()
+                            print('[collect_data] Simulated drop.')
+                            break
                         
                         rate.sleep()
                 
@@ -197,13 +211,20 @@ class collect_data():
                     print('[collect_data] Waiting for next episode initialization...')
                     rospy.sleep(5.0)
 
-                    if self.num_episodes > 0 and not (self.num_episodes % 5):
-                        open_srv()
-                        # self.texp.save()
-                        self.recorderSave_srv()
-                        if (self.num_episodes % 20 == 0):
-                            print('[collect_data] Cooling down.')
-                            rospy.sleep(120)
+                    self.slow_open()
+                    self.recorderSave_srv()
+                    open_srv()
+                    print('[collect_data] Position object and press key...')
+                    raw_input()
+                    self.trigger = True
+
+                    # if self.num_episodes > 0 and not (self.num_episodes % 5):
+                    #     open_srv()
+                    #     # self.texp.save()
+                    #     self.recorderSave_srv()
+                    #     if (self.num_episodes % 20 == 0):
+                    #         print('[collect_data] Cooling down.')
+                    #         rospy.sleep(120)
 
 
     def callbackGripperStatus(self, msg):
@@ -219,6 +240,12 @@ class collect_data():
 
     def callbackObjectDrop(self, msg):
         self.drop = msg.data
+
+    def slow_open(self):
+        print "Opening slowly."
+        for _ in range(30):
+            self.move_srv(np.array([-6.,-6.]))
+            rospy.sleep(0.1)
 
     def choose_action(self):
         if self.discrete_actions:

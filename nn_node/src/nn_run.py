@@ -2,15 +2,25 @@
 
 import rospy
 from gpup_gp_node.srv import batch_transition, one_transition
+from nn_node.srv import critic_seq
+
 #from gpup_gp_node_exp.srv import batch_transition, one_transition
 import numpy as np
 from svm_class import svm_failure
+import pickle
 
 from predict_nn import predict_nn
+
+from sklearn.neighbors import KDTree
+from sklearn.gaussian_process import GaussianProcessRegressor
+from sklearn.gaussian_process.kernels import RBF
+
+CRITIC = True
 
 class Spin_predict(predict_nn, svm_failure):
 
     state_dim = 4
+    OBS = True
 
     def __init__(self):
         predict_nn.__init__(self)
@@ -18,8 +28,25 @@ class Spin_predict(predict_nn, svm_failure):
 
         rospy.Service('/nn/transition', batch_transition, self.GetTransition)
         rospy.Service('/nn/transitionOneParticle', one_transition, self.GetTransitionOneParticle)
+        if CRITIC:
+            rospy.Service('/nn/critic_seq', critic_seq, self.GetCritic)
 
         rospy.init_node('predict', anonymous=True)
+
+        if self.OBS:
+            self.Obs = np.array([[-15, 115, 23]])
+
+        if CRITIC:
+            self.K = 3
+            with open('/home/pracsys/catkin_ws/src/t42_control/nn_node/gp_eval/data_P40.pkl', 'rb') as f: 
+                self.O, self.E = pickle.load(f)
+            if 0:
+                self.kdt = KDTree(self.O, leaf_size=100, metric='euclidean')
+            else:
+                with open('/home/pracsys/catkin_ws/src/t42_control/nn_node/gp_eval/kdt_P40.pkl', 'rb') as f: 
+                    self.kdt = pickle.load(f)
+            self.kernel = RBF(length_scale=1.0, length_scale_bounds=(1e-1, 10.0))
+            print('[nn_predict_node] Critic loaded.')
 
         print('[nn_predict_node] Ready to predict...')
         rospy.spin()
@@ -40,8 +67,6 @@ class Spin_predict(predict_nn, svm_failure):
         S = np.array(req.states).reshape(-1, self.state_dim)
         a = np.array(req.action)
 
-        collision_probability = 0.0
-
         if (len(S) == 1):
             st = rospy.get_time()
             p = self.probability(S[0,:], a)
@@ -49,6 +74,8 @@ class Spin_predict(predict_nn, svm_failure):
             node_probability = 1.0 - p
             sa = np.concatenate((S[0,:],a), axis=0)
             s_next = self.predict(sa)
+
+            collision_probability = 1.0 if (self.OBS and self.obstacle_check(s_next)) else 0.0
 
             return {'next_states': s_next, 'mean_shift': s_next, 'node_probability': node_probability, 'collision_probability': collision_probability}
         else:       
@@ -95,6 +122,15 @@ class Spin_predict(predict_nn, svm_failure):
             return {'next_states': S_next.reshape((-1,)), 'mean_shift': mean, 'node_probability': node_probability, 'bad_action': bad_action, 'collision_probability': collision_probability}
 
 
+    def obstacle_check(self, s):
+        f = 1.4 #2.0 # inflate
+
+        for o in self.Obs:
+            if np.linalg.norm(s[:2]-o[:2]) <= f * o[2]:
+                return True
+        return False
+
+
     def GetTransitionOneParticle(self, req):
 
         s = np.array(req.state)
@@ -111,6 +147,27 @@ class Spin_predict(predict_nn, svm_failure):
         # print(self.time_nn / self.num_checks_nn) 
 
         return {'next_state': s_next, 'node_probability': node_probability}
+
+
+    def GetCritic(self, req):
+
+        s = np.array(req.state)
+        a = np.array(req.future_action)
+        n = req.steps
+        Apr = np.array(req.seq)
+
+        sa = np.concatenate((s, a, np.array([n]), Apr.reshape((-1))), axis=0)
+        # sa = np.append(sa, n)
+
+        idx = self.kdt.query(sa.reshape(1,-1), k = self.K, return_distance=False)
+        O_nn = self.O[idx,:].reshape(self.K, -1)
+        E_nn = self.E[idx].reshape(self.K, 1)
+
+        gpr = GaussianProcessRegressor(kernel=self.kernel).fit(O_nn, E_nn)
+        e, _ = gpr.predict(sa.reshape(1, -1), return_std=True)
+    
+        return {'err': e}
+    
 
 if __name__ == '__main__':
     

@@ -33,7 +33,7 @@ class rolloutPublisher():
         rospy.Subscriber('/rollout/fail', Bool, self.callbacFail)
         rospy.Subscriber('/rollout_actor/runnning', Bool, self.callbackActorRunning)
 
-        self.rollout_actor_srv = rospy.ServiceProxy('/rollout/run_trigger', SetBool)
+        self.rollout_actor_srv = rospy.ServiceProxy('/rollout/run_actor', SetBool)
 
         self.arm_reset_srv = rospy.ServiceProxy('/RegraspObject', RegraspObject)
         rospy.Subscriber('/ObjectIsReset', String, self.callbackTrigger)
@@ -74,7 +74,7 @@ class rolloutPublisher():
     def run_rollout(self, A):
         self.rollout_transition = []
         self.trigger = False
-        self.ResetArm()  
+        # self.ResetArm()  
         self.fail = False  
 
         # self.close_srv()
@@ -88,10 +88,7 @@ class rolloutPublisher():
         self.S.append(np.copy(state))  
 
         print("[rollout_action_publisher] Rolling-out actions...")
-        # while not self.actor_running:
-        for _ in range(3):
-            self.rollout_actor_srv(True)
-            self.rate.sleep()
+        self.rollout_actor_srv(True)
         self.record_srv(True)
         
         # Publish episode actions
@@ -129,7 +126,7 @@ class rolloutPublisher():
             self.rate.sleep()
 
         rospy.sleep(1)
-        self.open_srv()
+        # self.open_srv()
 
         return success
 

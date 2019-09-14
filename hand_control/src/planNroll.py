@@ -77,6 +77,8 @@ class planRoll():
         rospy.sleep(3.)
         print('[planNroll] Waiting to grasp object...')
         self.close_srv()
+        print('[planNroll] Press key to start...')
+        raw_input()
         # self.trigger = False
 
     def run(self, msg):
@@ -90,13 +92,13 @@ class planRoll():
         # rospy.sleep(2.)
 
         # Get state
-        # for _ in range(100):
-        #     start = np.array(self.obs_srv().state)
-        #     self.rate.sleep()
-        # start = start[[0,1,11,12,3,4,5,6,7,8,9,10]] # For cylinder
-        # start[:2] *= 1000
-        start = np.array([  2.03328312e+01,   1.11295141e+02,   9.91000000e+01,  -9.86000000e+01])
-        start = start[:self.state_dim]
+        for _ in range(10):
+            start = np.array(self.obs_srv().state)
+            self.rate.sleep()
+        start = start[[0,1,11,12]] # For cylinder
+        start[:2] *= 1000
+        # start = np.array([  2.03328312e+01,   1.11295141e+02,   9.91000000e+01,  -9.86000000e+01])
+        # start = start[:self.state_dim]
 
         print "[plan_call] Start state: " + str(start)
         print "[plan_call] Goal state: " + str(goal)
@@ -181,8 +183,8 @@ class planRoll():
         msg.start_state = start
         msg.goal_state = goal
         msg.goal_radius = self.radius
-        msg.time_limit = 60*20 #seconds
-        msg.probability_success_threshold = 0.5 #affects SVM validity check 
+        msg.time_limit = 1500 #seconds
+        msg.probability_success_threshold = 0.7 #affects SVM validity check 
         msg.planning_algorithm = self.planning_algorithm
 
         print('Requesting goal %d with %s algorithm...'%(self.goal_counter, self.planning_algorithm))
