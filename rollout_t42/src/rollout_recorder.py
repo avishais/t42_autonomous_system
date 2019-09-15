@@ -11,7 +11,7 @@ import pickle
 import geometry_msgs.msg
 from sensor_msgs.msg import CompressedImage, Image
 
-record_images = True
+record_images = False
 
 class rolloutRecorder():
 
@@ -145,7 +145,7 @@ class rolloutRecorder():
 
         if record_images:
             # with open('/media/pracsys/DATA/hand_images_data/rollout_blue_' + str(np.random.randint(10000)) + '.pkl', 'wb') as f:
-            with open('/home/pracsys/Videos/rollout_blue_' + str(np.random.randint(10000)) + '.pkl', 'wb') as f:
+            with open('/home/pracsys/Videos/rollout_red_' + str(np.random.randint(10000)) + '.pkl', 'wb') as f:
                 pickle.dump([self.Timages, self.Simage, self.images, self.S, self.A, self.T], f)          
 
         print(np.array(self.S).shape)

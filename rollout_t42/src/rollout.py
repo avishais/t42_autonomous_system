@@ -77,9 +77,9 @@ class rolloutPublisher():
         # self.ResetArm()  
         self.fail = False  
 
-        # self.close_srv()
-        # print("set") 
-        # raw_input()
+        print("[rollout_action_publisher] Place object and press key...")
+        raw_input()
+        self.close_srv()
 
         msg = Float32MultiArray()  
 
@@ -121,14 +121,21 @@ class rolloutPublisher():
                 success = True
                 self.record_srv(False)
                 self.rollout_actor_srv(False)
+                # self.slow_open()
                 break
 
             self.rate.sleep()
 
-        rospy.sleep(1)
-        # self.open_srv()
+        rospy.sleep(1.)
+        self.open_srv()
 
         return success
+
+    def slow_open(self):
+        print "Opening slowly."
+        for _ in range(30):
+            self.move_srv(np.array([-6.,-6.]))
+            rospy.sleep(0.1)
 
     def callbacFail(self, msg):
         self.fail = msg.data
